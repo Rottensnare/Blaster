@@ -16,8 +16,10 @@ public:
 	ABlasterCharacter();
 	
 	virtual void Tick(float DeltaTime) override;
-	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	virtual void PostInitializeComponents() override;
 
 protected:
 	// Called when the game starts or when spawned
@@ -29,6 +31,7 @@ protected:
 	void LookUp(float Value);
 	void TurnAtRate(float Value);
 	void LookUpAtRate(float Value);
+	void EquipButtonPressed();
 
 private:
 
@@ -53,5 +56,20 @@ private:
 	UPROPERTY(EditAnywhere, Category = Camera, meta = (ClapMin = "0.05,", ClampMax = "5.0", UIMin = "0.05", UIMax = "5.0"))
 	float MouseYSensitivity;
 
+	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
+	class AWeapon* OverlappingWeapon;
+
+	UPROPERTY(VisibleAnywhere)
+	class UCombatComponent* CombatComponent;
+
+	UFUNCTION()
+	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
+
+	UFUNCTION(Server, Reliable)
+	void ServerEquipButtonPressed();
+
+public:
+
+	void SetOverlappingWeapon(AWeapon* Weapon);
 	
 };
