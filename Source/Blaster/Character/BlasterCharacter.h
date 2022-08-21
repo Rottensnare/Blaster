@@ -32,6 +32,7 @@ protected:
 	void TurnAtRate(float Value);
 	void LookUpAtRate(float Value);
 	void EquipButtonPressed();
+	void CrouchButtonPressed();
 
 private:
 
