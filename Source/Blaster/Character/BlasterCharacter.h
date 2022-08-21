@@ -16,7 +16,6 @@ public:
 	ABlasterCharacter();
 	
 	virtual void Tick(float DeltaTime) override;
-
 	
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
@@ -38,6 +37,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Category = Camera)
 	class UCameraComponent* CameraComponent;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class UWidgetComponent* OverheadWidget;
 
 	//Turn rate for controller
 	UPROPERTY(EditAnywhere, Category = Camera)
