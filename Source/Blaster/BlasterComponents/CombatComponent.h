@@ -19,6 +19,7 @@ public:
 	friend class ABlasterCharacter; // ABlasterCharacter will have full access to this class, including protected and private sections
 
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
 	void EquipWeapon(class AWeapon* WeaponToEquip);
 
@@ -30,7 +31,7 @@ private:
 
 	UPROPERTY()
 	class ABlasterCharacter* Character;
-	UPROPERTY()
+	UPROPERTY(Replicated)
 	AWeapon* EquippedWeapon;
 	
 
