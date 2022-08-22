@@ -43,7 +43,7 @@ protected:
 	virtual void Jump() override;
 	
 	UFUNCTION(BlueprintCallable)
-	void Footstep();
+	EPhysicalSurface GetSurfaceType();
 
 private:
 

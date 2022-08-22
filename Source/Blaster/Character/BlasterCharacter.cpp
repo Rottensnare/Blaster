@@ -3,6 +3,7 @@
 
 #include "BlasterCharacter.h"
 
+#include "Blaster/Blaster.h"
 #include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Camera/CameraComponent.h"
@@ -12,6 +13,7 @@
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "PhysicalMaterials/PhysicalMaterial.h"
 
 
 // Sets default values
@@ -229,6 +231,19 @@ void ABlasterCharacter::Jump()
 	{
 		Super::Jump();
 	}
+}
+
+EPhysicalSurface ABlasterCharacter::GetSurfaceType()
+{
+	FHitResult HitResult;
+	const FVector Start{GetActorLocation()};
+	const FVector End{Start+FVector(0.f, 0.f, -400.f)};
+	FCollisionQueryParams QueryParams;
+	QueryParams.bReturnPhysicalMaterial = true;
+	GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_Visibility, QueryParams);
+	
+	return UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get());
+	
 }
 
 void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
