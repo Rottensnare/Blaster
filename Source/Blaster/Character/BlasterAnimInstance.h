@@ -58,9 +58,11 @@ private:
 
 	UPROPERTY(BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	FTransform LeftHandTransfrom;
-
+	
 	class AWeapon* EquippedWeapon;
 
+	UPROPERTY(BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
+	ETurningInPlace TurningInPlace;
 	
 
 	FRotator CharacterRotationLastFrame;
