@@ -41,6 +41,9 @@ protected:
 	void TurnInPlace(float DeltaTime);
 	
 	virtual void Jump() override;
+	
+	UFUNCTION(BlueprintCallable)
+	void Footstep();
 
 private:
 
