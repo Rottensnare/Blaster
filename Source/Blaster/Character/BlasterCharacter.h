@@ -36,6 +36,8 @@ protected:
 	void AimButtonPressed();
 	void AimButtonReleased();
 
+	void AimOffset(float DeltaTime);
+
 private:
 
 	UPROPERTY(VisibleAnywhere, Category = Camera)
@@ -71,6 +73,9 @@ private:
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
 	
+	float AO_Yaw; //For calculating aim offsets
+	float AO_Pitch;
+	FRotator StartingAimRotation;
 
 public:
 
@@ -78,5 +83,8 @@ public:
 
 	bool IsWeaponEquipped();
 	bool IsAiming();
+
+	FORCEINLINE float GetAOYaw() const {return AO_Yaw;}
+	FORCEINLINE float GetAOPitch() const {return AO_Pitch;}
 	
 };
