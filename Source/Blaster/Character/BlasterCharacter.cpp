@@ -46,6 +46,9 @@ TurningInPlace(ETurningInPlace::ETIP_NotTurning)
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+
+	NetUpdateFrequency = 66.f;
+	MinNetUpdateFrequency = 33.f;
 }
 
 // Called when the game starts or when spawned
@@ -215,6 +218,19 @@ void ABlasterCharacter::TurnInPlace(float DeltaTime)
 	}
 }
 
+void ABlasterCharacter::Jump()
+{
+	if(bIsCrouched)
+	{
+		UnCrouch();
+		Super::Jump();
+	}
+	else
+	{
+		Super::Jump();
+	}
+}
+
 void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 {
 	
@@ -297,7 +313,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAxis("Turn", this, &ABlasterCharacter::Turn);
 	PlayerInputComponent->BindAxis("LookUp", this, &ABlasterCharacter::LookUp);
 
-	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ABlasterCharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &ABlasterCharacter::EquipButtonPressed);
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ABlasterCharacter::CrouchButtonPressed);
