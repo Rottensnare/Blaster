@@ -239,6 +239,13 @@ bool ABlasterCharacter::IsAiming()
 	return (CombatComponent && CombatComponent->bAiming);
 }
 
+AWeapon* ABlasterCharacter::GetEquippedWeapon()
+{
+	if(CombatComponent == nullptr) return nullptr;
+
+	return CombatComponent->EquippedWeapon;
+}
+
 // Called every frame
 
 
