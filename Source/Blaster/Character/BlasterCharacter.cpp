@@ -124,9 +124,25 @@ void ABlasterCharacter::CrouchButtonPressed()
 	
 }
 
+void ABlasterCharacter::AimButtonPressed()
+{
+	if(CombatComponent)
+	{
+		CombatComponent->SetAiming(true);
+	}
+}
+
+
+void ABlasterCharacter::AimButtonReleased()
+{
+	if(CombatComponent)
+	{
+		CombatComponent->SetAiming(false);
+	}
+}
+
 void ABlasterCharacter::OnRep_OverlappingWeapon(AWeapon* LastWeapon)
 {
-	UE_LOG(LogTemp, Warning, TEXT("OnRep Called"))
 	
 	if(OverlappingWeapon)
 	{
@@ -178,6 +194,11 @@ bool ABlasterCharacter::IsWeaponEquipped()
 	return (CombatComponent && CombatComponent->EquippedWeapon);
 }
 
+bool ABlasterCharacter::IsAiming()
+{
+	return (CombatComponent && CombatComponent->bAiming);
+}
+
 // Called every frame
 
 
@@ -199,6 +220,8 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 	PlayerInputComponent->BindAction("Equip", IE_Pressed, this, &ABlasterCharacter::EquipButtonPressed);
 	PlayerInputComponent->BindAction("Crouch", IE_Pressed, this, &ABlasterCharacter::CrouchButtonPressed);
+	PlayerInputComponent->BindAction("Aim", IE_Pressed, this, &ABlasterCharacter::AimButtonPressed);
+	PlayerInputComponent->BindAction("Aim", IE_Released, this, &ABlasterCharacter::AimButtonReleased);
 
 }
 

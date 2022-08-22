@@ -33,6 +33,8 @@ protected:
 	void LookUpAtRate(float Value);
 	void EquipButtonPressed();
 	void CrouchButtonPressed();
+	void AimButtonPressed();
+	void AimButtonReleased();
 
 private:
 
@@ -68,11 +70,13 @@ private:
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
+	
 
 public:
 
 	void SetOverlappingWeapon(AWeapon* Weapon);
 
 	bool IsWeaponEquipped();
+	bool IsAiming();
 	
 };
