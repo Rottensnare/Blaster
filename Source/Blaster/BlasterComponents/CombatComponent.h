@@ -75,6 +75,11 @@ private:
 
 	float CrosshairVelocityFactor;
 	float CrosshairInAirFactor;
+	float CrosshairAimFactor;
+	float CrosshairShootFactor;
+
+	UPROPERTY(EditDefaultsOnly)
+	float RecoilRecoverySpeed{20.f};
 
 	float DefaultFOV; //Set in BeginPlay
 

@@ -72,6 +72,15 @@ private:
 	UPROPERTY(EditAnywhere)
 	float ZoomInterpSpeed{20.f};
 
+	UPROPERTY(EditDefaultsOnly)
+	float AimAccuracy{0.6f};
+
+	UPROPERTY(EditDefaultsOnly)
+	float MaxRecoil{2.f};
+
+	UPROPERTY(EditDefaultsOnly)
+	float RecoilPerShot{0.2f};
+
 public:
 
 	void SetWeaponState(EWeaponState State);
@@ -80,5 +89,8 @@ public:
 	FORCEINLINE TArray<UTexture2D*> GetCrosshairTextures() const {return Crosshairs;}
 	FORCEINLINE float GetZoomFOV() const {return ZoomedFOV;}
 	FORCEINLINE float GetZoomInterpSpeed() const {return ZoomInterpSpeed;}
+	FORCEINLINE float GetAimAccuracy() const {return AimAccuracy;}
+	FORCEINLINE float GetMaxRecoil() const {return MaxRecoil;}
+	FORCEINLINE float GetRecoilPerShot() const {return RecoilPerShot;}
 };
 

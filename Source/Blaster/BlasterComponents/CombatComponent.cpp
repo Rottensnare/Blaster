@@ -96,6 +96,10 @@ void UCombatComponent::FireButtonPressed(bool bPressed)
 		FHitResult HitResult;
 		TraceUnderCrosshairs(HitResult);
 		ServerFire(HitResult.ImpactPoint);
+		if(EquippedWeapon)
+		{
+			CrosshairShootFactor = FMath::Clamp(CrosshairShootFactor += EquippedWeapon->GetRecoilPerShot(), 0.f, EquippedWeapon->GetMaxRecoil());
+		}
 	}
 }
 
@@ -129,7 +133,7 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 
 void UCombatComponent::SetCrosshairsSpread(float DeltaTime)
 {
-	if(Character == nullptr || BlasterHUD == nullptr) return;
+	if(Character == nullptr || BlasterHUD == nullptr || EquippedWeapon == nullptr) return;
 	
 	FVector2D WalkSpeedRange{0.f, Character->GetCharacterMovement()->MaxWalkSpeed};
 	FVector2D VelocityMultiplierRange(0.f, 1.f);
@@ -145,8 +149,19 @@ void UCombatComponent::SetCrosshairsSpread(float DeltaTime)
 	{
 		CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor, 0.f, DeltaTime, 10.f);
 	}
+	if(bAiming)
+	{
+		CrosshairAimFactor = FMath::FInterpTo(CrosshairAimFactor,  EquippedWeapon->GetAimAccuracy(), DeltaTime, 30.f);
+	}
+	else
+	{
+		CrosshairAimFactor = FMath::FInterpTo(CrosshairAimFactor,  0.f, DeltaTime, 30.f);
+	}
+
+	CrosshairShootFactor = FMath::FInterpTo(CrosshairShootFactor, 0.f, DeltaTime, RecoilRecoverySpeed);
 	
-	BlasterHUD->SetCrosshairSpread(CrosshairVelocityFactor + CrosshairInAirFactor);
+	const float Spread = FMath::Clamp((0.7f + CrosshairVelocityFactor + CrosshairShootFactor + CrosshairInAirFactor - CrosshairAimFactor), 0.f, 5.f);
+	BlasterHUD->SetCrosshairSpread(Spread);
 }
 
 void UCombatComponent::InterpFOV(float DeltaTime)
