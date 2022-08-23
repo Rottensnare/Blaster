@@ -105,7 +105,9 @@ public:
 	FORCEINLINE float GetAOYaw() const {return AO_Yaw;}
 	FORCEINLINE float GetAOPitch() const {return AO_Pitch;}
 	FORCEINLINE ETurningInPlace GetTurnInPlace() const {return TurningInPlace;}
+	FORCEINLINE UCameraComponent* GetCameraComponent() const {return CameraComponent;}
 	AWeapon* GetEquippedWeapon();
 	FVector GetHitTarget() const;
+	
 	
 };

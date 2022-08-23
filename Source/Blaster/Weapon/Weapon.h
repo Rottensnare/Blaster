@@ -66,11 +66,19 @@ private:
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
 	TArray<class UTexture2D*> Crosshairs;
 
+	UPROPERTY(EditAnywhere)
+	float ZoomedFOV{30.f};
+
+	UPROPERTY(EditAnywhere)
+	float ZoomInterpSpeed{20.f};
+
 public:
 
 	void SetWeaponState(EWeaponState State);
 	FORCEINLINE USphereComponent* GetAreaSphere() const {return AreaSphere;}
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const {return WeaponMesh;}
 	FORCEINLINE TArray<UTexture2D*> GetCrosshairTextures() const {return Crosshairs;}
+	FORCEINLINE float GetZoomFOV() const {return ZoomedFOV;}
+	FORCEINLINE float GetZoomInterpSpeed() const {return ZoomInterpSpeed;}
 };
 
