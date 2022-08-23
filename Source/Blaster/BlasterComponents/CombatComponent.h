@@ -47,7 +47,7 @@ protected:
 	
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
-	void SetHUDCrosshairs(float DeltaTime);
+	void SetCrosshairsSpread(float DeltaTime);
 
 private:
 
@@ -72,6 +72,9 @@ private:
 	bool bFireButtonPressed;
 
 	FVector HitTarget;
+
+	float CrosshairVelocityFactor;
+	float CrosshairInAirFactor;
 
 
 

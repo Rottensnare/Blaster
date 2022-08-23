@@ -327,10 +327,6 @@ AWeapon* ABlasterCharacter::GetEquippedWeapon()
 	return CombatComponent->EquippedWeapon;
 }
 
-// Called every frame
-
-
-// Called to bind functionality to input
 void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -377,6 +373,12 @@ void ABlasterCharacter::PlayFireMontage(bool bAiming)
 		SectionName = bAiming ? FName("RifleShoulder") : FName("RifleHip");
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
+}
+
+FVector ABlasterCharacter::GetHitTarget() const
+{
+	if(CombatComponent == nullptr) return  FVector();
+	return CombatComponent->HitTarget;
 }
 
 void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

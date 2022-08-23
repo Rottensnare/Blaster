@@ -34,7 +34,6 @@ void UCombatComponent::BeginPlay()
 	{
 		Character->GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
 	}
-	
 }
 
 // Called every frame
@@ -42,7 +41,13 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	SetHUDCrosshairs(DeltaTime);
+	SetCrosshairsSpread(DeltaTime);
+	if (Character && Character->IsLocallyControlled())
+	{
+		FHitResult HitResult;
+		TraceUnderCrosshairs(HitResult);
+		HitTarget = HitResult.ImpactPoint;
+	}
 }
 
 void UCombatComponent::SetAiming(bool bIsAiming)
@@ -112,9 +117,26 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 	}
 }
 
-void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
+void UCombatComponent::SetCrosshairsSpread(float DeltaTime)
 {
+	if(Character == nullptr || BlasterHUD == nullptr) return;
 	
+	FVector2D WalkSpeedRange{0.f, Character->GetCharacterMovement()->MaxWalkSpeed};
+	FVector2D VelocityMultiplierRange(0.f, 1.f);
+	FVector Velocity = Character->GetVelocity();
+	Velocity.Z = 0.f;
+	
+	CrosshairVelocityFactor = FMath::GetMappedRangeValueClamped(WalkSpeedRange, VelocityMultiplierRange, Velocity.Size());
+
+	if(Character->GetMovementComponent()->IsFalling())
+	{
+		CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor, 1.75f, DeltaTime, 10.f);
+	}else
+	{
+		CrosshairInAirFactor = FMath::FInterpTo(CrosshairInAirFactor, 0.f, DeltaTime, 10.f);
+	}
+	
+	BlasterHUD->SetCrosshairSpread(CrosshairVelocityFactor + CrosshairInAirFactor);
 }
 
 void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
@@ -161,6 +183,7 @@ bool UCombatComponent::SetCrosshairs()
 				HUDPackage.CrosshairsRight = nullptr;
 				
 			}
+			
 			BlasterHUD->SetHUDPackage(HUDPackage);
 			return true;
 			
