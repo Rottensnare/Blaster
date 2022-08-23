@@ -48,6 +48,7 @@ TurningInPlace(ETurningInPlace::ETIP_NotTurning)
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
+	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
 
 	NetUpdateFrequency = 66.f;
 	MinNetUpdateFrequency = 33.f;
@@ -65,6 +66,7 @@ void ABlasterCharacter::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	AimOffset(DeltaTime);
+	HideCharacter();
 }
 
 void ABlasterCharacter::MoveForward(float Value)
@@ -118,6 +120,7 @@ void ABlasterCharacter::EquipButtonPressed()
 		else
 		{
 			ServerEquipButtonPressed();
+			CombatComponent->SetCrosshairs();
 		}
 	}
 }
@@ -240,6 +243,7 @@ EPhysicalSurface ABlasterCharacter::GetSurfaceType()
 	const FVector End{Start+FVector(0.f, 0.f, -400.f)};
 	FCollisionQueryParams QueryParams;
 	QueryParams.bReturnPhysicalMaterial = true;
+	QueryParams.AddIgnoredActor(this);
 	GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECollisionChannel::ECC_Visibility, QueryParams);
 	
 	return UPhysicalMaterial::DetermineSurfaceType(HitResult.PhysMaterial.Get());
@@ -281,6 +285,27 @@ void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
 	if(CombatComponent)
 	{
 		CombatComponent->EquipWeapon(OverlappingWeapon);
+	}
+}
+
+void ABlasterCharacter::HideCharacter()
+{
+	if(!IsLocallyControlled()) return;
+	if((CameraComponent->GetComponentLocation() - GetActorLocation()).Size() < CharacterHideThreshold)
+	{
+		GetMesh()->SetVisibility(false);
+		if(CombatComponent && CombatComponent->EquippedWeapon && CombatComponent->EquippedWeapon->GetWeaponMesh())
+		{
+			CombatComponent->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = true;
+		}
+	}
+	else
+	{
+		GetMesh()->SetVisibility(true);
+		if(CombatComponent && CombatComponent->EquippedWeapon && CombatComponent->EquippedWeapon->GetWeaponMesh())
+		{
+			CombatComponent->EquippedWeapon->GetWeaponMesh()->bOwnerNoSee = false;
+		}
 	}
 }
 

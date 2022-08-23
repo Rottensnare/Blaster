@@ -40,9 +40,11 @@ private:
 	float CrosshairSpreadMax{16.f};
 	float CrosshairSpread;
 
+	FLinearColor CrosshairColor{FLinearColor::White};
 public:
 
 	FORCEINLINE void SetHUDPackage(const FHUDPackage& Package) {HUDPackage = Package;}
 	FORCEINLINE void SetCrosshairSpread(const float Spread) {CrosshairSpread = Spread;}
+	FORCEINLINE void SetCrosshairColor(FLinearColor Color) {CrosshairColor = Color;}
 	
 };

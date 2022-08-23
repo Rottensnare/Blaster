@@ -5,10 +5,11 @@
 #include "CoreMinimal.h"
 #include "Blaster/TurningInPlace.h"
 #include "GameFramework/Character.h"
+#include "Blaster/Interfaces/InteractWithCrosshairsInterface.h"
 #include "BlasterCharacter.generated.h"
 
 UCLASS()
-class BLASTER_API ABlasterCharacter : public ACharacter
+class BLASTER_API ABlasterCharacter : public ACharacter, public IInteractWithCrosshairsInterface
 {
 	GENERATED_BODY()
 
@@ -94,6 +95,13 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* FireWeaponMontage;
+
+	//Setting character invisible if camera gets too close
+	void HideCharacter();
+
+	//The distance to the camera at which the character should be set invisible.
+	UPROPERTY(EditDefaultsOnly)
+	float CharacterHideThreshold;
 
 public:
 
