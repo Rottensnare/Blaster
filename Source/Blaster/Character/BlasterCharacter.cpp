@@ -46,10 +46,11 @@ TurningInPlace(ETurningInPlace::ETIP_NotTurning)
 	CombatComponent->SetIsReplicated(true);
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
+	GetMesh()->SetCollisionObjectType(ECC_SkeletalMesh);
 	GetCapsuleComponent()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECollisionResponse::ECR_Ignore);
 	GetMesh()->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECollisionResponse::ECR_Block);
-
+	
 	NetUpdateFrequency = 66.f;
 	MinNetUpdateFrequency = 33.f;
 }
@@ -288,6 +289,11 @@ void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
 	}
 }
 
+void ABlasterCharacter::MulticastHit_Implementation()
+{
+	PlayHitReactMontage();
+}
+
 void ABlasterCharacter::HideCharacter()
 {
 	if(!IsLocallyControlled()) return;
@@ -396,6 +402,19 @@ void ABlasterCharacter::PlayFireMontage(bool bAiming)
 		AnimInstance->Montage_Play(FireWeaponMontage);
 		FName SectionName;
 		SectionName = bAiming ? FName("RifleShoulder") : FName("RifleHip");
+		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
+
+void ABlasterCharacter::PlayHitReactMontage()
+{
+	if(CombatComponent == nullptr || CombatComponent->EquippedWeapon == nullptr) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if(AnimInstance && HitReactMontage)
+	{
+		AnimInstance->Montage_Play(HitReactMontage);
+		FName SectionName{FName("HitReactFront")};
 		AnimInstance->Montage_JumpToSection(SectionName);
 	}
 }

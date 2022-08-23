@@ -24,6 +24,9 @@ public:
 	virtual void PostInitializeComponents() override;
 
 	void PlayFireMontage(bool bAiming);
+	
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastHit();
 
 protected:
 	// Called when the game starts or when spawned
@@ -50,6 +53,8 @@ protected:
 
 	void FireButtonPressed();
 	void FireButtonReleased();
+
+	void PlayHitReactMontage();
 
 private:
 
@@ -96,6 +101,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* FireWeaponMontage;
 
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* HitReactMontage;
+	
 	//Setting character invisible if camera gets too close
 	void HideCharacter();
 
