@@ -63,10 +63,14 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class ACasing> CasingClass;
 
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	TArray<class UTexture2D*> Crosshairs;
+
 public:
 
 	void SetWeaponState(EWeaponState State);
 	FORCEINLINE USphereComponent* GetAreaSphere() const {return AreaSphere;}
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const {return WeaponMesh;}
+	FORCEINLINE TArray<UTexture2D*> GetCrosshairTextures() const {return Crosshairs;}
 };
 

@@ -3,7 +3,9 @@
 
 #include "CombatComponent.h"
 
+#include "Blaster/BlasterPlayerController.h"
 #include "Blaster/Character/BlasterCharacter.h"
+#include "Blaster/HUD/BlasterHUD.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Components/SphereComponent.h"
 #include "Engine/SkeletalMeshSocket.h"
@@ -40,7 +42,7 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
-	
+	SetHUDCrosshairs(DeltaTime);
 }
 
 void UCombatComponent::SetAiming(bool bIsAiming)
@@ -110,6 +112,11 @@ void UCombatComponent::TraceUnderCrosshairs(FHitResult& TraceHitResult)
 	}
 }
 
+void UCombatComponent::SetHUDCrosshairs(float DeltaTime)
+{
+	
+}
+
 void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
 	if(EquippedWeapon == nullptr) return;
@@ -124,6 +131,42 @@ void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& T
 void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
 	MulticastFire(TraceHitTarget);
+}
+
+bool UCombatComponent::SetCrosshairs()
+{
+	if(Character == nullptr || Character->Controller == nullptr) return false;
+
+	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : BlasterPlayerController;
+	if(BlasterPlayerController)
+	{
+		BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(BlasterPlayerController->GetHUD()) : BlasterHUD;
+		if(BlasterHUD)
+		{
+			FHUDPackage HUDPackage;
+			if (EquippedWeapon)
+			{
+				
+				HUDPackage.CrosshairsCenter = EquippedWeapon->GetCrosshairTextures()[0];
+				HUDPackage.CrosshairsTop = EquippedWeapon->GetCrosshairTextures()[1];
+				HUDPackage.CrosshairsBottom = EquippedWeapon->GetCrosshairTextures()[2];
+				HUDPackage.CrosshairsLeft = EquippedWeapon->GetCrosshairTextures()[3];
+				HUDPackage.CrosshairsRight = EquippedWeapon->GetCrosshairTextures()[4];
+			}else
+			{
+				HUDPackage.CrosshairsCenter = nullptr;
+				HUDPackage.CrosshairsTop = nullptr;
+				HUDPackage.CrosshairsBottom = nullptr;
+				HUDPackage.CrosshairsLeft = nullptr;
+				HUDPackage.CrosshairsRight = nullptr;
+				
+			}
+			BlasterHUD->SetHUDPackage(HUDPackage);
+			return true;
+			
+		}
+	}
+	return false;
 }
 
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
@@ -142,6 +185,9 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
+
+
+	SetCrosshairs();
 	
 }
 

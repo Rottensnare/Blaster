@@ -21,6 +21,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	bool SetCrosshairs();
 	void EquipWeapon(class AWeapon* WeaponToEquip);
 
 
@@ -43,14 +44,20 @@ protected:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastFire(const FVector_NetQuantize& TraceHitTarget );
-
-
+	
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
+
+	void SetHUDCrosshairs(float DeltaTime);
 
 private:
 
 	UPROPERTY()
 	class ABlasterCharacter* Character;
+	UPROPERTY()
+	class ABlasterPlayerController* BlasterPlayerController;
+	UPROPERTY()
+	class ABlasterHUD* BlasterHUD;
+	
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
 
