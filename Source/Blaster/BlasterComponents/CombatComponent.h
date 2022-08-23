@@ -23,6 +23,7 @@ public:
 
 	void EquipWeapon(class AWeapon* WeaponToEquip);
 
+
 protected:
 	// Called when the game starts
 	virtual void BeginPlay() override;
@@ -34,6 +35,17 @@ protected:
 
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
+
+	void FireButtonPressed(bool bPressed);
+
+	UFUNCTION(Server, Reliable)
+	void ServerFire(const FVector_NetQuantize& TraceHitTarget );
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastFire(const FVector_NetQuantize& TraceHitTarget );
+
+
+	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
 private:
 
@@ -49,6 +61,12 @@ private:
 	float BaseWalkSpeed;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	float AimWalkSpeed;
+
+	bool bFireButtonPressed;
+
+	FVector HitTarget;
+
+
 
 		
 };

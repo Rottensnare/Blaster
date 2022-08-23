@@ -11,3 +11,4 @@
 #define EPS_Water EPhysicalSurface::SurfaceType5
 #define EPS_Grass EPhysicalSurface::SurfaceType6
 
+//TODO: Create an array of random vectors to use
