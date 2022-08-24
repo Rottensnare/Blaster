@@ -189,8 +189,8 @@ float ABlasterCharacter::CalculateSpeed()
 void ABlasterCharacter::AimOffset(float DeltaTime)
 {
 	
-	if(CombatComponent && CombatComponent->EquippedWeapon == nullptr) return; 
-	UE_LOG(LogTemp, Warning, TEXT("AimOffset"))
+	if(CombatComponent && CombatComponent->EquippedWeapon == nullptr) return;
+	
 	float Speed = CalculateSpeed();
 	bool bIsInAir = GetCharacterMovement()->IsFalling();
 
@@ -249,8 +249,6 @@ void ABlasterCharacter::SimProxiesTurn()
 	ProxyRotationLastFrame = ProxyRotation;
 	ProxyRotation = GetActorRotation();
 	ProxyYaw = UKismetMathLibrary::NormalizedDeltaRotator(ProxyRotation, ProxyRotationLastFrame).Yaw;
-
-	UE_LOG(LogTemp, Warning, TEXT("ProxyYaw: %f"), ProxyYaw)
 	
 	if (FMath::Abs(ProxyYaw) > TurnThreshold)
 	{
@@ -366,6 +364,7 @@ void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
 void ABlasterCharacter::MulticastHit_Implementation()
 {
 	PlayHitReactMontage();
+	
 }
 
 void ABlasterCharacter::HideCharacter()

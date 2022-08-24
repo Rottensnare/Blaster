@@ -81,6 +81,12 @@ private:
 	UPROPERTY(EditDefaultsOnly)
 	float RecoilPerShot{0.2f};
 
+	UPROPERTY(EditAnywhere, Category = Combat)
+	bool bAutomatic{true};
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float FireDelay{.15f};
+	
 public:
 
 	void SetWeaponState(EWeaponState State);
@@ -92,5 +98,7 @@ public:
 	FORCEINLINE float GetAimAccuracy() const {return AimAccuracy;}
 	FORCEINLINE float GetMaxRecoil() const {return MaxRecoil;}
 	FORCEINLINE float GetRecoilPerShot() const {return RecoilPerShot;}
+	FORCEINLINE bool IsAutomatic() const {return bAutomatic;}
+	FORCEINLINE float GetFireDelay() const {return FireDelay;}
 };
 

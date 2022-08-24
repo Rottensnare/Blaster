@@ -8,6 +8,7 @@
 #include "Components/BoxComponent.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Net/UnrealNetwork.h"
 #include "Sound/SoundCue.h"
 
 // Sets default values
@@ -40,11 +41,20 @@ void AProjectile::BeginPlay()
 	{
 		CollisionBox->OnComponentHit.AddDynamic(this, &AProjectile::OnHit);
 	}
+	
+	CollisionBox->OnComponentHit.AddDynamic(this, &AProjectile::OnHitClient);
+	
 
 	if(Tracer)
 	{
 		TracerComponent = UGameplayStatics::SpawnEmitterAttached(Tracer, CollisionBox, NAME_None, GetActorLocation(), GetActorRotation(), EAttachLocation::KeepWorldPosition);
 	}
+}
+
+void AProjectile::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
 }
 
 void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
@@ -55,12 +65,40 @@ void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimi
 	{
 		BlasterCharacter->MulticastHit();
 	}
+	MulticastSetImpactEffects(OtherActor);
 	
 	Destroy();
 }
 
+void AProjectile::OnHitClient(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& HitResult)
+{
+	ServerSetImpactEffects(OtherActor);
+}
+
+void AProjectile::ServerSetImpactEffects(AActor* OtherActor)
+{
+	MulticastSetImpactEffects(OtherActor);
+}
+
+void AProjectile::MulticastSetImpactEffects(AActor* OtherActor)
+{
+	ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(OtherActor);
+	if(BlasterCharacter)
+	{
+		ImpactParticles = CharacterImpactParticles;
+		ImpactSound = CharacterImpactSound;
+	}
+	else
+	{
+		ImpactParticles = MetalImpactParticles;
+		ImpactSound = MetalImpactSound;
+	}
+}
+
+
 void AProjectile::Destroyed() //Replicated to clients
 {
+	
 	if(ImpactParticles)
 	{
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, GetActorTransform());
@@ -71,10 +109,5 @@ void AProjectile::Destroyed() //Replicated to clients
 	}
 }
 
-// Called every frame
-void AProjectile::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 
-}
 

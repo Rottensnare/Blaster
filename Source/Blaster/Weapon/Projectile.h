@@ -17,13 +17,19 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	virtual void Destroyed() override;
 
+
 protected:
 
 	virtual void BeginPlay() override;
 
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& HitResult);
-
+	UFUNCTION()
+	virtual void OnHitClient(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& HitResult);
+	
+	void ServerSetImpactEffects(AActor* OtherActor);
+	
+	void MulticastSetImpactEffects(AActor* OtherActor);
 
 private:
 
@@ -38,11 +44,23 @@ private:
 	
 	class UParticleSystemComponent* TracerComponent;
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(VisibleAnywhere)
 	UParticleSystem* ImpactParticles;
 
 	UPROPERTY(EditAnywhere)
+	UParticleSystem* CharacterImpactParticles;
+
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* MetalImpactParticles;
+	
+	UPROPERTY(VisibleAnywhere)
 	class USoundCue* ImpactSound;
+
+	UPROPERTY(EditAnywhere)
+	USoundCue* CharacterImpactSound;
+
+	UPROPERTY(EditAnywhere)
+	USoundCue* MetalImpactSound;
 
 public:
 	
