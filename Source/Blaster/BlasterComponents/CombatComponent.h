@@ -21,6 +21,7 @@ public:
 	virtual void TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+	bool SetCrosshairs();
 	void EquipWeapon(class AWeapon* WeaponToEquip);
 
 
@@ -35,6 +36,7 @@ protected:
 
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
+	void Fire();
 
 	void FireButtonPressed(bool bPressed);
 
@@ -43,14 +45,20 @@ protected:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastFire(const FVector_NetQuantize& TraceHitTarget );
-
-
+	
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
+
+	void SetCrosshairsSpread(float DeltaTime);
 
 private:
 
 	UPROPERTY()
 	class ABlasterCharacter* Character;
+	UPROPERTY()
+	class ABlasterPlayerController* BlasterPlayerController;
+	UPROPERTY()
+	class ABlasterHUD* BlasterHUD;
+	
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
 	AWeapon* EquippedWeapon;
 
@@ -66,7 +74,30 @@ private:
 
 	FVector HitTarget;
 
+	float CrosshairVelocityFactor;
+	float CrosshairInAirFactor;
+	float CrosshairAimFactor;
+	float CrosshairShootFactor;
 
+	UPROPERTY(EditDefaultsOnly)
+	float RecoilRecoverySpeed{20.f};
 
-		
+	float DefaultFOV; //Set in BeginPlay
+
+	float CurrentFOV;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float ZoomedFOV{30.f};
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float ZoomInterpSpeed{20.f};
+
+	void InterpFOV(float DeltaTime);
+
+	FTimerHandle FireTimer;
+
+	void StartFireTimer();
+	void FireTimerFinished();
+	
+	bool bCanFire{true};
 };

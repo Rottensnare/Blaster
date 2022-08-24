@@ -5,10 +5,11 @@
 #include "CoreMinimal.h"
 #include "Blaster/TurningInPlace.h"
 #include "GameFramework/Character.h"
+#include "Blaster/Interfaces/InteractWithCrosshairsInterface.h"
 #include "BlasterCharacter.generated.h"
 
 UCLASS()
-class BLASTER_API ABlasterCharacter : public ACharacter
+class BLASTER_API ABlasterCharacter : public ACharacter, public IInteractWithCrosshairsInterface
 {
 	GENERATED_BODY()
 
@@ -23,7 +24,12 @@ public:
 	virtual void PostInitializeComponents() override;
 
 	void PlayFireMontage(bool bAiming);
+	
+	UFUNCTION(NetMulticast, Unreliable)
+	void MulticastHit();
 
+	virtual void OnRep_ReplicatedMovement() override;
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -38,8 +44,11 @@ protected:
 	void CrouchButtonPressed();
 	void AimButtonPressed();
 	void AimButtonReleased();
+	float CalculateSpeed();
+	void CalculateAO_Pitch();
 
 	void AimOffset(float DeltaTime);
+	void SimProxiesTurn();
 	void TurnInPlace(float DeltaTime);
 	
 	virtual void Jump() override;
@@ -49,6 +58,8 @@ protected:
 
 	void FireButtonPressed();
 	void FireButtonReleased();
+
+	void PlayHitReactMontage();
 
 private:
 
@@ -95,6 +106,23 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* FireWeaponMontage;
 
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* HitReactMontage;
+	
+	//Setting character invisible if camera gets too close
+	void HideCharacter();
+
+	//The distance to the camera at which the character should be set invisible.
+	UPROPERTY(EditDefaultsOnly)
+	float CharacterHideThreshold;
+
+	bool bRotateRootBone;
+	float TurnThreshold{0.5f};
+	FRotator ProxyRotationLastFrame;
+	FRotator ProxyRotation;
+	float ProxyYaw;
+	float TimeSinceLastMovementReplication;
+	
 public:
 
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -105,7 +133,10 @@ public:
 	FORCEINLINE float GetAOYaw() const {return AO_Yaw;}
 	FORCEINLINE float GetAOPitch() const {return AO_Pitch;}
 	FORCEINLINE ETurningInPlace GetTurnInPlace() const {return TurningInPlace;}
+	FORCEINLINE UCameraComponent* GetCameraComponent() const {return CameraComponent;}
+	FORCEINLINE bool ShouldRotateRootBone() const {return bRotateRootBone;}
 	AWeapon* GetEquippedWeapon();
+	FVector GetHitTarget() const;
 	
 	
 };

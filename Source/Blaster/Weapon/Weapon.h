@@ -63,10 +63,42 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class ACasing> CasingClass;
 
+	UPROPERTY(EditAnywhere, Category = Crosshairs)
+	TArray<class UTexture2D*> Crosshairs;
+
+	UPROPERTY(EditAnywhere)
+	float ZoomedFOV{30.f};
+
+	UPROPERTY(EditAnywhere)
+	float ZoomInterpSpeed{20.f};
+
+	UPROPERTY(EditDefaultsOnly)
+	float AimAccuracy{0.6f};
+
+	UPROPERTY(EditDefaultsOnly)
+	float MaxRecoil{2.f};
+
+	UPROPERTY(EditDefaultsOnly)
+	float RecoilPerShot{0.2f};
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	bool bAutomatic{true};
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float FireDelay{.15f};
+	
 public:
 
 	void SetWeaponState(EWeaponState State);
 	FORCEINLINE USphereComponent* GetAreaSphere() const {return AreaSphere;}
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const {return WeaponMesh;}
+	FORCEINLINE TArray<UTexture2D*> GetCrosshairTextures() const {return Crosshairs;}
+	FORCEINLINE float GetZoomFOV() const {return ZoomedFOV;}
+	FORCEINLINE float GetZoomInterpSpeed() const {return ZoomInterpSpeed;}
+	FORCEINLINE float GetAimAccuracy() const {return AimAccuracy;}
+	FORCEINLINE float GetMaxRecoil() const {return MaxRecoil;}
+	FORCEINLINE float GetRecoilPerShot() const {return RecoilPerShot;}
+	FORCEINLINE bool IsAutomatic() const {return bAutomatic;}
+	FORCEINLINE float GetFireDelay() const {return FireDelay;}
 };
 
