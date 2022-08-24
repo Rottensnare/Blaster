@@ -122,6 +122,18 @@ private:
 	FRotator ProxyRotation;
 	float ProxyYaw;
 	float TimeSinceLastMovementReplication;
+
+
+	UPROPERTY(EditAnywhere, Category = "Player Status")
+	float MaxHealth{100.f};
+
+	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Status")
+	float Health;
+
+	UFUNCTION()
+	void OnRep_Health();
+
+	class ABlasterPlayerController* BlasterPlayerController;
 	
 public:
 

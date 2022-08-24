@@ -30,6 +30,16 @@ public:
 
 	virtual void DrawHUD() override;
 
+	UPROPERTY(EditAnywhere, Category = "Player Status")
+	TSubclassOf<class UUserWidget> CharacterOverlayClass;
+	
+	class UCharacterOverlay* BlasterOverlay;
+
+protected:
+
+	virtual void BeginPlay() override;
+	void AddCharacterOverlay();
+
 private:
 
 	FHUDPackage HUDPackage;
