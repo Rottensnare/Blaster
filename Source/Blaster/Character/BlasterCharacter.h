@@ -28,6 +28,8 @@ public:
 	UFUNCTION(NetMulticast, Unreliable)
 	void MulticastHit();
 
+	virtual void OnRep_ReplicatedMovement() override;
+	
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -42,8 +44,11 @@ protected:
 	void CrouchButtonPressed();
 	void AimButtonPressed();
 	void AimButtonReleased();
+	float CalculateSpeed();
+	void CalculateAO_Pitch();
 
 	void AimOffset(float DeltaTime);
+	void SimProxiesTurn();
 	void TurnInPlace(float DeltaTime);
 	
 	virtual void Jump() override;
@@ -111,6 +116,13 @@ private:
 	UPROPERTY(EditDefaultsOnly)
 	float CharacterHideThreshold;
 
+	bool bRotateRootBone;
+	float TurnThreshold{0.5f};
+	FRotator ProxyRotationLastFrame;
+	FRotator ProxyRotation;
+	float ProxyYaw;
+	float TimeSinceLastMovementReplication;
+	
 public:
 
 	void SetOverlappingWeapon(AWeapon* Weapon);
@@ -122,6 +134,7 @@ public:
 	FORCEINLINE float GetAOPitch() const {return AO_Pitch;}
 	FORCEINLINE ETurningInPlace GetTurnInPlace() const {return TurningInPlace;}
 	FORCEINLINE UCameraComponent* GetCameraComponent() const {return CameraComponent;}
+	FORCEINLINE bool ShouldRotateRootBone() const {return bRotateRootBone;}
 	AWeapon* GetEquippedWeapon();
 	FVector GetHitTarget() const;
 	
