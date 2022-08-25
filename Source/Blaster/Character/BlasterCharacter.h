@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Blaster/TurningInPlace.h"
+#include "Blaster/BlasterComponents/CombatState.h"
 #include "GameFramework/Character.h"
 #include "Blaster/Interfaces/InteractWithCrosshairsInterface.h"
 #include "Components/TimelineComponent.h"
@@ -25,6 +26,7 @@ public:
 	virtual void PostInitializeComponents() override;
 
 	void PlayFireMontage(bool bAiming);
+	void PlayReloadMontage();
 	
 	virtual void OnRep_ReplicatedMovement() override;
 	void UpdateHUDHealth();
@@ -49,6 +51,7 @@ protected:
 	void CrouchButtonPressed();
 	void AimButtonPressed();
 	void AimButtonReleased();
+	void ReloadButtonPressed();
 	float CalculateSpeed();
 	void CalculateAO_Pitch();
 
@@ -98,7 +101,7 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_OverlappingWeapon)
 	class AWeapon* OverlappingWeapon;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UCombatComponent* CombatComponent;
 
 	UFUNCTION()
@@ -122,6 +125,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* EliminationMontage;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* ReloadMontage;
 
 	
 	//Setting character invisible if camera gets too close
@@ -188,6 +194,7 @@ private:
 
 	UPROPERTY()
 	class ABlasterPlayerState* BlasterPlayerState;
+
 	
 public:
 
@@ -204,8 +211,10 @@ public:
 	FORCEINLINE bool IsEliminated() const {return bEliminated;}
 	FORCEINLINE float GetHealth() const {return Health;}
 	FORCEINLINE float GetMaxHealth() const {return MaxHealth;}
+	FORCEINLINE int32 GetTotalAmmo() const;
 	AWeapon* GetEquippedWeapon();
 	FVector GetHitTarget() const;
+	ECombatState GetCombatState() const;
 	
 	
 };

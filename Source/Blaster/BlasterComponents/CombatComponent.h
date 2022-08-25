@@ -3,6 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "CombatState.h"
+#include "Blaster/Weapon/WeaponType.h"
 #include "Components/ActorComponent.h"
 #include "CombatComponent.generated.h"
 
@@ -23,6 +25,9 @@ public:
 
 	bool SetCrosshairs();
 	void EquipWeapon(class AWeapon* WeaponToEquip);
+	void Reload();
+	UFUNCTION(BlueprintCallable)
+	void FinishReloading();
 
 
 protected:
@@ -49,6 +54,11 @@ protected:
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
 	void SetCrosshairsSpread(float DeltaTime);
+
+	UFUNCTION(Server, Reliable)
+	void ServerReload();
+
+	void HandleReload();
 
 private:
 
@@ -100,4 +110,28 @@ private:
 	void FireTimerFinished();
 	
 	bool bCanFire{true};
+
+	bool CanFire();
+
+	//For current WeaponType
+	UPROPERTY(EditAnywhere , ReplicatedUsing = OnRep_CarriedAmmo)
+	int32 TotalAmmo;
+
+	UFUNCTION()
+	void OnRep_CarriedAmmo();
+
+	TMap<EWeaponType, int32> CarriedAmmoMap;
+	int32 StartingARAmmo{60};
+	void InitializeCarriedAmmo();
+
+	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
+	ECombatState CombatState{ECombatState::ECS_Unoccupied};
+
+	UFUNCTION()
+	void OnRep_CombatState();
+	
+
+public:
+
+	FORCEINLINE int32 GetTotalAmmo() const {return TotalAmmo;}
 };

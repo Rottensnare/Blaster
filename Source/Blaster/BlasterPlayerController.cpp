@@ -101,7 +101,7 @@ void ABlasterPlayerController::SetHUDMagText(int32 MagAmmo)
 
 	if(bIsHUDValid)
 	{
-		FString MagAmmoText = FString::Printf(TEXT("%d"), MagAmmo);
+		FString MagAmmoText = FString::Printf(TEXT("/ %d"), MagAmmo);
 		BlasterHUD->BlasterOverlay->MagText->SetText(FText::FromString(MagAmmoText));
 	}
 }

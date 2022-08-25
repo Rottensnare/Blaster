@@ -24,8 +24,8 @@
 
 // Sets default values
 ABlasterCharacter::ABlasterCharacter():
-BaseTurnRate(10.f),
-BaseLookUpRate(10.f),
+BaseTurnRate(75.f),
+BaseLookUpRate(75.f),
 MouseXSensitivity(1.f),
 MouseYSensitivity(1.f),
 TurningInPlace(ETurningInPlace::ETIP_NotTurning)
@@ -193,6 +193,14 @@ void ABlasterCharacter::AimButtonReleased()
 	if(CombatComponent)
 	{
 		CombatComponent->SetAiming(false);
+	}
+}
+
+void ABlasterCharacter::ReloadButtonPressed()
+{
+	if(CombatComponent)
+	{
+		CombatComponent->Reload();
 	}
 }
 
@@ -461,6 +469,12 @@ bool ABlasterCharacter::IsAiming()
 	return (CombatComponent && CombatComponent->bAiming);
 }
 
+int32 ABlasterCharacter::GetTotalAmmo() const
+{
+	if(CombatComponent == nullptr) return 0;
+	return CombatComponent->GetTotalAmmo();
+}
+
 AWeapon* ABlasterCharacter::GetEquippedWeapon()
 {
 	if(CombatComponent == nullptr) return nullptr;
@@ -489,6 +503,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction("Aim", IE_Released, this, &ABlasterCharacter::AimButtonReleased);
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ABlasterCharacter::FireButtonPressed);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ABlasterCharacter::FireButtonReleased);
+	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &ABlasterCharacter::ReloadButtonPressed);
 
 }
 
@@ -513,6 +528,29 @@ void ABlasterCharacter::PlayFireMontage(bool bAiming)
 		FName SectionName;
 		SectionName = bAiming ? FName("RifleShoulder") : FName("RifleHip");
 		AnimInstance->Montage_JumpToSection(SectionName);
+	}
+}
+
+void ABlasterCharacter::PlayReloadMontage()
+{
+	if(CombatComponent == nullptr || CombatComponent->EquippedWeapon == nullptr) return;
+
+	UAnimInstance* AnimInstance = GetMesh()->GetAnimInstance();
+	if(AnimInstance && ReloadMontage)
+	{
+		AnimInstance->Montage_Play(ReloadMontage);
+		FName SectionName;
+		switch (CombatComponent->EquippedWeapon->GetWeaponType())
+		{
+		case EWeaponType::EWT_AssaultRifle:
+			//SectionName = FName("ReloadARHip");
+			//AnimInstance->Montage_JumpToSection(SectionName);
+			break;
+		case EWeaponType::EWT_SubmachineGun:
+			break;
+		default:
+			break;
+		}
 	}
 }
 
@@ -569,6 +607,13 @@ FVector ABlasterCharacter::GetHitTarget() const
 	return CombatComponent->HitTarget;
 }
 
+ECombatState ABlasterCharacter::GetCombatState() const
+{
+	if(CombatComponent == nullptr) return ECombatState::ECS_MAX;
+	return CombatComponent->CombatState;
+	
+}
+
 void ABlasterCharacter::UpdateHUDHealth()
 {
 	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
@@ -583,6 +628,8 @@ void ABlasterCharacter::MulticastElim_Implementation()
 	if(BlasterPlayerController)
 	{
 		BlasterPlayerController->SetHUDAmmo(0);
+		BlasterPlayerController->SetHUDMagText(0);
+		BlasterPlayerController->SetHUDTotalAmmo(0);
 	}
 	
 	bEliminated = true;

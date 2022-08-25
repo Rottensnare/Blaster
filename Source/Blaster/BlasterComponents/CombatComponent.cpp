@@ -41,6 +41,10 @@ void UCombatComponent::BeginPlay()
 			CurrentFOV = DefaultFOV;
 		}
 	}
+	if(Character->HasAuthority())
+	{
+		InitializeCarriedAmmo();
+	}
 }
 
 // Called every frame
@@ -97,7 +101,7 @@ void UCombatComponent::OnRep_EquippedWeapon()
 
 void UCombatComponent::Fire()
 {
-	if(bCanFire == false) return;
+	if(!CanFire()) return;
 	bCanFire = false;
 	ServerFire(HitTarget);
 	StartFireTimer();
@@ -196,6 +200,7 @@ void UCombatComponent::SetCrosshairsSpread(float DeltaTime)
 	BlasterHUD->SetCrosshairSpread(Spread);
 }
 
+
 void UCombatComponent::InterpFOV(float DeltaTime)
 {
 	if(EquippedWeapon == nullptr) return;
@@ -232,6 +237,27 @@ void UCombatComponent::FireTimerFinished()
 		Fire();
 	}
 }
+
+bool UCombatComponent::CanFire()
+{
+	if(EquippedWeapon == nullptr) return false;
+	if(EquippedWeapon->IsEmpty() || !bCanFire) return false;
+	return true;
+}
+
+void UCombatComponent::OnRep_CarriedAmmo()
+{
+	EquippedWeapon->SetTotalAmmo();
+}
+
+
+
+void UCombatComponent::InitializeCarriedAmmo()
+{
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_AssaultRifle, 60);
+}
+
+
 
 void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
 {
@@ -304,6 +330,16 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	}
 	EquippedWeapon->SetOwner(Character);
 	EquippedWeapon->SetHUDAmmo();
+	EquippedWeapon->SetHUDMagAmmo();
+	if(CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
+	{
+		TotalAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
+		if(Character->HasAuthority())
+		{
+			EquippedWeapon->SetTotalAmmo();
+		}
+	}
+	
 
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
@@ -313,12 +349,59 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	
 }
 
+void UCombatComponent::Reload()
+{
+	if(EquippedWeapon == nullptr) return;
+	if(TotalAmmo > 0 && !EquippedWeapon->MagazineIsFull() && CombatState == ECombatState::ECS_Unoccupied)
+	{
+		ServerReload();
+	}
+}
+
+void UCombatComponent::FinishReloading()
+{
+	if(Character && Character->HasAuthority())
+	{
+		CombatState = ECombatState::ECS_Unoccupied;
+	}
+}
+
+void UCombatComponent::HandleReload()
+{
+	
+	Character->PlayReloadMontage();
+}
+
+void UCombatComponent::ServerReload_Implementation()
+{
+	if(Character == nullptr) return;
+	CombatState = ECombatState::ECS_Reloading;
+	HandleReload();
+	
+}
+
+void UCombatComponent::OnRep_CombatState()
+{
+	switch (CombatState)
+	{
+	case ECombatState::ECS_Unoccupied:
+		break;
+	case ECombatState::ECS_Reloading:
+		HandleReload();
+		break;
+	default:
+		break;
+	}
+}
+
 void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
 	DOREPLIFETIME(UCombatComponent, bAiming);
+	DOREPLIFETIME(UCombatComponent, CombatState);
+	DOREPLIFETIME_CONDITION(UCombatComponent, TotalAmmo, COND_OwnerOnly);
 }
 
 

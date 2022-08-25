@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "WeaponType.h"
 #include "Weapon.generated.h"
 
 UENUM(BlueprintType)
@@ -102,12 +103,15 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	int32 MagCapacity;
-
+	
 	UPROPERTY()
 	class ABlasterCharacter* OwnerCharacter;
 
 	UPROPERTY()
 	class ABlasterPlayerController* OwnerController;
+
+	UPROPERTY(EditAnywhere)
+	EWeaponType WeaponType;
 	
 public:
 
@@ -122,5 +126,11 @@ public:
 	FORCEINLINE float GetRecoilPerShot() const {return RecoilPerShot;}
 	FORCEINLINE bool IsAutomatic() const {return bAutomatic;}
 	FORCEINLINE float GetFireDelay() const {return FireDelay;}
+	FORCEINLINE bool IsEmpty() const {return Ammo <= 0;}
+	FORCEINLINE EWeaponType GetWeaponType() const {return WeaponType;}
+	FORCEINLINE bool MagazineIsFull() const {return Ammo >= MagCapacity;}
+	FORCEINLINE int32 GetAmmo() const {return Ammo;}
+
+	
 };
 

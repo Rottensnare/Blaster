@@ -112,7 +112,7 @@ void AWeapon::OnRep_Ammo()
 
 void AWeapon::SpendRound()
 {
-	Ammo -= 1;
+	Ammo = FMath::Clamp(Ammo -1, 0, MagCapacity);
 	SetHUDAmmo();
 }
 
@@ -199,6 +199,8 @@ void AWeapon::OnRep_Owner()
 	}else
 	{
 		SetHUDAmmo();
+		SetHUDMagAmmo();
+		SetTotalAmmo();
 	}
 
 	
@@ -219,12 +221,29 @@ void AWeapon::SetHUDAmmo()
 
 void AWeapon::SetHUDMagAmmo()
 {
-	
+
+	OwnerCharacter = OwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : OwnerCharacter;
+	if(OwnerCharacter)
+	{
+		OwnerController = OwnerController == nullptr ? Cast<ABlasterPlayerController>(OwnerCharacter->Controller) : OwnerController;
+		if(OwnerController)
+		{
+			OwnerController->SetHUDMagText(MagCapacity);
+		}
+	}
 }
 
 void AWeapon::SetTotalAmmo()
 {
-	
+	OwnerCharacter = OwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : OwnerCharacter;
+	if(OwnerCharacter)
+	{
+		OwnerController = OwnerController == nullptr ? Cast<ABlasterPlayerController>(OwnerCharacter->Controller) : OwnerController;
+		if(OwnerController)
+		{
+			OwnerController->SetHUDTotalAmmo(OwnerCharacter->GetTotalAmmo());
+		}
+	}
 }
 
 void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
