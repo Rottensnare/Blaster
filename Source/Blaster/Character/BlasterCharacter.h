@@ -6,6 +6,7 @@
 #include "Blaster/TurningInPlace.h"
 #include "GameFramework/Character.h"
 #include "Blaster/Interfaces/InteractWithCrosshairsInterface.h"
+#include "Components/TimelineComponent.h"
 #include "BlasterCharacter.generated.h"
 
 UCLASS()
@@ -25,11 +26,15 @@ public:
 
 	void PlayFireMontage(bool bAiming);
 	
-	UFUNCTION(NetMulticast, Unreliable)
-	void MulticastHit();
-
 	virtual void OnRep_ReplicatedMovement() override;
+	void UpdateHUDHealth();
 	
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastElim();
+	void Elim();
+	void PlayElimMontage();
+	virtual void Destroyed() override;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -60,6 +65,12 @@ protected:
 	void FireButtonReleased();
 
 	void PlayHitReactMontage();
+
+	UFUNCTION()
+	void ReceiveDamage(AActor* DamagedActor ,float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
+
+	//Initialize HUD if relevant info is missing
+	void PollInit();
 
 private:
 
@@ -108,6 +119,10 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* HitReactMontage;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* EliminationMontage;
+
 	
 	//Setting character invisible if camera gets too close
 	void HideCharacter();
@@ -122,6 +137,57 @@ private:
 	FRotator ProxyRotation;
 	float ProxyYaw;
 	float TimeSinceLastMovementReplication;
+
+
+	UPROPERTY(EditAnywhere, Category = "Player Status")
+	float MaxHealth{100.f};
+
+	UPROPERTY(ReplicatedUsing = OnRep_Health, VisibleAnywhere, Category = "Player Status")
+	float Health;
+
+	UFUNCTION()
+	void OnRep_Health();
+
+	UPROPERTY()
+	class ABlasterPlayerController* BlasterPlayerController;
+
+	bool bEliminated{false};
+
+	FTimerHandle ElimTimer;
+	UPROPERTY(EditDefaultsOnly);
+	float ElimDelay{3.f};
+	void ElimTimerFinished();
+
+	FOnTimelineFloat DissolveTrack;
+	UPROPERTY(VisibleAnywhere)
+	UTimelineComponent* DissolveTimeline;
+
+	UFUNCTION()
+	void UpdateDissolveMaterial(float DissolveValue);
+	void StartDissolve();
+
+	UPROPERTY(EditAnywhere)
+	UCurveFloat* DissolveCurve;
+
+	//Changed at runtime, based on the DissolveMaterialInstance
+	UPROPERTY(VisibleAnywhere, Category = Elim)
+	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance;
+
+	//Set on the blueprint used by the dynamic version
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterialInstance* DissolveMaterialInstance;
+
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* ElimBotEffect;
+
+	UPROPERTY(VisibleAnywhere)
+	UParticleSystemComponent* ElimBotComponent;
+
+	UPROPERTY(EditAnywhere)
+	class USoundCue* BotSoundCue;
+
+	UPROPERTY()
+	class ABlasterPlayerState* BlasterPlayerState;
 	
 public:
 
@@ -135,6 +201,9 @@ public:
 	FORCEINLINE ETurningInPlace GetTurnInPlace() const {return TurningInPlace;}
 	FORCEINLINE UCameraComponent* GetCameraComponent() const {return CameraComponent;}
 	FORCEINLINE bool ShouldRotateRootBone() const {return bRotateRootBone;}
+	FORCEINLINE bool IsEliminated() const {return bEliminated;}
+	FORCEINLINE float GetHealth() const {return Health;}
+	FORCEINLINE float GetMaxHealth() const {return MaxHealth;}
 	AWeapon* GetEquippedWeapon();
 	FVector GetHitTarget() const;
 	
