@@ -28,6 +28,15 @@ public:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* ElimsAmount;
 
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* AmmoText;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* MagText;
+
+	UPROPERTY(meta = (BindWidget))
+	UTextBlock* TotalAmmoText;
+
 protected:
 
 

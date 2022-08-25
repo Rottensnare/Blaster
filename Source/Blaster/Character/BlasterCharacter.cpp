@@ -580,6 +580,11 @@ void ABlasterCharacter::UpdateHUDHealth()
 
 void ABlasterCharacter::MulticastElim_Implementation()
 {
+	if(BlasterPlayerController)
+	{
+		BlasterPlayerController->SetHUDAmmo(0);
+	}
+	
 	bEliminated = true;
 	PlayElimMontage();
 

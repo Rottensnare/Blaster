@@ -77,3 +77,45 @@ void ABlasterPlayerController::SetHUDElims(int32 Elims)
 		BlasterHUD->BlasterOverlay->ElimsAmount->SetText(FText::FromString(ElimsText));
 	}
 }
+
+void ABlasterPlayerController::SetHUDAmmo(int32 Ammo)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	bool bIsHUDValid = BlasterHUD
+		&& BlasterHUD->BlasterOverlay
+		&& BlasterHUD->BlasterOverlay->AmmoText;
+
+	if(bIsHUDValid)
+	{
+		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
+		BlasterHUD->BlasterOverlay->AmmoText->SetText(FText::FromString(AmmoText));
+	}
+}
+
+void ABlasterPlayerController::SetHUDMagText(int32 MagAmmo)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	bool bIsHUDValid = BlasterHUD
+		&& BlasterHUD->BlasterOverlay
+		&& BlasterHUD->BlasterOverlay->MagText;
+
+	if(bIsHUDValid)
+	{
+		FString MagAmmoText = FString::Printf(TEXT("%d"), MagAmmo);
+		BlasterHUD->BlasterOverlay->MagText->SetText(FText::FromString(MagAmmoText));
+	}
+}
+
+void ABlasterPlayerController::SetHUDTotalAmmo(int32 TotalAmmo)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	bool bIsHUDValid = BlasterHUD
+		&& BlasterHUD->BlasterOverlay
+		&& BlasterHUD->BlasterOverlay->TotalAmmoText;
+
+	if(bIsHUDValid)
+	{
+		FString TotalText = FString::Printf(TEXT("%d"), TotalAmmo);
+		BlasterHUD->BlasterOverlay->TotalAmmoText->SetText(FText::FromString(TotalText));
+	}
+}

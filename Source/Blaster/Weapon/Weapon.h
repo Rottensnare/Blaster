@@ -32,6 +32,10 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void Fire(const FVector& HitTarget);
 	void Dropped();
+	virtual void OnRep_Owner() override;
+	void SetHUDAmmo();
+	void SetHUDMagAmmo();
+	void SetTotalAmmo();
 
 protected:
 	// Called when the game starts or when spawned
@@ -87,6 +91,23 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	float FireDelay{.15f};
+
+	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
+	int32 Ammo;
+
+	UFUNCTION()
+	void OnRep_Ammo();
+
+	void SpendRound();
+
+	UPROPERTY(EditAnywhere)
+	int32 MagCapacity;
+
+	UPROPERTY()
+	class ABlasterCharacter* OwnerCharacter;
+
+	UPROPERTY()
+	class ABlasterPlayerController* OwnerController;
 	
 public:
 
