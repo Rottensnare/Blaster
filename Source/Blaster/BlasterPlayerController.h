@@ -18,6 +18,8 @@ public:
 
 	void SetHUDHealth(float Health, float MaxHealth);
 	virtual void OnPossess(APawn* InPawn) override;
+	void SetHUDScore(float Score);
+	void SetHUDElims(int32 Elims);
 	
 
 protected:
@@ -25,6 +27,6 @@ protected:
 	virtual void BeginPlay() override;
 
 private:
-	
+	UPROPERTY()
 	class ABlasterHUD* BlasterHUD;
 };

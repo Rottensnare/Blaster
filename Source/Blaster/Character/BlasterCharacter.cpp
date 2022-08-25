@@ -5,6 +5,7 @@
 
 #include "Blaster/Blaster.h"
 #include "Blaster/BlasterPlayerController.h"
+#include "Blaster/BlasterPlayerState.h"
 #include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Blaster/GameMode/BlasterGameMode.h"
 #include "Blaster/Weapon/Weapon.h"
@@ -105,6 +106,8 @@ void ABlasterCharacter::Tick(float DeltaTime)
 
 	//Checks if character is too close to the camera, and if so, hides the character. TODO: Use interpolation and dither effect for a more refined hide effect
 	HideCharacter();
+
+	PollInit();
 }
 
 void ABlasterCharacter::MoveForward(float Value)
@@ -545,6 +548,19 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 		}
 	}
 	
+}
+
+void ABlasterCharacter::PollInit()
+{
+	if(BlasterPlayerState == nullptr)
+	{
+		BlasterPlayerState = GetPlayerState<ABlasterPlayerState>();
+		if(BlasterPlayerState)
+		{
+			BlasterPlayerState->AddToScore(0.f);
+			BlasterPlayerState->AddToElims(0);
+		}
+	}
 }
 
 FVector ABlasterCharacter::GetHitTarget() const

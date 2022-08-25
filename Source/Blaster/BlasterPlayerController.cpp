@@ -49,3 +49,31 @@ void ABlasterPlayerController::OnPossess(APawn* InPawn)
 		SetHUDHealth(BlasterCharacter->GetHealth(), BlasterCharacter->GetMaxHealth());
 	}
 }
+
+void ABlasterPlayerController::SetHUDScore(float Score)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	bool bIsHUDValid = BlasterHUD
+		&& BlasterHUD->BlasterOverlay
+		&& BlasterHUD->BlasterOverlay->ScoreAmount;
+
+	if(bIsHUDValid)
+	{
+		FString ScoreText = FString::Printf(TEXT("%d"), FMath::FloorToInt(Score));
+		BlasterHUD->BlasterOverlay->ScoreAmount->SetText(FText::FromString(ScoreText));
+	}
+}
+
+void ABlasterPlayerController::SetHUDElims(int32 Elims)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	bool bIsHUDValid = BlasterHUD
+		&& BlasterHUD->BlasterOverlay
+		&& BlasterHUD->BlasterOverlay->ElimsAmount;
+
+	if(bIsHUDValid)
+	{
+		FString ElimsText = FString::Printf(TEXT("%d"), Elims);
+		BlasterHUD->BlasterOverlay->ElimsAmount->SetText(FText::FromString(ElimsText));
+	}
+}

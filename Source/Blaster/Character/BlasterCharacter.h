@@ -68,7 +68,9 @@ protected:
 
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor ,float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
-	
+
+	//Initialize HUD if relevant info is missing
+	void PollInit();
 
 private:
 
@@ -146,6 +148,7 @@ private:
 	UFUNCTION()
 	void OnRep_Health();
 
+	UPROPERTY()
 	class ABlasterPlayerController* BlasterPlayerController;
 
 	bool bEliminated{false};
@@ -182,6 +185,9 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	class USoundCue* BotSoundCue;
+
+	UPROPERTY()
+	class ABlasterPlayerState* BlasterPlayerState;
 	
 public:
 
