@@ -30,6 +30,9 @@ protected:
 	void ServerSetImpactEffects(AActor* OtherActor);
 	
 	void MulticastSetImpactEffects(AActor* OtherActor);
+	
+	UPROPERTY(EditAnywhere)
+	float Damage {10.f};
 
 private:
 
@@ -61,6 +64,7 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	USoundCue* MetalImpactSound;
+
 
 public:
 	
