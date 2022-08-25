@@ -14,8 +14,11 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Net/UnrealNetwork.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Particles/ParticleSystemComponent.h"
 #include "PhysicalMaterials/PhysicalMaterial.h"
+#include "Sound/SoundCue.h"
 
 
 // Sets default values
@@ -584,6 +587,16 @@ void ABlasterCharacter::MulticastElim_Implementation()
 
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	FVector BotSpawnPoint{GetActorLocation() + FVector(0.f, 0.f, 200.f)};
+	if(ElimBotEffect)
+	{
+		ElimBotComponent = UGameplayStatics::SpawnEmitterAtLocation(this, ElimBotEffect, BotSpawnPoint, FRotator::ZeroRotator);
+	}
+	if(BotSoundCue)
+	{
+		UGameplayStatics::SpawnSoundAtLocation(this, BotSoundCue, BotSpawnPoint);
+	}
 }
 
 
@@ -605,6 +618,7 @@ void ABlasterCharacter::ElimTimerFinished()
 	{
 		GameMode->RequestRespawn(this, Controller);
 	}
+	
 }
 
 void ABlasterCharacter::PlayElimMontage()
@@ -614,6 +628,16 @@ void ABlasterCharacter::PlayElimMontage()
 	{
 		AnimInstance->Montage_Play(EliminationMontage);
 	}
+}
+
+void ABlasterCharacter::Destroyed()
+{
+	if(ElimBotComponent)
+	{
+		ElimBotComponent->DestroyComponent();
+	}
+	
+	Super::Destroyed();
 }
 
 void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

@@ -33,6 +33,7 @@ public:
 	void MulticastElim();
 	void Elim();
 	void PlayElimMontage();
+	virtual void Destroyed() override;
 
 protected:
 	// Called when the game starts or when spawned
@@ -172,6 +173,15 @@ private:
 	//Set on the blueprint used by the dynamic version
 	UPROPERTY(EditAnywhere, Category = Elim)
 	UMaterialInstance* DissolveMaterialInstance;
+
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* ElimBotEffect;
+
+	UPROPERTY(VisibleAnywhere)
+	UParticleSystemComponent* ElimBotComponent;
+
+	UPROPERTY(EditAnywhere)
+	class USoundCue* BotSoundCue;
 	
 public:
 
@@ -186,6 +196,8 @@ public:
 	FORCEINLINE UCameraComponent* GetCameraComponent() const {return CameraComponent;}
 	FORCEINLINE bool ShouldRotateRootBone() const {return bRotateRootBone;}
 	FORCEINLINE bool IsEliminated() const {return bEliminated;}
+	FORCEINLINE float GetHealth() const {return Health;}
+	FORCEINLINE float GetMaxHealth() const {return MaxHealth;}
 	AWeapon* GetEquippedWeapon();
 	FVector GetHitTarget() const;
 	
