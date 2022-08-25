@@ -27,6 +27,11 @@ public:
 	
 	virtual void OnRep_ReplicatedMovement() override;
 	void UpdateHUDHealth();
+	
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastElim();
+	void Elim();
+	void PlayElimMontage();
 
 protected:
 	// Called when the game starts or when spawned
@@ -61,6 +66,7 @@ protected:
 
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor ,float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
+	
 
 private:
 
@@ -109,6 +115,10 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* HitReactMontage;
+
+	UPROPERTY(EditAnywhere, Category = Combat)
+	UAnimMontage* EliminationMontage;
+
 	
 	//Setting character invisible if camera gets too close
 	void HideCharacter();
@@ -135,6 +145,13 @@ private:
 	void OnRep_Health();
 
 	class ABlasterPlayerController* BlasterPlayerController;
+
+	bool bEliminated{false};
+
+	FTimerHandle ElimTimer;
+	UPROPERTY(EditDefaultsOnly);
+	float ElimDelay{3.f};
+	void ElimTimerFinished();
 	
 public:
 
@@ -148,6 +165,7 @@ public:
 	FORCEINLINE ETurningInPlace GetTurnInPlace() const {return TurningInPlace;}
 	FORCEINLINE UCameraComponent* GetCameraComponent() const {return CameraComponent;}
 	FORCEINLINE bool ShouldRotateRootBone() const {return bRotateRootBone;}
+	FORCEINLINE bool IsEliminated() const {return bEliminated;}
 	AWeapon* GetEquippedWeapon();
 	FVector GetHitTarget() const;
 	
