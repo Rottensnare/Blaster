@@ -6,6 +6,7 @@
 #include "Blaster/TurningInPlace.h"
 #include "GameFramework/Character.h"
 #include "Blaster/Interfaces/InteractWithCrosshairsInterface.h"
+#include "Components/TimelineComponent.h"
 #include "BlasterCharacter.generated.h"
 
 UCLASS()
@@ -152,6 +153,25 @@ private:
 	UPROPERTY(EditDefaultsOnly);
 	float ElimDelay{3.f};
 	void ElimTimerFinished();
+
+	FOnTimelineFloat DissolveTrack;
+	UPROPERTY(VisibleAnywhere)
+	UTimelineComponent* DissolveTimeline;
+
+	UFUNCTION()
+	void UpdateDissolveMaterial(float DissolveValue);
+	void StartDissolve();
+
+	UPROPERTY(EditAnywhere)
+	UCurveFloat* DissolveCurve;
+
+	//Changed at runtime, based on the DissolveMaterialInstance
+	UPROPERTY(VisibleAnywhere, Category = Elim)
+	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance;
+
+	//Set on the blueprint used by the dynamic version
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterialInstance* DissolveMaterialInstance;
 	
 public:
 
