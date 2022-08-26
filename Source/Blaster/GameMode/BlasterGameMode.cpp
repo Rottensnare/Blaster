@@ -63,6 +63,20 @@ void ABlasterGameMode::RequestRespawn(ACharacter* EliminatedCharacter, AControll
 	}
 }
 
+void ABlasterGameMode::OnMatchStateSet()
+{
+	Super::OnMatchStateSet();
+
+	for(FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		ABlasterPlayerController* BlasterController = Cast<ABlasterPlayerController>(*It);
+		if(BlasterController)
+		{
+			BlasterController->OnMatchStateSet(MatchState);
+		}
+	}
+}
+
 void ABlasterGameMode::BeginPlay()
 {
 	Super::BeginPlay();

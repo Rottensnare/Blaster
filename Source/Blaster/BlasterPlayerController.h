@@ -25,22 +25,30 @@ public:
 	void SetHUDTotalAmmo(int32 TotalAmmo);
 	void SetHUDWeaponType(FString WeaponType);
 	void SetMatchTimeText(float MatchTime);
+	void SetHUDAnnouncementTime(float WarmupTime);
 
 	virtual float GetServerTime();
 	virtual void ReceivedPlayer() override;
+	void OnMatchStateSet(FName State);
 	
-
+	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 protected:
 
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
 	void SetHUDTime();
+	void HandleMatchHasStarted();
+
+	UFUNCTION(Server, Reliable)
+	void ServerCheckMatchState();
 
 	UFUNCTION(Server, Reliable)
 	void ServerRequestServerTime(const float TimeOfClientRequest);
 
 	UFUNCTION(Client, Reliable)
 	void ClientReportServerTime(const float TimeOfClientRequest, const float TimeServerReceivedClientRequest);
+
+	void PollInit();
 
 	float ClientServerDelta{0.f};
 	
@@ -53,6 +61,30 @@ private:
 	UPROPERTY()
 	class ABlasterHUD* BlasterHUD;
 
-	float MatchTime{120.f};
+	float MatchTime{0.f};
+	float WarmupTime{0.f};
+	float LevelStartingTime{0.f};
+	
 	uint32 CountdownInt{0};
+
+	UPROPERTY(ReplicatedUsing = OnRep_MatchState)
+	FName MatchState{FName()};
+
+	UFUNCTION()
+	void OnRep_MatchState();
+
+	UFUNCTION(Client, Reliable)
+	void ClientJoinMidGame(FName InMatchState, float InWarmup, float InMatchTime, float InStartingTime);
+
+	UPROPERTY()
+	class UCharacterOverlay* CharacterOverlay;
+
+	bool bInitializeCharacterOverlay{false};
+
+	//Cached values that will be used to set HUD element values when Overlay is initialized.
+	//Overlay will be initialized late so we need to do this.
+	float HUDHealth;
+	float HUDMaxHealth;
+	float HUDScore;
+	float HUDElims;
 };
