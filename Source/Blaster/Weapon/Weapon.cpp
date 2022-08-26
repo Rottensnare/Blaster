@@ -201,6 +201,7 @@ void AWeapon::OnRep_Owner()
 		SetHUDAmmo();
 		SetHUDMagAmmo();
 		SetTotalAmmo();
+		SetHUDWeaponType();
 	}
 
 	
@@ -242,6 +243,20 @@ void AWeapon::SetTotalAmmo()
 		if(OwnerController)
 		{
 			OwnerController->SetHUDTotalAmmo(OwnerCharacter->GetTotalAmmo());
+		}
+	}
+}
+
+void AWeapon::SetHUDWeaponType()
+{
+	OwnerCharacter = OwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : OwnerCharacter;
+	if(OwnerCharacter)
+	{
+		OwnerController = OwnerController == nullptr ? Cast<ABlasterPlayerController>(OwnerCharacter->Controller) : OwnerController;
+		if(OwnerController)
+		{
+			FText WeaponText = UEnum::GetDisplayValueAsText(WeaponType);
+			OwnerController->SetHUDWeaponType(WeaponText.ToString());
 		}
 	}
 }

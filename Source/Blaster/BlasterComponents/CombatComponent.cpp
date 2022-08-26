@@ -332,6 +332,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	EquippedWeapon->SetOwner(Character);
 	EquippedWeapon->SetHUDAmmo();
 	EquippedWeapon->SetHUDMagAmmo();
+	EquippedWeapon->SetHUDWeaponType();
 	if(CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
 	{
 		TotalAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];

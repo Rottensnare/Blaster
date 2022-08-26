@@ -23,6 +23,7 @@ public:
 	void SetHUDAmmo(int32 Ammo);
 	void SetHUDMagText(int32 MagAmmo);
 	void SetHUDTotalAmmo(int32 TotalAmmo);
+	void SetHUDWeaponType(FString WeaponType);
 	
 
 protected:

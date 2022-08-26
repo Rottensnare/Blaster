@@ -37,6 +37,7 @@ public:
 	void SetHUDAmmo();
 	void SetHUDMagAmmo();
 	void SetTotalAmmo();
+	void SetHUDWeaponType();
 	void AddAmmo(int32 AmmoToAdd);
 
 protected:

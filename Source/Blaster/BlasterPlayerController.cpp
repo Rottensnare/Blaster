@@ -119,3 +119,16 @@ void ABlasterPlayerController::SetHUDTotalAmmo(int32 TotalAmmo)
 		BlasterHUD->BlasterOverlay->TotalAmmoText->SetText(FText::FromString(TotalText));
 	}
 }
+
+void ABlasterPlayerController::SetHUDWeaponType(FString WeaponType)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	bool bIsHUDValid = BlasterHUD
+		&& BlasterHUD->BlasterOverlay
+		&& BlasterHUD->BlasterOverlay->WeaponTypeText;
+
+	if(bIsHUDValid)
+	{
+		BlasterHUD->BlasterOverlay->WeaponTypeText->SetText(FText::FromString(WeaponType));
+	}
+}
