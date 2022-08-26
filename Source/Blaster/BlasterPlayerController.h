@@ -24,13 +24,35 @@ public:
 	void SetHUDMagText(int32 MagAmmo);
 	void SetHUDTotalAmmo(int32 TotalAmmo);
 	void SetHUDWeaponType(FString WeaponType);
+	void SetMatchTimeText(float MatchTime);
+
+	virtual float GetServerTime();
+	virtual void ReceivedPlayer() override;
 	
 
 protected:
 
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaSeconds) override;
+	void SetHUDTime();
+
+	UFUNCTION(Server, Reliable)
+	void ServerRequestServerTime(const float TimeOfClientRequest);
+
+	UFUNCTION(Client, Reliable)
+	void ClientReportServerTime(const float TimeOfClientRequest, const float TimeServerReceivedClientRequest);
+
+	float ClientServerDelta{0.f};
+	
+	UPROPERTY(EditAnywhere, Category = Time)
+	float TimeSyncFrequency{5.f};
+	
+	float TimeSyncRunningTime{0.f};
 
 private:
 	UPROPERTY()
 	class ABlasterHUD* BlasterHUD;
+
+	float MatchTime{120.f};
+	uint32 CountdownInt{0};
 };
