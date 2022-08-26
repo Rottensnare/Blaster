@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "WeaponType.h"
 #include "Weapon.generated.h"
 
 UENUM(BlueprintType)
@@ -32,6 +33,12 @@ public:
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	virtual void Fire(const FVector& HitTarget);
 	void Dropped();
+	virtual void OnRep_Owner() override;
+	void SetHUDAmmo();
+	void SetHUDMagAmmo();
+	void SetTotalAmmo();
+	void SetHUDWeaponType();
+	void AddAmmo(int32 AmmoToAdd);
 
 protected:
 	// Called when the game starts or when spawned
@@ -87,6 +94,32 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	float FireDelay{.15f};
+
+	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
+	int32 Ammo;
+
+	UFUNCTION()
+	void OnRep_Ammo();
+
+	void SpendRound();
+
+	UPROPERTY(EditAnywhere)
+	int32 MagCapacity;
+	
+	UPROPERTY()
+	class ABlasterCharacter* OwnerCharacter;
+
+	UPROPERTY()
+	class ABlasterPlayerController* OwnerController;
+
+	UPROPERTY(EditAnywhere)
+	EWeaponType WeaponType;
+
+	UPROPERTY(EditAnywhere)
+	class USoundCue* ReloadSound;
+
+	UPROPERTY(EditAnywhere)
+	USoundCue* EquipSound;
 	
 public:
 
@@ -101,5 +134,14 @@ public:
 	FORCEINLINE float GetRecoilPerShot() const {return RecoilPerShot;}
 	FORCEINLINE bool IsAutomatic() const {return bAutomatic;}
 	FORCEINLINE float GetFireDelay() const {return FireDelay;}
+	FORCEINLINE bool IsEmpty() const {return Ammo <= 0;}
+	FORCEINLINE EWeaponType GetWeaponType() const {return WeaponType;}
+	FORCEINLINE bool MagazineIsFull() const {return Ammo >= MagCapacity;}
+	FORCEINLINE int32 GetAmmo() const {return Ammo;}
+	FORCEINLINE int32 GetMagCapacity() const {return MagCapacity;}
+	FORCEINLINE USoundCue* GetReloadSound() const {return ReloadSound;}
+	FORCEINLINE USoundCue* GetEquipSound() const {return EquipSound;}
+
+	
 };
 

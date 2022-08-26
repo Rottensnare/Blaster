@@ -4,6 +4,7 @@
 #include "Weapon.h"
 
 #include "Casing.h"
+#include "Blaster/BlasterPlayerController.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Components/SphereComponent.h"
 #include "Components/WidgetComponent.h"
@@ -98,7 +99,21 @@ void AWeapon::OnRep_WeaponState()
 		WeaponMesh->SetEnableGravity(true);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 		break;
+	default:
+		break;
+		
 	}
+}
+
+void AWeapon::OnRep_Ammo()
+{
+	SetHUDAmmo();
+}
+
+void AWeapon::SpendRound()
+{
+	Ammo = FMath::Clamp(Ammo -1, 0, MagCapacity);
+	SetHUDAmmo();
 }
 
 void AWeapon::SetWeaponState(EWeaponState State)
@@ -160,6 +175,7 @@ void AWeapon::Fire(const FVector& HitTarget)
 			}
 		}
 	}
+	SpendRound();
 }
 
 void AWeapon::Dropped()
@@ -168,6 +184,88 @@ void AWeapon::Dropped()
 	FDetachmentTransformRules DetachmentTransformRules(EDetachmentRule::KeepWorld, true);
 	WeaponMesh->DetachFromComponent(DetachmentTransformRules);
 	SetOwner(nullptr);
+	OwnerCharacter = nullptr;
+	OwnerController = nullptr;
+}
+
+void AWeapon::OnRep_Owner()
+{
+	Super::OnRep_Owner();
+	
+	if(Owner == nullptr)
+	{
+		OwnerCharacter = nullptr;
+		OwnerController = nullptr;
+	}else
+	{
+		SetHUDAmmo();
+		SetHUDMagAmmo();
+		SetTotalAmmo();
+		SetHUDWeaponType();
+	}
+
+	
+}
+
+void AWeapon::SetHUDAmmo()
+{
+	OwnerCharacter = OwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : OwnerCharacter;
+	if(OwnerCharacter)
+	{
+		OwnerController = OwnerController == nullptr ? Cast<ABlasterPlayerController>(OwnerCharacter->Controller) : OwnerController;
+		if(OwnerController)
+		{
+			OwnerController->SetHUDAmmo(Ammo);
+		}
+	}
+}
+
+void AWeapon::SetHUDMagAmmo()
+{
+
+	OwnerCharacter = OwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : OwnerCharacter;
+	if(OwnerCharacter)
+	{
+		OwnerController = OwnerController == nullptr ? Cast<ABlasterPlayerController>(OwnerCharacter->Controller) : OwnerController;
+		if(OwnerController)
+		{
+			OwnerController->SetHUDMagText(MagCapacity);
+		}
+	}
+}
+
+void AWeapon::SetTotalAmmo()
+{
+	OwnerCharacter = OwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : OwnerCharacter;
+	if(OwnerCharacter)
+	{
+		OwnerController = OwnerController == nullptr ? Cast<ABlasterPlayerController>(OwnerCharacter->Controller) : OwnerController;
+		if(OwnerController)
+		{
+			OwnerController->SetHUDTotalAmmo(OwnerCharacter->GetTotalAmmo());
+		}
+	}
+}
+
+void AWeapon::SetHUDWeaponType()
+{
+	OwnerCharacter = OwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : OwnerCharacter;
+	if(OwnerCharacter)
+	{
+		OwnerController = OwnerController == nullptr ? Cast<ABlasterPlayerController>(OwnerCharacter->Controller) : OwnerController;
+		if(OwnerController)
+		{
+			FText WeaponText = UEnum::GetDisplayValueAsText(WeaponType);
+			OwnerController->SetHUDWeaponType(WeaponText.ToString());
+		}
+	}
+}
+
+void AWeapon::AddAmmo(int32 AmmoToAdd)
+{
+	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
+	SetHUDAmmo();
+	SetTotalAmmo();
 }
 
 void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
@@ -175,4 +273,5 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeapon, WeaponState)
+	DOREPLIFETIME(AWeapon, Ammo)
 }

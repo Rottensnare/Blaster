@@ -20,6 +20,10 @@ public:
 	virtual void OnPossess(APawn* InPawn) override;
 	void SetHUDScore(float Score);
 	void SetHUDElims(int32 Elims);
+	void SetHUDAmmo(int32 Ammo);
+	void SetHUDMagText(int32 MagAmmo);
+	void SetHUDTotalAmmo(int32 TotalAmmo);
+	void SetHUDWeaponType(FString WeaponType);
 	
 
 protected:

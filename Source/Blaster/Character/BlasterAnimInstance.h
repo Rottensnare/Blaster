@@ -83,5 +83,11 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	float RightHandRotationSpeed{15.f};
+
+	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	bool bUseFabrik;
+
+	UPROPERTY(BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = "true"))
+	bool bUseAimOffset;
 	
 };
