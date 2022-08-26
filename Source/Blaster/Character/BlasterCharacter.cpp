@@ -469,11 +469,6 @@ bool ABlasterCharacter::IsAiming()
 	return (CombatComponent && CombatComponent->bAiming);
 }
 
-int32 ABlasterCharacter::GetTotalAmmo() const
-{
-	if(CombatComponent == nullptr) return 0;
-	return CombatComponent->GetTotalAmmo();
-}
 
 AWeapon* ABlasterCharacter::GetEquippedWeapon()
 {
@@ -612,6 +607,12 @@ ECombatState ABlasterCharacter::GetCombatState() const
 	if(CombatComponent == nullptr) return ECombatState::ECS_MAX;
 	return CombatComponent->CombatState;
 	
+}
+
+int32 ABlasterCharacter::GetTotalAmmo() const
+{
+	if(CombatComponent == nullptr) return 0;
+	return CombatComponent->TotalAmmo;
 }
 
 void ABlasterCharacter::UpdateHUDHealth()

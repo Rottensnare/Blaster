@@ -255,7 +255,7 @@ void UCombatComponent::OnRep_CarriedAmmo()
 
 void UCombatComponent::InitializeCarriedAmmo()
 {
-	CarriedAmmoMap.Emplace(EWeaponType::EWT_AssaultRifle, 60);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_AssaultRifle, 300);
 }
 
 

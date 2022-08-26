@@ -211,10 +211,10 @@ public:
 	FORCEINLINE bool IsEliminated() const {return bEliminated;}
 	FORCEINLINE float GetHealth() const {return Health;}
 	FORCEINLINE float GetMaxHealth() const {return MaxHealth;}
-	FORCEINLINE int32 GetTotalAmmo() const;
 	AWeapon* GetEquippedWeapon();
 	FVector GetHitTarget() const;
 	ECombatState GetCombatState() const;
+	int32 GetTotalAmmo() const;
 	
 	
 };
