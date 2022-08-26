@@ -37,6 +37,7 @@ public:
 	void SetHUDAmmo();
 	void SetHUDMagAmmo();
 	void SetTotalAmmo();
+	void AddAmmo(int32 AmmoToAdd);
 
 protected:
 	// Called when the game starts or when spawned
@@ -112,6 +113,12 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	EWeaponType WeaponType;
+
+	UPROPERTY(EditAnywhere)
+	class USoundCue* ReloadSound;
+
+	UPROPERTY(EditAnywhere)
+	USoundCue* EquipSound;
 	
 public:
 
@@ -130,6 +137,9 @@ public:
 	FORCEINLINE EWeaponType GetWeaponType() const {return WeaponType;}
 	FORCEINLINE bool MagazineIsFull() const {return Ammo >= MagCapacity;}
 	FORCEINLINE int32 GetAmmo() const {return Ammo;}
+	FORCEINLINE int32 GetMagCapacity() const {return MagCapacity;}
+	FORCEINLINE USoundCue* GetReloadSound() const {return ReloadSound;}
+	FORCEINLINE USoundCue* GetEquipSound() const {return EquipSound;}
 
 	
 };

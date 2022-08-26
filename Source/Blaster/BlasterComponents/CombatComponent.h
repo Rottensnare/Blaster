@@ -28,6 +28,7 @@ public:
 	void Reload();
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
+	
 
 
 protected:
@@ -59,6 +60,8 @@ protected:
 	void ServerReload();
 
 	void HandleReload();
+
+	int32 AmountToReload();
 
 private:
 
@@ -124,7 +127,7 @@ private:
 	int32 StartingARAmmo{60};
 	void InitializeCarriedAmmo();
 
-	UPROPERTY(ReplicatedUsing = OnRep_CombatState)
+	UPROPERTY(BlueprintReadOnly ,ReplicatedUsing = OnRep_CombatState, meta = (AllowPrivateAccess = "true"))
 	ECombatState CombatState{ECombatState::ECS_Unoccupied};
 
 	UFUNCTION()
