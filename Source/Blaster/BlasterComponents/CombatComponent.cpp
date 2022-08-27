@@ -255,7 +255,8 @@ void UCombatComponent::OnRep_CarriedAmmo()
 
 void UCombatComponent::InitializeCarriedAmmo()
 {
-	CarriedAmmoMap.Emplace(EWeaponType::EWT_AssaultRifle, 300);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_AssaultRifle, StartingARAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_RocketLauncher, StartingRocketAmmo);
 }
 
 
@@ -289,7 +290,6 @@ bool UCombatComponent::SetCrosshairs()
 			FHUDPackage HUDPackage;
 			if (EquippedWeapon)
 			{
-				
 				HUDPackage.CrosshairsCenter = EquippedWeapon->GetCrosshairTextures()[0];
 				HUDPackage.CrosshairsTop = EquippedWeapon->GetCrosshairTextures()[1];
 				HUDPackage.CrosshairsBottom = EquippedWeapon->GetCrosshairTextures()[2];

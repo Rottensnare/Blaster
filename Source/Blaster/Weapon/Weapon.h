@@ -26,11 +26,15 @@ class BLASTER_API AWeapon : public AActor
 public:	
 	// Sets default values for this actor's properties
 	AWeapon();
+
+	//If someone forgets to add crosshairs, this will prevent a crash of type "Array out of bounds".
+	virtual void OnConstruction(const FTransform& Transform) override;
 	
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 	void ShowPickupWidget(bool bShowWidget);
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	//Plays fire animation, ejects a casing if any, then calls SpendRound. Specific functionality implemented in the derived classes.
 	virtual void Fire(const FVector& HitTarget);
 	void Dropped();
 	virtual void OnRep_Owner() override;
@@ -52,55 +56,68 @@ protected:
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	class USkeletalMeshComponent* WeaponMesh;
-	
+
+	//When overlapped, Character can pickup the weapon, also the PickupWidget will be shown.
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	class USphereComponent* AreaSphere;
 
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_WeaponState)
 	EWeaponState WeaponState;
-
+	
+	//For clients to set the WeaponState
 	UFUNCTION()
 	void OnRep_WeaponState();
 
+	//Displays info about weapon when overlapping with the AreaSphere
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	class UWidgetComponent* PickupWidget;
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Properties")
 	class UAnimationAsset* FireAnimation;
 
+	//Class used to spawn a casing in the Fire function
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<class ACasing> CasingClass;
 
+	//Elements can be null. 0: Center, 1: Up, 2: Down, 3: Left, 4: Right.
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
 	TArray<class UTexture2D*> Crosshairs;
 
 	UPROPERTY(EditAnywhere)
 	float ZoomedFOV{30.f};
 
+	//How fast camera zooms in when aiming. Higher is better.
 	UPROPERTY(EditAnywhere)
 	float ZoomInterpSpeed{20.f};
 
+	//Lower is better. 0.6 is default
 	UPROPERTY(EditDefaultsOnly)
 	float AimAccuracy{0.6f};
 
+	//Max amount of crosshair spread firing the weapon can cause. Lower is better.
 	UPROPERTY(EditDefaultsOnly)
 	float MaxRecoil{2.f};
 
+	//Lower is better. Slowly adds up, need to wait. Characters combat component has Recoil recovery speed.
 	UPROPERTY(EditDefaultsOnly)
 	float RecoilPerShot{0.2f};
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	bool bAutomatic{true};
 
+	//Delay between shots. Lower is better.
 	UPROPERTY(EditAnywhere, Category = Combat)
 	float FireDelay{.15f};
 
+	//Current ammo in the magazine/weapon
 	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
 	int32 Ammo;
 
+	//For clients. Only calls SetHUDAmmo
 	UFUNCTION()
 	void OnRep_Ammo();
 
+	//Decreases ammo by 1, then calls SetHUDAmmo
 	void SpendRound();
 
 	UPROPERTY(EditAnywhere)

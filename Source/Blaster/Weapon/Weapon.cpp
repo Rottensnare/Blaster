@@ -33,7 +33,21 @@ AWeapon::AWeapon()
 
 	PickupWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickupWidget"));
 	PickupWidget->SetupAttachment(RootComponent);
+
 	
+}
+
+void AWeapon::OnConstruction(const FTransform& Transform)
+{
+	Super::OnConstruction(Transform);
+
+	for(int i = 0; i < 5; i++) //If someone forgets to put the crosshairs, this prevents a crash.
+		{
+			if(Crosshairs.Num() < 5)
+			{
+				Crosshairs.Add(nullptr);
+			}
+		}
 }
 
 // Called when the game starts or when spawned
