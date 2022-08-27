@@ -37,9 +37,13 @@ public:
 	void PlayElimMontage();
 	virtual void Destroyed() override;
 
+	UPROPERTY(Replicated)
+	bool bDisableGameplay{false};
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	void RotateInPlace(float DeltaTime);
 
 	void MoveForward(float Value);
 	void MoveRight(float Value);
@@ -211,10 +215,12 @@ public:
 	FORCEINLINE bool IsEliminated() const {return bEliminated;}
 	FORCEINLINE float GetHealth() const {return Health;}
 	FORCEINLINE float GetMaxHealth() const {return MaxHealth;}
+	FORCEINLINE bool GetDisableGameplay() const {return bDisableGameplay;}
 	AWeapon* GetEquippedWeapon();
 	FVector GetHitTarget() const;
 	ECombatState GetCombatState() const;
 	int32 GetTotalAmmo() const;
+	UCombatComponent* GetCombatComponent() const;
 	
 	
 };

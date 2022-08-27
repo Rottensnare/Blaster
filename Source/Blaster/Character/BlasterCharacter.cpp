@@ -86,10 +86,14 @@ void ABlasterCharacter::BeginPlay()
 	}
 }
 
-void ABlasterCharacter::Tick(float DeltaTime)
+void ABlasterCharacter::RotateInPlace(float DeltaTime)
 {
-	Super::Tick(DeltaTime);
-
+	if(bDisableGameplay)
+	{
+		bUseControllerRotationYaw = false;
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		return;
+	}
 	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
 	{
 		AimOffset(DeltaTime);
@@ -103,6 +107,13 @@ void ABlasterCharacter::Tick(float DeltaTime)
 		}
 		CalculateAO_Pitch();
 	}
+}
+
+void ABlasterCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	RotateInPlace(DeltaTime);
 
 	//Checks if character is too close to the camera, and if so, hides the character. TODO: Use interpolation and dither effect for a more refined hide effect
 	HideCharacter();
@@ -112,6 +123,7 @@ void ABlasterCharacter::Tick(float DeltaTime)
 
 void ABlasterCharacter::MoveForward(float Value)
 {
+	if(bDisableGameplay) return;
 	if(Controller != nullptr && Value != 0.f)
 	{
 		const FRotator YawRotation(0.f, Controller->GetControlRotation().Yaw, 0.f);
@@ -122,6 +134,7 @@ void ABlasterCharacter::MoveForward(float Value)
 
 void ABlasterCharacter::MoveRight(float Value)
 {
+	if(bDisableGameplay) return;
 	if(Controller != nullptr && Value != 0.f)
 	{
 		const FRotator YawRotation(0.f, Controller->GetControlRotation().Yaw, 0.f);
@@ -152,6 +165,7 @@ void ABlasterCharacter::LookUpAtRate(float Value)
 
 void ABlasterCharacter::EquipButtonPressed()
 {
+	if(bDisableGameplay) return;
 	if(CombatComponent)
 	{
 		if(HasAuthority())
@@ -168,6 +182,7 @@ void ABlasterCharacter::EquipButtonPressed()
 
 void ABlasterCharacter::CrouchButtonPressed()
 {
+	if(bDisableGameplay) return;
 	if(bIsCrouched)
 	{
 		UnCrouch();
@@ -181,6 +196,7 @@ void ABlasterCharacter::CrouchButtonPressed()
 
 void ABlasterCharacter::AimButtonPressed()
 {
+	if(bDisableGameplay) return;
 	if(CombatComponent)
 	{
 		CombatComponent->SetAiming(true);
@@ -198,6 +214,7 @@ void ABlasterCharacter::AimButtonReleased()
 
 void ABlasterCharacter::ReloadButtonPressed()
 {
+	if(bDisableGameplay) return;
 	if(CombatComponent)
 	{
 		CombatComponent->Reload();
@@ -324,6 +341,7 @@ void ABlasterCharacter::TurnInPlace(float DeltaTime)
 
 void ABlasterCharacter::Jump()
 {
+	if(bDisableGameplay) return;
 	if(bIsCrouched)
 	{
 		UnCrouch();
@@ -351,6 +369,7 @@ EPhysicalSurface ABlasterCharacter::GetSurfaceType()
 
 void ABlasterCharacter::FireButtonPressed()
 {
+	if(bDisableGameplay) return;
 	if(CombatComponent)
 	{
 		CombatComponent->FireButtonPressed(true);
@@ -615,6 +634,11 @@ int32 ABlasterCharacter::GetTotalAmmo() const
 	return CombatComponent->TotalAmmo;
 }
 
+UCombatComponent* ABlasterCharacter::GetCombatComponent() const
+{
+	return CombatComponent;
+}
+
 void ABlasterCharacter::UpdateHUDHealth()
 {
 	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
@@ -649,11 +673,11 @@ void ABlasterCharacter::MulticastElim_Implementation()
 
 	GetCharacterMovement()->DisableMovement();
 	GetCharacterMovement()->StopMovementImmediately();
-	if(BlasterPlayerController)
-	{
-		DisableInput(BlasterPlayerController);
-	}
 
+	bDisableGameplay = true;
+	
+	if(CombatComponent) CombatComponent->FireButtonPressed(false);
+	
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
@@ -715,6 +739,7 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
 	DOREPLIFETIME(ABlasterCharacter, Health);
+	DOREPLIFETIME(ABlasterCharacter, bDisableGameplay);
 }
 
 
