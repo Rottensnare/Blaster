@@ -30,25 +30,18 @@ protected:
 	void ServerSetImpactEffects(AActor* OtherActor);
 	
 	void MulticastSetImpactEffects(AActor* OtherActor);
+
+	virtual void ShowEffects();
 	
 	UPROPERTY(EditAnywhere)
 	float Damage {10.f};
 
-private:
-
+	
 	UPROPERTY(EditAnywhere)
 	class UBoxComponent* CollisionBox;
 
 	UPROPERTY(VisibleAnywhere)
-	class UProjectileMovementComponent* ProjectileMovementComponent;
-
-	UPROPERTY(EditAnywhere)
-	class UParticleSystem* Tracer;
-	
-	class UParticleSystemComponent* TracerComponent;
-
-	UPROPERTY(VisibleAnywhere)
-	UParticleSystem* ImpactParticles;
+	class UParticleSystem* ImpactParticles;
 
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* CharacterImpactParticles;
@@ -64,6 +57,21 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	USoundCue* MetalImpactSound;
+
+	UPROPERTY(VisibleAnywhere)
+	class UProjectileMovementComponent* ProjectileMovementComponent;
+
+private:
+	
+	
+
+	UPROPERTY(EditAnywhere)
+	 UParticleSystem* Tracer;
+
+	UPROPERTY()
+	UParticleSystemComponent* TracerComponent;
+
+
 
 
 public:

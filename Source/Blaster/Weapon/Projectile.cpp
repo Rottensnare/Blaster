@@ -26,10 +26,7 @@ AProjectile::AProjectile()
 	CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECR_Block);
 	CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECR_Block);
 	CollisionBox->SetCollisionResponseToChannel(ECC_SkeletalMesh, ECR_Block);
-
-	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComp"));
-	ProjectileMovementComponent->bRotationFollowsVelocity = true;
-
+	
 }
 
 // Called when the game starts or when spawned
@@ -89,6 +86,13 @@ void AProjectile::MulticastSetImpactEffects(AActor* OtherActor)
 		ImpactParticles = MetalImpactParticles;
 		ImpactSound = MetalImpactSound;
 	}
+
+	ShowEffects();
+}
+
+void AProjectile::ShowEffects()
+{
+	
 }
 
 

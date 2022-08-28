@@ -2,8 +2,14 @@
 
 
 #include "ProjectileRocket.h"
-
+#include "Niagara/Classes/NiagaraSystem.h"
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
+#include "RocketMovementComponent.h"
+#include "Components/AudioComponent.h"
+#include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Sound/SoundCue.h"
 
 AProjectileRocket::AProjectileRocket()
 {
@@ -11,11 +17,53 @@ AProjectileRocket::AProjectileRocket()
 	RocketMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RocketMesh"));
 	RocketMesh->SetupAttachment(RootComponent);
 	RocketMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	RocketTailLocation = CreateDefaultSubobject<USceneComponent>(TEXT("RocketTailLocation"));
+	RocketTailLocation->SetupAttachment(RootComponent);
+
+	RocketMovementComponent = CreateDefaultSubobject<URocketMovementComponent>(TEXT("RocketMovementComponent"));
+	RocketMovementComponent->bRotationFollowsVelocity = true;
+	RocketMovementComponent->SetIsReplicated(true);
+	RocketMovementComponent->ProjectileGravityScale = 0.4f;
+	RocketMovementComponent->InitialSpeed = 12000.f;
+	RocketMovementComponent->MaxSpeed = 12000.f;
 }
+
+void AProjectileRocket::BeginPlay()
+{
+	Super::BeginPlay();
+
+	if(TrailSystem && RocketTailLocation)
+	{
+		TrailSystemComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(TrailSystem, GetRootComponent(), FName(), RocketTailLocation->GetComponentLocation(), GetActorRotation(), EAttachLocation::KeepWorldPosition, false);
+	}
+	if(ProjectileSoundCue && LoopingSoundAttenuation)
+	{
+		ProjectileLoopComponent = UGameplayStatics::SpawnSoundAttached(
+			ProjectileSoundCue,
+			GetRootComponent(),
+			FName(),
+			GetActorLocation(),
+			EAttachLocation::KeepWorldPosition,
+			false,
+			1.f,
+			1.f,
+			0.f, LoopingSoundAttenuation,
+			(USoundConcurrency*)nullptr,
+			false);
+	}
+}
+
+
 
 void AProjectileRocket::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
                               FVector NormalImpulse, const FHitResult& HitResult)
 {
+	if(OtherActor == GetOwner())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Stop hitting yourself!"))
+		return;
+	}
 	APawn* FiringPawn = GetInstigator();
 	if(FiringPawn)
 	{
@@ -38,5 +86,52 @@ void AProjectileRocket::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 		}
 	}
 	
-	Super::OnHit(HitComp, OtherActor, OtherComp, NormalImpulse, HitResult);
+	MulticastSetImpactEffects(OtherActor);
+	
+	GetWorldTimerManager().SetTimer(DestroyTimer, this, &AProjectileRocket::DestroyTimerFinished, DestroyTime);
+}
+
+void AProjectileRocket::DestroyTimerFinished()
+{
+	
+}
+
+void AProjectileRocket::Destroyed()
+{
+	
+}
+
+void AProjectileRocket::ShowEffects()
+{
+	Super::ShowEffects();
+
+	if(ProjectileLoopComponent)
+	{
+		ProjectileLoopComponent->Stop();
+		ProjectileLoopComponent->DestroyComponent();
+	}
+
+	if(RocketMesh)
+	{
+		RocketMesh->SetVisibility(false);
+		
+	}
+	if(CollisionBox)
+	{
+		CollisionBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
+	if(TrailSystemComponent && TrailSystemComponent->GetSystemInstanceController())
+	{
+		TrailSystemComponent->GetSystemInstanceController()->Deactivate();
+	}
+
+	if(ImpactParticles)
+	{
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ImpactParticles, GetActorTransform());
+	}
+	if(ImpactSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation());
+	}
 }
