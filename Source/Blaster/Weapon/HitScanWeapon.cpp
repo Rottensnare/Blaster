@@ -7,6 +7,7 @@
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystemComponent.h"
 #include "Sound/SoundCue.h"
 
 void AHitScanWeapon::Fire(const FVector& HitTarget)
@@ -36,18 +37,22 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 				if(InstigatorPawn->GetController())
 				{
 					UGameplayStatics::ApplyDamage(BlasterCharacter, Damage, InstigatorPawn->GetController(), this, UDamageType::StaticClass());
-					MulticastSetImpactEffects(EHT_Character, HitResult.Location);
+					MulticastSetImpactEffects(EHT_Character, HitResult.Location, SocketTransform.GetLocation());
 				}
 			}
 			else
 			{
-				MulticastSetImpactEffects(EHT_Other, HitResult.Location);
+				MulticastSetImpactEffects(EHT_Other, HitResult.Location, SocketTransform.GetLocation());
 			}
+		}
+		else
+		{
+			MulticastSetImpactEffects(EHT_MAX, End, SocketTransform.GetLocation());
 		}
 	}
 }
 
-void AHitScanWeapon::MulticastSetImpactEffects_Implementation(EHitType HitType, const FVector_NetQuantize& Location)
+void AHitScanWeapon::MulticastSetImpactEffects_Implementation(EHitType HitType, const FVector_NetQuantize& Location, const FVector_NetQuantize& StartLocation)
 {
 	
 	if(HitType == EHT_Character)
@@ -55,16 +60,21 @@ void AHitScanWeapon::MulticastSetImpactEffects_Implementation(EHitType HitType, 
 		ImpactParticles = CharacterImpactParticles;
 		ImpactSound = CharacterImpactSound;
 	}
-	else
+	else if(HitType == EHT_Character)
 	{
 		ImpactParticles = MetalImpactParticles;
 		ImpactSound = MetalImpactSound;
 	}
+	else if(HitType == EHT_MAX)
+	{
+		ImpactParticles = nullptr;
+		ImpactSound = nullptr;
+	}
 	
-	ShowEffects(Location);
+	ShowEffects(Location, StartLocation);
 }
 
-void AHitScanWeapon::ShowEffects(const FVector& Location)
+void AHitScanWeapon::ShowEffects(const FVector& Location, const FVector& StartLocation)
 {
 	if(ImpactParticles)
 	{
@@ -73,5 +83,13 @@ void AHitScanWeapon::ShowEffects(const FVector& Location)
 	if(ImpactSound)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, Location);
+	}
+	if(BeamParticles)
+	{
+		UParticleSystemComponent* ParticleSystemComponent = UGameplayStatics::SpawnEmitterAtLocation(this, BeamParticles, StartLocation);
+		if(ParticleSystemComponent)
+		{
+			ParticleSystemComponent->SetVectorParameter(FName("Target"), Location);
+		}
 	}
 }

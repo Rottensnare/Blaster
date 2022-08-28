@@ -32,9 +32,9 @@ public:
 protected:
 
 	UFUNCTION(NetMulticast, Reliable)
-	void MulticastSetImpactEffects(EHitType HitType, const FVector_NetQuantize& Location);
+	void MulticastSetImpactEffects(EHitType HitType, const FVector_NetQuantize& Location,  const FVector_NetQuantize& StartLocation = FVector());
 
-	virtual void ShowEffects(const FVector& Location);
+	virtual void ShowEffects(const FVector& Location, const FVector& StartLocation = FVector());
 
 	UPROPERTY(VisibleAnywhere)
 	class UParticleSystem* ImpactParticles;
@@ -59,5 +59,8 @@ private:
 	
 	UPROPERTY(EditAnywhere)
 	float Damage{10.f};
+
+	UPROPERTY(EditAnywhere)
+	UParticleSystem* BeamParticles;
 	
 };
