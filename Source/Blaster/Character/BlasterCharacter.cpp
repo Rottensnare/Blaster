@@ -558,9 +558,13 @@ void ABlasterCharacter::PlayReloadMontage()
 		{
 		case EWeaponType::EWT_AssaultRifle:
 			//SectionName = FName("ReloadARHip");
-			//AnimInstance->Montage_JumpToSection(SectionName);
+			//AnimInstance->Montage_JumpToSection(SectionName); //BUG: If there is only one section, the animation can fail
 			break;
 		case EWeaponType::EWT_SubmachineGun:
+			break;
+		case EWeaponType::EWT_Pistol:
+			break;
+		case EWeaponType::EWT_RocketLauncher:
 			break;
 		default:
 			break;
