@@ -90,9 +90,13 @@ private:
 	UPROPERTY(EditAnywhere)
 	float ZoomInterpSpeed{20.f};
 
-	//Lower is better. 0.6 is default
+	//Higher is better. 0.6 is default
 	UPROPERTY(EditDefaultsOnly)
 	float AimAccuracy{0.6f};
+
+	//How accurate is the gun when doing nothing
+	UPROPERTY(EditDefaultsOnly)
+	float BaseAccuracy{0.9f};
 
 	//Max amount of crosshair spread firing the weapon can cause. Lower is better.
 	UPROPERTY(EditDefaultsOnly)
@@ -158,6 +162,7 @@ public:
 	FORCEINLINE int32 GetMagCapacity() const {return MagCapacity;}
 	FORCEINLINE USoundCue* GetReloadSound() const {return ReloadSound;}
 	FORCEINLINE USoundCue* GetEquipSound() const {return EquipSound;}
+	FORCEINLINE float GetBaseAccuracy() const {return BaseAccuracy;}
 
 	
 };

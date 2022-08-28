@@ -128,7 +128,9 @@ private:
 	UPROPERTY(EditAnywhere)
 	int32 StartingRocketAmmo{8};
 	UPROPERTY(EditAnywhere)
-	int32 StartingPistolAmmo{30};
+	int32 StartingPistolAmmo{50};
+	UPROPERTY(EditAnywhere)
+	int32 StartingSMGAmmo{120};
 	
 	void InitializeCarriedAmmo();
 
