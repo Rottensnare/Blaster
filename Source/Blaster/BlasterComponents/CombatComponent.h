@@ -29,6 +29,7 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
 	void FireButtonPressed(bool bPressed);
+	void PickupAmmo(const EWeaponType InWeaponType, const int32 InAmmoAmount);
 
 
 protected:
@@ -121,7 +122,11 @@ private:
 	UFUNCTION()
 	void OnRep_CarriedAmmo();
 
+	//TODO: Implement max ammo per weapon type
 	TMap<EWeaponType, int32> CarriedAmmoMap;
+
+	UPROPERTY(EditAnywhere)
+	int32 MaxAmmo{420};
 	
 	UPROPERTY(EditAnywhere)
 	int32 StartingARAmmo{60};

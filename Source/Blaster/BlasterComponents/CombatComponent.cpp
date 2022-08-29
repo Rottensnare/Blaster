@@ -414,6 +414,24 @@ int32 UCombatComponent::AmountToReload()
 	return 0;
 }
 
+void UCombatComponent::PickupAmmo(const EWeaponType InWeaponType, const int32 InAmmoAmount)
+{
+	if(CarriedAmmoMap.Contains(InWeaponType))
+	{
+		CarriedAmmoMap[InWeaponType] = FMath::Clamp(CarriedAmmoMap[InWeaponType] + InAmmoAmount, 0, MaxAmmo);
+		
+		BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : BlasterPlayerController;
+		if(BlasterPlayerController)
+		{
+			if(EquippedWeapon->GetWeaponType() == InWeaponType)
+			{
+				TotalAmmo = CarriedAmmoMap[InWeaponType];
+				BlasterPlayerController->SetHUDTotalAmmo(TotalAmmo);
+			}
+		}
+	}
+}
+
 void UCombatComponent::ServerReload_Implementation()
 {
 	if(Character == nullptr || EquippedWeapon == nullptr) return;
