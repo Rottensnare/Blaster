@@ -3,6 +3,7 @@
 
 #include "Projectile.h"
 
+#include "NiagaraFunctionLibrary.h"
 #include "Blaster/Blaster.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Components/BoxComponent.h"
@@ -26,10 +27,7 @@ AProjectile::AProjectile()
 	CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_Visibility, ECR_Block);
 	CollisionBox->SetCollisionResponseToChannel(ECollisionChannel::ECC_WorldStatic, ECR_Block);
 	CollisionBox->SetCollisionResponseToChannel(ECC_SkeletalMesh, ECR_Block);
-
-	ProjectileMovementComponent = CreateDefaultSubobject<UProjectileMovementComponent>(TEXT("ProjectileMovementComp"));
-	ProjectileMovementComponent->bRotationFollowsVelocity = true;
-
+	
 }
 
 // Called when the game starts or when spawned
@@ -88,6 +86,56 @@ void AProjectile::MulticastSetImpactEffects(AActor* OtherActor)
 	{
 		ImpactParticles = MetalImpactParticles;
 		ImpactSound = MetalImpactSound;
+	}
+
+	ShowEffects();
+}
+
+void AProjectile::ShowEffects()
+{
+	
+}
+
+void AProjectile::DestroyTimerFinished()
+{
+	Destroy();
+}
+
+void AProjectile::StartDestroyTimer()
+{
+	GetWorldTimerManager().SetTimer(DestroyTimer, this, &AProjectile::DestroyTimerFinished, DestroyTime);
+}
+
+void AProjectile::ExplodeDamage()
+{
+	APawn* FiringPawn = GetInstigator();
+	if(FiringPawn)
+	{
+		AController* FiringController = FiringPawn->GetController();
+		if(FiringController)
+		{
+			UGameplayStatics::ApplyRadialDamageWithFalloff(
+				this,
+				Damage,
+				Damage / 8.f,
+				GetActorLocation(),
+				InnerDamageRadius,
+				OuterDamageRadius,
+				1.f,
+				UDamageType::StaticClass(),
+				TArray<AActor*>(),
+				this,
+				FiringController
+				);
+		}
+	}
+}
+
+void AProjectile::SpawnTrailSystem()
+{
+	if(TrailSystem)
+	{
+		TrailSystemComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(TrailSystem, GetRootComponent(), FName(), GetActorLocation(), GetActorRotation(), EAttachLocation::KeepWorldPosition, false);
 	}
 }
 

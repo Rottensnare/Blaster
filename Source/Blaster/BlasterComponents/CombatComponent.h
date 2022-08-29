@@ -28,7 +28,8 @@ public:
 	void Reload();
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
-	
+	void FireButtonPressed(bool bPressed);
+	void PickupAmmo(const EWeaponType InWeaponType, const int32 InAmmoAmount);
 
 
 protected:
@@ -43,8 +44,6 @@ protected:
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
 	void Fire();
-
-	void FireButtonPressed(bool bPressed);
 
 	UFUNCTION(Server, Reliable)
 	void ServerFire(const FVector_NetQuantize& TraceHitTarget );
@@ -123,8 +122,27 @@ private:
 	UFUNCTION()
 	void OnRep_CarriedAmmo();
 
+	//TODO: Implement max ammo per weapon type
 	TMap<EWeaponType, int32> CarriedAmmoMap;
+
+	UPROPERTY(EditAnywhere)
+	int32 MaxAmmo{420};
+	
+	UPROPERTY(EditAnywhere)
 	int32 StartingARAmmo{60};
+	UPROPERTY(EditAnywhere)
+	int32 StartingRocketAmmo{8};
+	UPROPERTY(EditAnywhere)
+	int32 StartingPistolAmmo{50};
+	UPROPERTY(EditAnywhere)
+	int32 StartingSMGAmmo{120};
+	UPROPERTY(EditAnywhere)
+	int32 StartingShotgunAmmo{24};
+	UPROPERTY(EditAnywhere)
+	int32 StartingSniperAmmo{20};
+	UPROPERTY(EditAnywhere)
+	int32 StartingGrenadeLauncherAmmo{8};
+	
 	void InitializeCarriedAmmo();
 
 	UPROPERTY(BlueprintReadOnly ,ReplicatedUsing = OnRep_CombatState, meta = (AllowPrivateAccess = "true"))

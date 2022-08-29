@@ -37,9 +37,19 @@ public:
 	void PlayElimMontage();
 	virtual void Destroyed() override;
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void ShowSniperScopeWidget(bool bShowScope);
+			
+	//Setting character invisible if camera gets too close
+	void HideCharacter();
+
+	UPROPERTY(Replicated)
+	bool bDisableGameplay{false};
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
+	void RotateInPlace(float DeltaTime);
 
 	void MoveForward(float Value);
 	void MoveRight(float Value);
@@ -74,6 +84,8 @@ protected:
 
 	//Initialize HUD if relevant info is missing
 	void PollInit();
+
+
 
 private:
 
@@ -129,9 +141,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* ReloadMontage;
 
-	
-	//Setting character invisible if camera gets too close
-	void HideCharacter();
+
 
 	//The distance to the camera at which the character should be set invisible.
 	UPROPERTY(EditDefaultsOnly)
@@ -211,10 +221,12 @@ public:
 	FORCEINLINE bool IsEliminated() const {return bEliminated;}
 	FORCEINLINE float GetHealth() const {return Health;}
 	FORCEINLINE float GetMaxHealth() const {return MaxHealth;}
+	FORCEINLINE bool GetDisableGameplay() const {return bDisableGameplay;}
 	AWeapon* GetEquippedWeapon();
 	FVector GetHitTarget() const;
 	ECombatState GetCombatState() const;
 	int32 GetTotalAmmo() const;
+	UCombatComponent* GetCombatComponent() const;
 	
 	
 };

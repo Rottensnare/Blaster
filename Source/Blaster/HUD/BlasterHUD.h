@@ -29,17 +29,26 @@ class BLASTER_API ABlasterHUD : public AHUD
 public:
 
 	virtual void DrawHUD() override;
-
+	void AddCharacterOverlay();
+	void AddWarmupWidget();
+	
 	UPROPERTY(EditAnywhere, Category = "Player Status")
 	TSubclassOf<class UUserWidget> CharacterOverlayClass;
+
+	UPROPERTY(EditAnywhere, Category = "Announcements")
+	TSubclassOf<UUserWidget> WarmupWidgetClass;
 
 	UPROPERTY()
 	class UCharacterOverlay* BlasterOverlay;
 
+	UPROPERTY()
+	class UAnnouncement* WarmupWidget;
+
+
 protected:
 
 	virtual void BeginPlay() override;
-	void AddCharacterOverlay();
+	
 
 private:
 

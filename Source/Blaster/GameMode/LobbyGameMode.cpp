@@ -16,8 +16,7 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 		if(World)
 		{
 			bUseSeamlessTravel = true;
-			World->ServerTravel(FString("/Game/Maps/Level_OpenWorld_01?listen"));
-			
+			World->ServerTravel(FString("/Game/Maps/Level_FFA_01?listen"));
 		}
 	}
 }

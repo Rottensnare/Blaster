@@ -3,6 +3,7 @@
 
 #include "BlasterHUD.h"
 
+#include "Announcement.h"
 #include "CharacterOverlay.h"
 #include "Blueprint/UserWidget.h"
 
@@ -50,8 +51,7 @@ void ABlasterHUD::DrawHUD()
 void ABlasterHUD::BeginPlay()
 {
 	Super::BeginPlay();
-
-	AddCharacterOverlay();
+	
 }
 
 void ABlasterHUD::AddCharacterOverlay()
@@ -63,6 +63,17 @@ void ABlasterHUD::AddCharacterOverlay()
 		BlasterOverlay->AddToViewport();
 	}
 }
+
+void ABlasterHUD::AddWarmupWidget()
+{
+	APlayerController* PlayerController = GetOwningPlayerController();
+	if(PlayerController && WarmupWidgetClass)
+	{
+		WarmupWidget = CreateWidget<UAnnouncement>(PlayerController, WarmupWidgetClass);
+		WarmupWidget->AddToViewport();
+	}
+}
+
 void ABlasterHUD::DrawCrosshair(UTexture2D* Texture, FVector2D ViewportCenter, FVector2D Spread)
 {
 	const float TextureWidth = Texture->GetSizeX();

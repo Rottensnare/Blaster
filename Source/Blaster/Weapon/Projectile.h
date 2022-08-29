@@ -30,25 +30,29 @@ protected:
 	void ServerSetImpactEffects(AActor* OtherActor);
 	
 	void MulticastSetImpactEffects(AActor* OtherActor);
+
+	virtual void ShowEffects();
+
+	void SpawnTrailSystem();
+
+	void DestroyTimerFinished();
+
+	void StartDestroyTimer();
+
+	void ExplodeDamage();
 	
 	UPROPERTY(EditAnywhere)
 	float Damage {10.f};
 
-private:
-
+	
+	UPROPERTY(EditDefaultsOnly)
+	class UStaticMeshComponent* ProjectileMesh;
+	
 	UPROPERTY(EditAnywhere)
 	class UBoxComponent* CollisionBox;
 
 	UPROPERTY(VisibleAnywhere)
-	class UProjectileMovementComponent* ProjectileMovementComponent;
-
-	UPROPERTY(EditAnywhere)
-	class UParticleSystem* Tracer;
-	
-	class UParticleSystemComponent* TracerComponent;
-
-	UPROPERTY(VisibleAnywhere)
-	UParticleSystem* ImpactParticles;
+	class UParticleSystem* ImpactParticles;
 
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* CharacterImpactParticles;
@@ -64,6 +68,37 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	USoundCue* MetalImpactSound;
+
+	UPROPERTY(VisibleAnywhere)
+	class UProjectileMovementComponent* ProjectileMovementComponent;
+
+	UPROPERTY(EditAnywhere)
+	class UNiagaraSystem* TrailSystem;
+	
+	UPROPERTY()
+	class UNiagaraComponent* TrailSystemComponent;
+
+	FTimerHandle DestroyTimer;
+
+	UPROPERTY(EditAnywhere)
+	float DestroyTime{3.f};
+
+		
+	UPROPERTY(EditAnywhere)
+	float InnerDamageRadius{100.f};
+
+	UPROPERTY(EditAnywhere)
+	float OuterDamageRadius{350.f};
+
+private:
+
+	UPROPERTY(EditAnywhere)
+	 UParticleSystem* Tracer;
+
+	UPROPERTY()
+	UParticleSystemComponent* TracerComponent;
+
+
 
 
 public:

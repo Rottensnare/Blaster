@@ -6,6 +6,7 @@
 #include "Blaster/BlasterPlayerController.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/HUD/BlasterHUD.h"
+#include "Blaster/Weapon/HitScanWeapon.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SphereComponent.h"
@@ -67,21 +68,32 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 void UCombatComponent::SetAiming(bool bIsAiming)
 {
+	if(Character == nullptr || EquippedWeapon == nullptr) return;
 	bAiming = bIsAiming; //Set here so that we don't need to wait for the server to tell us to aim.
 	ServerSetAiming(bIsAiming);
-	if(Character)
+	
+	Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
+	if(Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle)
 	{
-		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
+		Character->ShowSniperScopeWidget(bIsAiming);
+		if(bIsAiming) //BUG: Quickscoping is too effective, need to add a small delay before setting scatter usage
+		{
+			EquippedWeapon->SetUseScatter(false);
+		}
+		else
+		{
+			EquippedWeapon->SetUseScatter(true);
+		}
 	}
 }
 
 void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)
 {
+	if(Character == nullptr || EquippedWeapon == nullptr) return;
 	bAiming = bIsAiming;
-	if(Character)
-	{
-		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
-	}
+
+	Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
+	
 }
 
 void UCombatComponent::OnRep_EquippedWeapon()
@@ -197,7 +209,7 @@ void UCombatComponent::SetCrosshairsSpread(float DeltaTime)
 
 	CrosshairShootFactor = FMath::FInterpTo(CrosshairShootFactor, 0.f, DeltaTime, RecoilRecoverySpeed);
 	
-	const float Spread = FMath::Clamp((0.7f + CrosshairVelocityFactor + CrosshairShootFactor + CrosshairInAirFactor - CrosshairAimFactor), 0.f, 5.f);
+	const float Spread = FMath::Clamp((EquippedWeapon->GetBaseAccuracy() + CrosshairVelocityFactor + CrosshairShootFactor + CrosshairInAirFactor - CrosshairAimFactor), 0.f, 7.f);
 	BlasterHUD->SetCrosshairSpread(Spread);
 }
 
@@ -255,7 +267,13 @@ void UCombatComponent::OnRep_CarriedAmmo()
 
 void UCombatComponent::InitializeCarriedAmmo()
 {
-	CarriedAmmoMap.Emplace(EWeaponType::EWT_AssaultRifle, 300);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_AssaultRifle, StartingARAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_RocketLauncher, StartingRocketAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_Pistol, StartingPistolAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_SubmachineGun, StartingSMGAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_Shotgun, StartingShotgunAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_SniperRifle, StartingSniperAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_GrenadeLauncher, StartingGrenadeLauncherAmmo);
 }
 
 
@@ -289,7 +307,6 @@ bool UCombatComponent::SetCrosshairs()
 			FHUDPackage HUDPackage;
 			if (EquippedWeapon)
 			{
-				
 				HUDPackage.CrosshairsCenter = EquippedWeapon->GetCrosshairTextures()[0];
 				HUDPackage.CrosshairsTop = EquippedWeapon->GetCrosshairTextures()[1];
 				HUDPackage.CrosshairsBottom = EquippedWeapon->GetCrosshairTextures()[2];
@@ -397,6 +414,24 @@ int32 UCombatComponent::AmountToReload()
 	return 0;
 }
 
+void UCombatComponent::PickupAmmo(const EWeaponType InWeaponType, const int32 InAmmoAmount)
+{
+	if(CarriedAmmoMap.Contains(InWeaponType))
+	{
+		CarriedAmmoMap[InWeaponType] = FMath::Clamp(CarriedAmmoMap[InWeaponType] + InAmmoAmount, 0, MaxAmmo);
+		
+		BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : BlasterPlayerController;
+		if(BlasterPlayerController)
+		{
+			if(EquippedWeapon->GetWeaponType() == InWeaponType)
+			{
+				TotalAmmo = CarriedAmmoMap[InWeaponType];
+				BlasterPlayerController->SetHUDTotalAmmo(TotalAmmo);
+			}
+		}
+	}
+}
+
 void UCombatComponent::ServerReload_Implementation()
 {
 	if(Character == nullptr || EquippedWeapon == nullptr) return;
@@ -407,7 +442,7 @@ void UCombatComponent::ServerReload_Implementation()
 	{
 		CarriedAmmoMap[EquippedWeapon->GetWeaponType()] -= ReloadAmount;
 		TotalAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
-		EquippedWeapon->AddAmmo(ReloadAmount);
+		EquippedWeapon->AddAmmo(ReloadAmount); //BUG: Someone is going to abuse this with animation cancels and reload much faster than intended
 	}
 	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : BlasterPlayerController;
 	if(BlasterPlayerController)

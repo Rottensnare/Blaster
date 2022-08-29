@@ -25,6 +25,9 @@ AWeapon::AWeapon()
 	WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
 	WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECR_Ignore);
 	WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	WeaponMesh->SetCustomDepthStencilValue(CustomDepthValue);
+	WeaponMesh->MarkRenderStateDirty();
+	EnableCustomDepth(true);
 
 	AreaSphere = CreateDefaultSubobject<USphereComponent>(TEXT("AreaSphere"));
 	AreaSphere->SetupAttachment(GetRootComponent());
@@ -33,7 +36,21 @@ AWeapon::AWeapon()
 
 	PickupWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("PickupWidget"));
 	PickupWidget->SetupAttachment(RootComponent);
+
 	
+}
+
+void AWeapon::OnConstruction(const FTransform& Transform)
+{
+	Super::OnConstruction(Transform);
+
+	for(int i = 0; i < 5; i++) //If someone forgets to put the crosshairs, this prevents a crash.
+		{
+			if(Crosshairs.Num() < 5)
+			{
+				Crosshairs.Add(nullptr);
+			}
+		}
 }
 
 // Called when the game starts or when spawned
@@ -52,7 +69,6 @@ void AWeapon::BeginPlay()
 		AreaSphere->OnComponentBeginOverlap.AddDynamic(this, &ThisClass::AWeapon::OnSphereOverlap);
 		AreaSphere->OnComponentEndOverlap.AddDynamic(this, &ThisClass::AWeapon::OnSphereEndOverlap);
 	}
-	
 }
 
 // Called every frame
@@ -91,6 +107,13 @@ void AWeapon::OnRep_WeaponState()
 		WeaponMesh->SetEnableGravity(false);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		if(WeaponType == EWeaponType::EWT_SubmachineGun)
+		{
+			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			WeaponMesh->SetEnableGravity(true);
+			WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		}
+		EnableCustomDepth(false);
 		break;
 	case EWeaponState::EWS_Initial:
 		break;
@@ -98,6 +121,12 @@ void AWeapon::OnRep_WeaponState()
 		WeaponMesh->SetSimulatePhysics(true);
 		WeaponMesh->SetEnableGravity(true);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
+		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECR_Ignore);
+		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECR_Ignore);
+		WeaponMesh->SetCustomDepthStencilValue(CustomDepthValue);
+		WeaponMesh->MarkRenderStateDirty();
+		EnableCustomDepth(true);
 		break;
 	default:
 		break;
@@ -123,10 +152,18 @@ void AWeapon::SetWeaponState(EWeaponState State)
 	{
 	case EWeaponState::EWS_Equipped:
 		ShowPickupWidget(false);
+		SetReplicateMovement(false);
 		WeaponMesh->SetSimulatePhysics(false);
 		WeaponMesh->SetEnableGravity(false);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		if(WeaponType == EWeaponType::EWT_SubmachineGun)
+		{
+			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			WeaponMesh->SetEnableGravity(true);
+			WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		}
+		EnableCustomDepth(false);
 		break;
 	case EWeaponState::EWS_Initial:
 		break;
@@ -134,10 +171,17 @@ void AWeapon::SetWeaponState(EWeaponState State)
 		if(HasAuthority())
 		{
 			AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+			SetReplicateMovement(true);
 		}
 		WeaponMesh->SetSimulatePhysics(true);
 		WeaponMesh->SetEnableGravity(true);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+		WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Block);
+		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Pawn, ECR_Ignore);
+		WeaponMesh->SetCollisionResponseToChannel(ECollisionChannel::ECC_Camera, ECR_Ignore);
+		WeaponMesh->SetCustomDepthStencilValue(CustomDepthValue);
+		WeaponMesh->MarkRenderStateDirty();
+		EnableCustomDepth(true);
 		break;
 	default:
 		break;
@@ -266,6 +310,14 @@ void AWeapon::AddAmmo(int32 AmmoToAdd)
 	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
 	SetHUDAmmo();
 	SetTotalAmmo();
+}
+
+void AWeapon::EnableCustomDepth(bool bEnable)
+{
+	if(WeaponMesh)
+	{
+		WeaponMesh->SetRenderCustomDepth(bEnable);
+	}
 }
 
 void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
