@@ -33,8 +33,11 @@ protected:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastSetImpactEffects(EHitType HitType, const FVector_NetQuantize& Location,  const FVector_NetQuantize& StartLocation = FVector());
+	void WeaponTraceHit(const FVector& InTraceStart, const FVector& InHitTarget, FHitResult& OutHitResult);
 
 	virtual void ShowEffects(const FVector& Location, const FVector& StartLocation = FVector());
+
+	FVector TraceEndWithScatter(const FVector& TraceStart, const FVector& HitTarget);
 
 	UPROPERTY(VisibleAnywhere)
 	class UParticleSystem* ImpactParticles;
@@ -54,11 +57,18 @@ protected:
 	UPROPERTY(EditAnywhere)
 	USoundCue* MetalImpactSound;
 
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	float DistanceToSphere{800.f};
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	float SphereRadius{75.f};
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	bool bUseScatter{false};
 
-private:
-	
 	UPROPERTY(EditAnywhere)
 	float Damage{10.f};
+
+
+private:
 
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* BeamParticles;
