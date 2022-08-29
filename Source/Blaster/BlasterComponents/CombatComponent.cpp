@@ -423,7 +423,7 @@ void UCombatComponent::PickupAmmo(const EWeaponType InWeaponType, const int32 In
 		BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : BlasterPlayerController;
 		if(BlasterPlayerController)
 		{
-			if(EquippedWeapon->GetWeaponType() == InWeaponType)
+			if(EquippedWeapon && EquippedWeapon->GetWeaponType() == InWeaponType)
 			{
 				TotalAmmo = CarriedAmmoMap[InWeaponType];
 				BlasterPlayerController->SetHUDTotalAmmo(TotalAmmo);

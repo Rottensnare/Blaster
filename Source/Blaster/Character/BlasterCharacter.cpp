@@ -6,6 +6,7 @@
 #include "Blaster/Blaster.h"
 #include "Blaster/BlasterPlayerController.h"
 #include "Blaster/BlasterPlayerState.h"
+#include "Blaster/BlasterComponents/BuffComponent.h"
 #include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Blaster/GameMode/BlasterGameMode.h"
 #include "Blaster/Weapon/Weapon.h"
@@ -50,6 +51,9 @@ TurningInPlace(ETurningInPlace::ETIP_NotTurning)
 
 	CombatComponent = CreateDefaultSubobject<UCombatComponent>(TEXT("CombatComponent"));
 	CombatComponent->SetIsReplicated(true);
+
+	BuffComponent = CreateDefaultSubobject<UBuffComponent>(TEXT("BuffComponent"));
+	BuffComponent->SetIsReplicated(true);
 
 	GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 	GetMesh()->SetCollisionObjectType(ECC_SkeletalMesh);
@@ -428,9 +432,12 @@ void ABlasterCharacter::HideCharacter()
 	}
 }
 
-void ABlasterCharacter::OnRep_Health()
+void ABlasterCharacter::OnRep_Health(float LastHealth)
 {
-	PlayHitReactMontage();
+	if(Health < LastHealth)
+	{
+		PlayHitReactMontage();
+	}
 	UpdateHUDHealth();
 }
 
@@ -528,6 +535,10 @@ void ABlasterCharacter::PostInitializeComponents()
 	if(CombatComponent)
 	{
 		CombatComponent->Character = this;
+	}
+	if(BuffComponent)
+	{
+		BuffComponent->Character = this;
 	}
 }
 
@@ -647,6 +658,11 @@ int32 ABlasterCharacter::GetTotalAmmo() const
 UCombatComponent* ABlasterCharacter::GetCombatComponent() const
 {
 	return CombatComponent;
+}
+
+UBuffComponent* ABlasterCharacter::GetBuffComponent() const
+{
+	return BuffComponent;
 }
 
 void ABlasterCharacter::UpdateHUDHealth()

@@ -116,6 +116,9 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UCombatComponent* CombatComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class UBuffComponent* BuffComponent;
+
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
 
@@ -162,7 +165,7 @@ private:
 	float Health;
 
 	UFUNCTION()
-	void OnRep_Health();
+	void OnRep_Health(float LastHealth);
 
 	UPROPERTY()
 	class ABlasterPlayerController* BlasterPlayerController;
@@ -220,6 +223,7 @@ public:
 	FORCEINLINE bool ShouldRotateRootBone() const {return bRotateRootBone;}
 	FORCEINLINE bool IsEliminated() const {return bEliminated;}
 	FORCEINLINE float GetHealth() const {return Health;}
+	FORCEINLINE void SetHealth(const float InAmount) {Health = InAmount;}
 	FORCEINLINE float GetMaxHealth() const {return MaxHealth;}
 	FORCEINLINE bool GetDisableGameplay() const {return bDisableGameplay;}
 	AWeapon* GetEquippedWeapon();
@@ -227,6 +231,7 @@ public:
 	ECombatState GetCombatState() const;
 	int32 GetTotalAmmo() const;
 	UCombatComponent* GetCombatComponent() const;
+	UBuffComponent* GetBuffComponent() const;
 	
 	
 };
