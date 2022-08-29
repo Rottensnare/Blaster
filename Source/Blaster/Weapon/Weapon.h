@@ -44,6 +44,8 @@ public:
 	void SetHUDWeaponType();
 	void AddAmmo(int32 AmmoToAdd);
 
+	void EnableCustomDepth(bool bEnable);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -144,6 +146,9 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	USoundCue* EquipSound;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
+	int32 CustomDepthValue{CUSTOM_DEPTH_TAN};
 	
 public:
 
