@@ -566,6 +566,12 @@ void ABlasterCharacter::PlayReloadMontage()
 			break;
 		case EWeaponType::EWT_RocketLauncher:
 			break;
+		case EWeaponType::EWT_Shotgun:
+			break;
+		case EWeaponType::EWT_SniperRifle:
+			break;
+		case EWeaponType::EWT_GrenadeLauncher:
+			break;
 		default:
 			break;
 		}
@@ -680,7 +686,11 @@ void ABlasterCharacter::MulticastElim_Implementation()
 
 	bDisableGameplay = true;
 	
-	if(CombatComponent) CombatComponent->FireButtonPressed(false);
+	if(CombatComponent)
+	{
+		CombatComponent->FireButtonPressed(false);
+		CombatComponent->SetAiming(false);
+	}
 	
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);

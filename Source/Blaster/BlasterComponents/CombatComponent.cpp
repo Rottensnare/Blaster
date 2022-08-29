@@ -6,6 +6,7 @@
 #include "Blaster/BlasterPlayerController.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/HUD/BlasterHUD.h"
+#include "Blaster/Weapon/HitScanWeapon.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Camera/CameraComponent.h"
 #include "Components/SphereComponent.h"
@@ -67,21 +68,32 @@ void UCombatComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 void UCombatComponent::SetAiming(bool bIsAiming)
 {
+	if(Character == nullptr || EquippedWeapon == nullptr) return;
 	bAiming = bIsAiming; //Set here so that we don't need to wait for the server to tell us to aim.
 	ServerSetAiming(bIsAiming);
-	if(Character)
+	
+	Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
+	if(Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle)
 	{
-		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
+		Character->ShowSniperScopeWidget(bIsAiming);
+		if(bIsAiming) //BUG: Quickscoping is too effective, need to add a small delay before setting scatter usage
+		{
+			EquippedWeapon->SetUseScatter(false);
+		}
+		else
+		{
+			EquippedWeapon->SetUseScatter(true);
+		}
 	}
 }
 
 void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)
 {
+	if(Character == nullptr || EquippedWeapon == nullptr) return;
 	bAiming = bIsAiming;
-	if(Character)
-	{
-		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
-	}
+
+	Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
+	
 }
 
 void UCombatComponent::OnRep_EquippedWeapon()
@@ -260,6 +272,8 @@ void UCombatComponent::InitializeCarriedAmmo()
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_Pistol, StartingPistolAmmo);
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_SubmachineGun, StartingSMGAmmo);
 	CarriedAmmoMap.Emplace(EWeaponType::EWT_Shotgun, StartingShotgunAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_SniperRifle, StartingSniperAmmo);
+	CarriedAmmoMap.Emplace(EWeaponType::EWT_GrenadeLauncher, StartingGrenadeLauncherAmmo);
 }
 
 
@@ -410,7 +424,7 @@ void UCombatComponent::ServerReload_Implementation()
 	{
 		CarriedAmmoMap[EquippedWeapon->GetWeaponType()] -= ReloadAmount;
 		TotalAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
-		EquippedWeapon->AddAmmo(ReloadAmount);
+		EquippedWeapon->AddAmmo(ReloadAmount); //BUG: Someone is going to abuse this with animation cancels and reload much faster than intended
 	}
 	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : BlasterPlayerController;
 	if(BlasterPlayerController)

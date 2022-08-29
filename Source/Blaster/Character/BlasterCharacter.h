@@ -37,6 +37,12 @@ public:
 	void PlayElimMontage();
 	virtual void Destroyed() override;
 
+	UFUNCTION(BlueprintImplementableEvent)
+	void ShowSniperScopeWidget(bool bShowScope);
+			
+	//Setting character invisible if camera gets too close
+	void HideCharacter();
+
 	UPROPERTY(Replicated)
 	bool bDisableGameplay{false};
 
@@ -78,6 +84,8 @@ protected:
 
 	//Initialize HUD if relevant info is missing
 	void PollInit();
+
+
 
 private:
 
@@ -133,9 +141,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* ReloadMontage;
 
-	
-	//Setting character invisible if camera gets too close
-	void HideCharacter();
+
 
 	//The distance to the camera at which the character should be set invisible.
 	UPROPERTY(EditDefaultsOnly)

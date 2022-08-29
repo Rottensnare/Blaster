@@ -53,6 +53,9 @@ protected:
 	UFUNCTION()
 	void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	bool bUseScatter{false};
+
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	class USkeletalMeshComponent* WeaponMesh;
@@ -163,6 +166,7 @@ public:
 	FORCEINLINE USoundCue* GetReloadSound() const {return ReloadSound;}
 	FORCEINLINE USoundCue* GetEquipSound() const {return EquipSound;}
 	FORCEINLINE float GetBaseAccuracy() const {return BaseAccuracy;}
+	FORCEINLINE void SetUseScatter(bool bInUseScatter) {bUseScatter = bInUseScatter;}
 
 	
 };

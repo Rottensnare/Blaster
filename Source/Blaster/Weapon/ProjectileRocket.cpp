@@ -14,9 +14,9 @@
 AProjectileRocket::AProjectileRocket()
 {
 
-	RocketMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RocketMesh"));
-	RocketMesh->SetupAttachment(RootComponent);
-	RocketMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	ProjectileMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("RocketMesh"));
+	ProjectileMesh->SetupAttachment(RootComponent);
+	ProjectileMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
 	RocketTailLocation = CreateDefaultSubobject<USceneComponent>(TEXT("RocketTailLocation"));
 	RocketTailLocation->SetupAttachment(RootComponent);
@@ -33,10 +33,8 @@ void AProjectileRocket::BeginPlay()
 {
 	Super::BeginPlay();
 
-	if(TrailSystem && RocketTailLocation)
-	{
-		TrailSystemComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(TrailSystem, GetRootComponent(), FName(), RocketTailLocation->GetComponentLocation(), GetActorRotation(), EAttachLocation::KeepWorldPosition, false);
-	}
+	SpawnTrailSystem();
+	
 	if(ProjectileSoundCue && LoopingSoundAttenuation)
 	{
 		ProjectileLoopComponent = UGameplayStatics::SpawnSoundAttached(
@@ -87,13 +85,7 @@ void AProjectileRocket::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, 
 	}
 	
 	MulticastSetImpactEffects(OtherActor);
-	
-	GetWorldTimerManager().SetTimer(DestroyTimer, this, &AProjectileRocket::DestroyTimerFinished, DestroyTime);
-}
-
-void AProjectileRocket::DestroyTimerFinished()
-{
-	
+	StartDestroyTimer();
 }
 
 void AProjectileRocket::Destroyed()
@@ -111,9 +103,9 @@ void AProjectileRocket::ShowEffects()
 		ProjectileLoopComponent->DestroyComponent();
 	}
 
-	if(RocketMesh)
+	if(ProjectileMesh)
 	{
-		RocketMesh->SetVisibility(false);
+		ProjectileMesh->SetVisibility(false);
 		
 	}
 	if(CollisionBox)

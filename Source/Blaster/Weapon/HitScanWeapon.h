@@ -61,8 +61,6 @@ protected:
 	float DistanceToSphere{800.f};
 	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
 	float SphereRadius{75.f};
-	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
-	bool bUseScatter{false};
 
 	UPROPERTY(EditAnywhere)
 	float Damage{10.f};

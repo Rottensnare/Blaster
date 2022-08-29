@@ -32,10 +32,21 @@ protected:
 	void MulticastSetImpactEffects(AActor* OtherActor);
 
 	virtual void ShowEffects();
+
+	void SpawnTrailSystem();
+
+	void DestroyTimerFinished();
+
+	void StartDestroyTimer();
+
+	void ExplodeDamage();
 	
 	UPROPERTY(EditAnywhere)
 	float Damage {10.f};
 
+	
+	UPROPERTY(EditDefaultsOnly)
+	class UStaticMeshComponent* ProjectileMesh;
 	
 	UPROPERTY(EditAnywhere)
 	class UBoxComponent* CollisionBox;
@@ -61,9 +72,25 @@ protected:
 	UPROPERTY(VisibleAnywhere)
 	class UProjectileMovementComponent* ProjectileMovementComponent;
 
+	UPROPERTY(EditAnywhere)
+	class UNiagaraSystem* TrailSystem;
+	
+	UPROPERTY()
+	class UNiagaraComponent* TrailSystemComponent;
+
+	FTimerHandle DestroyTimer;
+
+	UPROPERTY(EditAnywhere)
+	float DestroyTime{3.f};
+
+		
+	UPROPERTY(EditAnywhere)
+	float InnerDamageRadius{100.f};
+
+	UPROPERTY(EditAnywhere)
+	float OuterDamageRadius{350.f};
+
 private:
-	
-	
 
 	UPROPERTY(EditAnywhere)
 	 UParticleSystem* Tracer;

@@ -24,15 +24,12 @@ protected:
 
 	virtual void BeginPlay() override;
 
-	void DestroyTimerFinished();
+	
 
 	virtual void Destroyed() override;
 
 	virtual void ShowEffects() override;
 	
-	UPROPERTY(EditAnywhere)
-	class UNiagaraSystem* TrailSystem;
-
 	//Sound the projectile makes while flying through the air
 	UPROPERTY(EditAnywhere)
 	class USoundCue* ProjectileSoundCue;
@@ -51,23 +48,10 @@ protected:
 	
 private:
 
-	UPROPERTY(EditDefaultsOnly)
-	class UStaticMeshComponent* RocketMesh;
 
-	UPROPERTY(EditAnywhere)
-	float InnerDamageRadius{100.f};
 
-	UPROPERTY(EditAnywhere)
-	float OuterDamageRadius{350.f};
 
-	FTimerHandle DestroyTimer;
-
-	UPROPERTY(EditAnywhere)
-	float DestroyTime{3.f};
-
-	UPROPERTY()
-	class UNiagaraComponent* TrailSystemComponent;
-
+	
 
 public:
 	
