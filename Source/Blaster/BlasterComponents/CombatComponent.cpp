@@ -472,6 +472,12 @@ void UCombatComponent::OnRep_CombatState()
 	}
 }
 
+void UCombatComponent::SetSpeeds(const float InAimSpeed, const float InBaseSpeed)
+{
+	BaseWalkSpeed = InBaseSpeed;
+	AimWalkSpeed = InAimSpeed;
+}
+
 void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);

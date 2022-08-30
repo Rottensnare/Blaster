@@ -155,4 +155,5 @@ private:
 public:
 
 	FORCEINLINE int32 GetTotalAmmo() const {return TotalAmmo;}
+	void SetSpeeds(const float InAimSpeed, const float InBaseSpeed);
 };

@@ -27,6 +27,13 @@ protected:
 	UFUNCTION()
 	void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	UPROPERTY(VisibleAnywhere)
+	class UNiagaraComponent* PickupEffectComponent;
+
+	UPROPERTY(EditAnywhere)
+	class UNiagaraSystem* PickedUpEffect;
+
+
 private:
 
 	UPROPERTY(EditAnywhere)
@@ -40,6 +47,7 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent* PickupMesh;
+
 
 	UPROPERTY(EditAnywhere)
 	float BaseTurnRate{45.f};

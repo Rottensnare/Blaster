@@ -3,7 +3,9 @@
 
 #include "BuffComponent.h"
 
+#include "CombatComponent.h"
 #include "Blaster/Character/BlasterCharacter.h"
+#include "GameFramework/CharacterMovementComponent.h"
 
 // Sets default values for this component's properties
 UBuffComponent::UBuffComponent()
@@ -20,8 +22,6 @@ UBuffComponent::UBuffComponent()
 void UBuffComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	// ...
 	
 }
 
@@ -43,6 +43,45 @@ void UBuffComponent::Heal(float InHealAmount, float InHealTime)
 	AmountToHeal += InHealAmount;
 }
 
+void UBuffComponent::BuffSpeed(float InBuffBaseSpeed, float InBuffCrouchSpeed, float InBuffTime)
+{
+	if(Character == nullptr) return;
+
+	Character->GetWorldTimerManager().SetTimer(SpeedBuffTimer, this, &UBuffComponent::ResetSpeed, InBuffTime);
+
+	MulticastSpeedBuff(InBuffBaseSpeed, InBuffCrouchSpeed);
+
+	Character->GetCharacterMovement()->MaxWalkSpeed = InBuffBaseSpeed;
+	Character->GetCharacterMovement()->MaxWalkSpeedCrouched = InBuffCrouchSpeed;
+	if(Character->GetCombatComponent())
+	{
+		Character->GetCombatComponent()->SetSpeeds(InBuffCrouchSpeed, InBuffBaseSpeed);
+	}
+	
+}
+
+void UBuffComponent::BuffJump(float InBuffJumpVelocity, float InBuffTime)
+{
+	if(Character == nullptr) return;
+
+	Character->GetWorldTimerManager().SetTimer(JumpBuffTimer, this, &UBuffComponent::ResetJump, InBuffTime);
+	Character->GetCharacterMovement()->JumpZVelocity = InBuffJumpVelocity;
+
+	MulticastJumpBuff(InBuffJumpVelocity);
+
+}
+
+void UBuffComponent::SetInitialSpeeds(float BaseSpeed, float CrouchSpeed)
+{
+	InitialBaseSpeed = BaseSpeed;
+	InitialCrouchSpeed = CrouchSpeed;
+}
+
+void UBuffComponent::SetInitialJumpVelocity(float InVelocity)
+{
+	InitialJumpVelocity = InVelocity;
+}
+
 void UBuffComponent::HealRampUp(float DeltaTime)
 {
 	if(!bHealing || Character == nullptr || Character->IsEliminated()) return;
@@ -59,4 +98,46 @@ void UBuffComponent::HealRampUp(float DeltaTime)
 		bHealing = false;
 		AmountToHeal = 0.f;
 	}
+}
+
+void UBuffComponent::ResetSpeed()
+{
+	if(Character == nullptr || !Character->GetCharacterMovement()) return;
+	
+	Character->GetCharacterMovement()->MaxWalkSpeed = InitialBaseSpeed;
+	Character->GetCharacterMovement()->MaxWalkSpeedCrouched = InitialCrouchSpeed;
+	if(Character->GetCombatComponent())
+	{
+		Character->GetCombatComponent()->SetSpeeds(InitialCrouchSpeed, InitialBaseSpeed);
+	}
+
+	MulticastSpeedBuff(InitialBaseSpeed, InitialCrouchSpeed);
+}
+
+void UBuffComponent::ResetJump()
+{
+	if(Character == nullptr) return;
+	Character->GetCharacterMovement()->JumpZVelocity = InitialJumpVelocity;
+	MulticastJumpBuff(InitialJumpVelocity);
+}
+
+void UBuffComponent::MulticastJumpBuff_Implementation(float InJumpVelocity)
+{
+	if(Character == nullptr || Character->HasAuthority()) return;
+	Character->GetCharacterMovement()->JumpZVelocity = InJumpVelocity;
+}
+
+void UBuffComponent::MulticastSpeedBuff_Implementation(float InBaseSpeed, float InCrouchSpeed)
+{
+	if(Character == nullptr) return;
+	if(!Character->HasAuthority())
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = InBaseSpeed;
+		Character->GetCharacterMovement()->MaxWalkSpeedCrouched = InCrouchSpeed;
+		if(Character->GetCombatComponent())
+		{
+			Character->GetCombatComponent()->SetSpeeds(InCrouchSpeed, InBaseSpeed);
+		}
+	}
+	
 }
