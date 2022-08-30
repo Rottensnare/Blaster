@@ -167,13 +167,37 @@ void ABlasterCharacter::EquipButtonPressed()
 	if(bDisableGameplay) return;
 	if(CombatComponent)
 	{
-		if(HasAuthority())
+		if(CombatComponent->SecondaryWeapon == nullptr)
 		{
-			CombatComponent->EquipWeapon(OverlappingWeapon);
+			CombatComponent->EquipSecondaryWeapon(OverlappingWeapon);
 		}
 		else
 		{
-			ServerEquipButtonPressed();
+			if(HasAuthority())
+			{
+				CombatComponent->EquipWeapon(OverlappingWeapon);
+			}
+			else
+			{
+				ServerEquipButtonPressed();
+				CombatComponent->SetCrosshairs();
+			}
+		}
+	}
+}
+
+void ABlasterCharacter::SwapButtonPressed()
+{
+	if(bDisableGameplay) return;
+	if(CombatComponent)
+	{
+		if(HasAuthority())
+		{
+			CombatComponent->SwapWeapons();
+		}
+		else
+		{
+			ServerSwapButtonPressed();
 			CombatComponent->SetCrosshairs();
 		}
 	}
@@ -405,6 +429,15 @@ void ABlasterCharacter::ServerEquipButtonPressed_Implementation()
 	}
 }
 
+void ABlasterCharacter::ServerSwapButtonPressed_Implementation()
+{
+	if(CombatComponent)
+	{
+		CombatComponent->SwapWeapons();
+	}
+}
+
+
 
 void ABlasterCharacter::HideCharacter()
 {
@@ -437,7 +470,7 @@ void ABlasterCharacter::SpawnDefaultWeapon()
 		StartingWeapon->bDestroyWeapon = true;
 		if(CombatComponent)
 		{
-			CombatComponent->EquipWeapon(StartingWeapon);
+			CombatComponent->EquipPrimaryWeapon(StartingWeapon);
 		}
 	}
 }
@@ -566,7 +599,7 @@ void ABlasterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ABlasterCharacter::FireButtonPressed);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ABlasterCharacter::FireButtonReleased);
 	PlayerInputComponent->BindAction("Reload", IE_Pressed, this, &ABlasterCharacter::ReloadButtonPressed);
-
+	PlayerInputComponent->BindAction("SwapWeapons", IE_Pressed, this, &ABlasterCharacter::SwapButtonPressed);
 }
 
 void ABlasterCharacter::PostInitializeComponents()

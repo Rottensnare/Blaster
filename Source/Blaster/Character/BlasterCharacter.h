@@ -62,6 +62,7 @@ protected:
 	void TurnAtRate(float Value);
 	void LookUpAtRate(float Value);
 	void EquipButtonPressed();
+	void SwapButtonPressed();
 	void CrouchButtonPressed();
 	void AimButtonPressed();
 	void AimButtonReleased();
@@ -128,6 +129,9 @@ private:
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
+
+	UFUNCTION(Server, Reliable)
+	void ServerSwapButtonPressed();
 	
 	float AO_Yaw; //For calculating aim offsets
 	float AO_Pitch;
