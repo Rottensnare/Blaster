@@ -31,6 +31,7 @@ public:
 	virtual void OnRep_ReplicatedMovement() override;
 	void UpdateHUDHealth();
 	void UpdateHUDShields();
+	void UpdateHUDAmmo();
 	
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastElim();
@@ -43,6 +44,8 @@ public:
 			
 	//Setting character invisible if camera gets too close
 	void HideCharacter();
+
+	void SpawnDefaultWeapon();
 
 	UPROPERTY(Replicated)
 	bool bDisableGameplay{false};
@@ -86,7 +89,7 @@ protected:
 	//Initialize HUD if relevant info is missing
 	void PollInit();
 
-
+	
 
 private:
 
@@ -144,6 +147,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* ReloadMontage;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AWeapon> DefaultWeaponClass;
 
 
 
@@ -217,6 +223,10 @@ private:
 
 	UPROPERTY()
 	class ABlasterPlayerState* BlasterPlayerState;
+
+	FTimerHandle HUDInitTimer;
+	void HUDInitTimerFinished();
+	float HUDInitDelay{0.2f};
 
 	
 public:

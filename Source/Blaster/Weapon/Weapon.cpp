@@ -242,13 +242,13 @@ void AWeapon::OnRep_Owner()
 		OwnerController = nullptr;
 	}else
 	{
-		SetHUDAmmo();
 		SetHUDMagAmmo();
-		SetTotalAmmo();
 		SetHUDWeaponType();
+		if(OwnerCharacter)
+		{
+			OwnerCharacter->UpdateHUDAmmo();
+		}
 	}
-
-	
 }
 
 void AWeapon::SetHUDAmmo()
@@ -259,7 +259,7 @@ void AWeapon::SetHUDAmmo()
 		OwnerController = OwnerController == nullptr ? Cast<ABlasterPlayerController>(OwnerCharacter->Controller) : OwnerController;
 		if(OwnerController)
 		{
-			OwnerController->SetHUDAmmo(Ammo);
+			OwnerCharacter->UpdateHUDAmmo();
 		}
 	}
 }
@@ -274,19 +274,6 @@ void AWeapon::SetHUDMagAmmo()
 		if(OwnerController)
 		{
 			OwnerController->SetHUDMagText(MagCapacity);
-		}
-	}
-}
-
-void AWeapon::SetTotalAmmo()
-{
-	OwnerCharacter = OwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : OwnerCharacter;
-	if(OwnerCharacter)
-	{
-		OwnerController = OwnerController == nullptr ? Cast<ABlasterPlayerController>(OwnerCharacter->Controller) : OwnerController;
-		if(OwnerController)
-		{
-			OwnerController->SetHUDTotalAmmo(OwnerCharacter->GetTotalAmmo());
 		}
 	}
 }
@@ -309,7 +296,6 @@ void AWeapon::AddAmmo(int32 AmmoToAdd)
 {
 	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
 	SetHUDAmmo();
-	SetTotalAmmo();
 }
 
 void AWeapon::EnableCustomDepth(bool bEnable)

@@ -109,18 +109,19 @@ void ABlasterPlayerController::ServerCheckMatchState_Implementation()
 
 void ABlasterPlayerController::PollInit()
 {
-	if(CharacterOverlay == nullptr) //Waiting for character overlay to be initialized so that HUD can be updated.
+	if (CharacterOverlay == nullptr)
 	{
-		if(BlasterHUD && BlasterHUD->BlasterOverlay)
+		if (BlasterHUD && BlasterHUD->BlasterOverlay)
 		{
 			CharacterOverlay = BlasterHUD->BlasterOverlay;
-			if(CharacterOverlay)
+			if (CharacterOverlay)
 			{
-				SetHUDHealth(HUDHealth, HUDMaxHealth);
-				SetHUDShields(HUDShields, HUDMaxShields);
-				SetHUDScore(HUDScore);
-				SetHUDElims(HUDElims);
-				bInitializeCharacterOverlay = false;
+				if (bInitializeHealth) SetHUDHealth(HUDHealth, HUDMaxHealth);
+				if (bInitializeShield) SetHUDShields(HUDShields, HUDMaxShields);
+				if (bInitializeScore) SetHUDScore(HUDScore);
+				if (bInitializeDefeats) SetHUDElims(HUDElims);
+				if (bInitializeCarriedAmmo) SetHUDTotalAmmo(HUDCarriedAmmo);
+				if (bInitializeWeaponAmmo) SetHUDAmmo(HUDWeaponAmmo);
 			}
 		}
 	}
@@ -281,6 +282,10 @@ void ABlasterPlayerController::SetHUDAmmo(int32 Ammo)
 	{
 		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
 		BlasterHUD->BlasterOverlay->AmmoText->SetText(FText::FromString(AmmoText));
+	}else
+	{
+		bInitializeWeaponAmmo = true;
+		HUDWeaponAmmo = Ammo;
 	}
 }
 
@@ -309,6 +314,10 @@ void ABlasterPlayerController::SetHUDTotalAmmo(int32 TotalAmmo)
 	{
 		FString TotalText = FString::Printf(TEXT("%d"), TotalAmmo);
 		BlasterHUD->BlasterOverlay->TotalAmmoText->SetText(FText::FromString(TotalText));
+	}else
+	{
+		bInitializeCarriedAmmo = true;
+		HUDCarriedAmmo = TotalAmmo;
 	}
 }
 

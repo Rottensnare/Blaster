@@ -40,11 +40,12 @@ public:
 	virtual void OnRep_Owner() override;
 	void SetHUDAmmo();
 	void SetHUDMagAmmo();
-	void SetTotalAmmo();
 	void SetHUDWeaponType();
 	void AddAmmo(int32 AmmoToAdd);
 
 	void EnableCustomDepth(bool bEnable);
+	
+	bool bDestroyWeapon = false;
 
 protected:
 	// Called when the game starts or when spawned

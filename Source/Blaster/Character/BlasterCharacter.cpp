@@ -74,14 +74,15 @@ void ABlasterCharacter::BeginPlay()
 	Super::BeginPlay();
 
 	Health = MaxHealth;
-	
-	UpdateHUDHealth();
-	UpdateHUDShields();
+	GetWorldTimerManager().SetTimer(HUDInitTimer, this, &ABlasterCharacter::HUDInitTimerFinished, HUDInitDelay);
+	SpawnDefaultWeapon();
 	
 	if(HasAuthority())
 	{
 		OnTakeAnyDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
 	}
+
+	
 }
 
 void ABlasterCharacter::RotateInPlace(float DeltaTime)
@@ -426,6 +427,21 @@ void ABlasterCharacter::HideCharacter()
 	}
 }
 
+void ABlasterCharacter::SpawnDefaultWeapon()
+{
+	ABlasterGameMode* BlasterGameMode = Cast<ABlasterGameMode>(UGameplayStatics::GetGameMode(this));
+	UWorld* World = GetWorld();
+	if(BlasterGameMode && World && !bEliminated && DefaultWeaponClass)
+	{
+		AWeapon* StartingWeapon =  World->SpawnActor<AWeapon>(DefaultWeaponClass);
+		StartingWeapon->bDestroyWeapon = true;
+		if(CombatComponent)
+		{
+			CombatComponent->EquipWeapon(StartingWeapon);
+		}
+	}
+}
+
 void ABlasterCharacter::OnRep_Health(float LastHealth)
 {
 	if(Health < LastHealth)
@@ -468,6 +484,20 @@ void ABlasterCharacter::StartDissolve()
 		DissolveTimeline->AddInterpFloat(DissolveCurve, DissolveTrack);
 		DissolveTimeline->Play();
 	}
+}
+
+void ABlasterCharacter::HUDInitTimerFinished()
+{
+	UpdateHUDAmmo();
+	UpdateHUDHealth();
+	UpdateHUDShields();
+	
+	if(BlasterPlayerController && CombatComponent && CombatComponent->EquippedWeapon)
+	{
+		FText WeaponText = UEnum::GetDisplayValueAsText(CombatComponent->EquippedWeapon->GetWeaponType());
+		BlasterPlayerController->SetHUDWeaponType(WeaponText.ToString());
+	}
+	
 }
 
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
@@ -709,6 +739,17 @@ void ABlasterCharacter::UpdateHUDShields()
 	}
 }
 
+void ABlasterCharacter::UpdateHUDAmmo()
+{
+	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+	if (BlasterPlayerController && CombatComponent && CombatComponent->EquippedWeapon)
+	{
+		BlasterPlayerController->SetHUDTotalAmmo(CombatComponent->TotalAmmo);
+		BlasterPlayerController->SetHUDAmmo(CombatComponent->EquippedWeapon->GetAmmo());
+		BlasterPlayerController->SetHUDMagText(CombatComponent->EquippedWeapon->GetMagCapacity());
+	}
+}
+
 void ABlasterCharacter::MulticastElim_Implementation()
 {
 	if(BlasterPlayerController)
@@ -762,7 +803,15 @@ void ABlasterCharacter::Elim()
 {
 	if(CombatComponent && CombatComponent->EquippedWeapon)
 	{
-		CombatComponent->EquippedWeapon->Dropped();
+		if(CombatComponent->EquippedWeapon->bDestroyWeapon)
+		{
+			CombatComponent->EquippedWeapon->Destroy();
+		}else
+		{
+			CombatComponent->EquippedWeapon->Dropped();
+		}
+		
+		
 	}
 	MulticastElim();
 	GetWorldTimerManager().SetTimer(ElimTimer, this, &ABlasterCharacter::ElimTimerFinished, ElimDelay);

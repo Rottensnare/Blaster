@@ -76,6 +76,7 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 	if(Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle)
 	{
 		Character->ShowSniperScopeWidget(bIsAiming);
+		//BUG: Following code needs to be replicated
 		if(bIsAiming) //BUG: Quickscoping is too effective, need to add a small delay before setting scatter usage
 		{
 			EquippedWeapon->SetUseScatter(false);
@@ -93,7 +94,14 @@ void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)
 	bAiming = bIsAiming;
 
 	Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
-	
+	if(EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle && bIsAiming)
+	{
+		EquippedWeapon->SetUseScatter(false);
+	}
+	else if(EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle && !bIsAiming)
+	{
+		EquippedWeapon->SetUseScatter(true);
+	}
 }
 
 void UCombatComponent::OnRep_EquippedWeapon()
@@ -260,7 +268,10 @@ bool UCombatComponent::CanFire()
 
 void UCombatComponent::OnRep_CarriedAmmo()
 {
-	EquippedWeapon->SetTotalAmmo();
+	if(Character)
+	{
+		Character->UpdateHUDAmmo();
+	}
 }
 
 
@@ -339,6 +350,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 		EquippedWeapon->Dropped();
 	}
 	EquippedWeapon = WeaponToEquip;
+	if(EquippedWeapon == nullptr) return;
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 	
 	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("hand_rSocket"));
@@ -355,7 +367,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 		TotalAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
 		if(Character->HasAuthority())
 		{
-			EquippedWeapon->SetTotalAmmo();
+			Character->UpdateHUDAmmo();
 		}
 	}
 

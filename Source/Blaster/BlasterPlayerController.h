@@ -91,10 +91,18 @@ private:
 	//Overlay will be initialized late so we need to do this.
 	float HUDHealth;
 	float HUDMaxHealth;
-	bool bInitializeHealth{false}; // Not used ATM, because somehow the thing works without this
+	bool bInitializeHealth{false}; // All bInit booleans are set to true when HUD is valid.
 	float HUDShields;
 	float HUDMaxShields;
-	bool bInitializeShields{false}; // Not used ATM, because somehow the thing works without this
+	bool bInitializeShields{false}; 
 	float HUDScore;
 	float HUDElims;
+	bool bInitializeDefeats{false}; 
+	bool bInitializeScore{false};
+	bool bInitializeShield{false};
+	
+	float HUDCarriedAmmo;
+	bool bInitializeCarriedAmmo = false;
+	float HUDWeaponAmmo;
+	bool bInitializeWeaponAmmo = false;
 };
