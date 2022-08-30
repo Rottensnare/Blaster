@@ -30,6 +30,7 @@ public:
 	
 	virtual void OnRep_ReplicatedMovement() override;
 	void UpdateHUDHealth();
+	void UpdateHUDShields();
 	
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastElim();
@@ -166,6 +167,15 @@ private:
 
 	UFUNCTION()
 	void OnRep_Health(float LastHealth);
+	
+	UPROPERTY(EditAnywhere, Category = "Player Status")
+	float MaxShields{50.f};
+
+	UPROPERTY(ReplicatedUsing = OnRep_Shields, EditAnywhere, Category = "Player Status")
+	float Shields{0.f};
+
+	UFUNCTION()
+	void OnRep_Shields(float LastShields);
 
 	UPROPERTY()
 	class ABlasterPlayerController* BlasterPlayerController;
@@ -224,7 +234,10 @@ public:
 	FORCEINLINE bool IsEliminated() const {return bEliminated;}
 	FORCEINLINE float GetHealth() const {return Health;}
 	FORCEINLINE void SetHealth(const float InAmount) {Health = InAmount;}
+	FORCEINLINE float GetShields() const {return Shields;}
+	FORCEINLINE void SetShields(const float InAmount) {Shields = InAmount;}
 	FORCEINLINE float GetMaxHealth() const {return MaxHealth;}
+	FORCEINLINE float GetMaxShields() const {return MaxShields;}
 	FORCEINLINE bool GetDisableGameplay() const {return bDisableGameplay;}
 	AWeapon* GetEquippedWeapon();
 	FVector GetHitTarget() const;

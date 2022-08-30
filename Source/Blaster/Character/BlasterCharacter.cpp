@@ -67,13 +67,6 @@ TurningInPlace(ETurningInPlace::ETIP_NotTurning)
 	DissolveTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("DissolveTimelineComponent"));
 }
 
-void ABlasterCharacter::OnRep_ReplicatedMovement()
-{
-	Super::OnRep_ReplicatedMovement();
-	
-	SimProxiesTurn();
-	TimeSinceLastMovementReplication = 0.f;
-}
 
 // Called when the game starts or when spawned
 void ABlasterCharacter::BeginPlay()
@@ -83,6 +76,7 @@ void ABlasterCharacter::BeginPlay()
 	Health = MaxHealth;
 	
 	UpdateHUDHealth();
+	UpdateHUDShields();
 	
 	if(HasAuthority())
 	{
@@ -441,6 +435,23 @@ void ABlasterCharacter::OnRep_Health(float LastHealth)
 	UpdateHUDHealth();
 }
 
+void ABlasterCharacter::OnRep_Shields(float LastShields)
+{
+	if(Shields < LastShields)
+	{
+		PlayHitReactMontage();
+	}
+	UpdateHUDShields();
+}
+
+void ABlasterCharacter::OnRep_ReplicatedMovement()
+{
+	Super::OnRep_ReplicatedMovement();
+	
+	SimProxiesTurn();
+	TimeSinceLastMovementReplication = 0.f;
+}
+
 void ABlasterCharacter::UpdateDissolveMaterial(float DissolveValue)
 {
 	if(DynamicDissolveMaterialInstance)
@@ -607,8 +618,22 @@ void ABlasterCharacter::PlayHitReactMontage()
 void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
 	AController* InstigatorController, AActor* DamageCauser)
 {
-
-	Health = FMath::Clamp(Health - Damage, 0.f, MaxHealth);
+	if(bEliminated) return;
+	//BUG: Possibly will cause a bug in the future. Reference Lecture 166 "Updating the Shield"
+	float DamageToHealth; 
+	if(Shields - Damage < 0.f)
+	{
+		DamageToHealth = Damage - Shields;
+		Shields = 0.f;
+	}else
+	{
+		Shields = FMath::Clamp(Shields - Damage, 0.f, MaxShields);
+		DamageToHealth = 0.f;
+	}
+	
+	
+	Health = FMath::Clamp(Health - DamageToHealth, 0.f, MaxHealth);
+	UpdateHUDShields();
 	UpdateHUDHealth();
 	PlayHitReactMontage();
 
@@ -622,7 +647,6 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 			GameMode->PlayerEliminated(this, BlasterPlayerController, AttackerController);
 		}
 	}
-	
 }
 
 void ABlasterCharacter::PollInit()
@@ -673,6 +697,15 @@ void ABlasterCharacter::UpdateHUDHealth()
 	if(BlasterPlayerController)
 	{
 		BlasterPlayerController->SetHUDHealth(Health, MaxHealth);
+	}
+}
+
+void ABlasterCharacter::UpdateHUDShields()
+{
+	BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
+	if(BlasterPlayerController)
+	{
+		BlasterPlayerController->SetHUDShields(Shields, MaxShields);
 	}
 }
 
@@ -771,6 +804,7 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 
 	DOREPLIFETIME_CONDITION(ABlasterCharacter, OverlappingWeapon, COND_OwnerOnly);
 	DOREPLIFETIME(ABlasterCharacter, Health);
+	DOREPLIFETIME(ABlasterCharacter, Shields);
 	DOREPLIFETIME(ABlasterCharacter, bDisableGameplay);
 }
 

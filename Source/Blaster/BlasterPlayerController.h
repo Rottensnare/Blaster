@@ -17,6 +17,7 @@ class BLASTER_API ABlasterPlayerController : public APlayerController
 public:
 
 	void SetHUDHealth(float Health, float MaxHealth);
+	void SetHUDShields(float Shields, float MaxShields);
 	virtual void OnPossess(APawn* InPawn) override;
 	void SetHUDScore(float Score);
 	void SetHUDElims(int32 Elims);
@@ -90,6 +91,10 @@ private:
 	//Overlay will be initialized late so we need to do this.
 	float HUDHealth;
 	float HUDMaxHealth;
+	bool bInitializeHealth{false}; // Not used ATM, because somehow the thing works without this
+	float HUDShields;
+	float HUDMaxShields;
+	bool bInitializeShields{false}; // Not used ATM, because somehow the thing works without this
 	float HUDScore;
 	float HUDElims;
 };

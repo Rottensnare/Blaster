@@ -33,6 +33,7 @@ void UBuffComponent::TickComponent(float DeltaTime, ELevelTick TickType, FActorC
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
 
 	HealRampUp(DeltaTime);
+	ShieldRampUp(DeltaTime);
 	
 }
 
@@ -41,6 +42,13 @@ void UBuffComponent::Heal(float InHealAmount, float InHealTime)
 	bHealing = true;
 	HealingRate = InHealAmount / InHealTime;
 	AmountToHeal += InHealAmount;
+}
+
+void UBuffComponent::ReplenishShields(float InShieldAmount, float InRate)
+{
+	bShielding = true;
+	ShieldRate = InShieldAmount / InRate;
+	AmountToShield += InShieldAmount;
 }
 
 void UBuffComponent::BuffSpeed(float InBuffBaseSpeed, float InBuffCrouchSpeed, float InBuffTime)
@@ -97,6 +105,24 @@ void UBuffComponent::HealRampUp(float DeltaTime)
 	{
 		bHealing = false;
 		AmountToHeal = 0.f;
+	}
+}
+
+void UBuffComponent::ShieldRampUp(float DeltaTime)
+{
+	if(!bShielding || Character == nullptr || Character->IsEliminated()) return;
+
+	const float ShieldThisFrame = ShieldRate * DeltaTime;
+	Character->SetShields(FMath::Clamp( Character->GetShields() + ShieldThisFrame, 0.f, Character->GetMaxShields()));
+	AmountToShield -= ShieldThisFrame;
+	if(Character->HasAuthority())
+	{
+		Character->UpdateHUDShields();
+	}
+	if(AmountToShield <= 0.f || Character->GetShields() >= Character->GetMaxShields())
+	{
+		bShielding = false;
+		AmountToShield = 0.f;
 	}
 }
 
