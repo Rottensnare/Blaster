@@ -30,6 +30,8 @@ public:
 	
 	virtual void OnRep_ReplicatedMovement() override;
 	void UpdateHUDHealth();
+	void UpdateHUDShields();
+	void UpdateHUDAmmo();
 	
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastElim();
@@ -42,6 +44,8 @@ public:
 			
 	//Setting character invisible if camera gets too close
 	void HideCharacter();
+
+	void SpawnDefaultWeapon();
 
 	UPROPERTY(Replicated)
 	bool bDisableGameplay{false};
@@ -58,6 +62,7 @@ protected:
 	void TurnAtRate(float Value);
 	void LookUpAtRate(float Value);
 	void EquipButtonPressed();
+	void SwapButtonPressed();
 	void CrouchButtonPressed();
 	void AimButtonPressed();
 	void AimButtonReleased();
@@ -85,7 +90,7 @@ protected:
 	//Initialize HUD if relevant info is missing
 	void PollInit();
 
-
+	
 
 private:
 
@@ -116,11 +121,17 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UCombatComponent* CombatComponent;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class UBuffComponent* BuffComponent;
+
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
 
 	UFUNCTION(Server, Reliable)
 	void ServerEquipButtonPressed();
+
+	UFUNCTION(Server, Reliable)
+	void ServerSwapButtonPressed();
 	
 	float AO_Yaw; //For calculating aim offsets
 	float AO_Pitch;
@@ -141,8 +152,12 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	UAnimMontage* ReloadMontage;
 
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<AWeapon> DefaultWeaponClass;
 
-
+	UPROPERTY()
+	AWeapon* DefaultWeapon;
+	
 	//The distance to the camera at which the character should be set invisible.
 	UPROPERTY(EditDefaultsOnly)
 	float CharacterHideThreshold;
@@ -162,7 +177,16 @@ private:
 	float Health;
 
 	UFUNCTION()
-	void OnRep_Health();
+	void OnRep_Health(float LastHealth);
+	
+	UPROPERTY(EditAnywhere, Category = "Player Status")
+	float MaxShields{50.f};
+
+	UPROPERTY(ReplicatedUsing = OnRep_Shields, EditAnywhere, Category = "Player Status")
+	float Shields{0.f};
+
+	UFUNCTION()
+	void OnRep_Shields(float LastShields);
 
 	UPROPERTY()
 	class ABlasterPlayerController* BlasterPlayerController;
@@ -205,6 +229,10 @@ private:
 	UPROPERTY()
 	class ABlasterPlayerState* BlasterPlayerState;
 
+	FTimerHandle HUDInitTimer;
+	void HUDInitTimerFinished();
+	float HUDInitDelay{0.2f};
+
 	
 public:
 
@@ -220,13 +248,18 @@ public:
 	FORCEINLINE bool ShouldRotateRootBone() const {return bRotateRootBone;}
 	FORCEINLINE bool IsEliminated() const {return bEliminated;}
 	FORCEINLINE float GetHealth() const {return Health;}
+	FORCEINLINE void SetHealth(const float InAmount) {Health = InAmount;}
+	FORCEINLINE float GetShields() const {return Shields;}
+	FORCEINLINE void SetShields(const float InAmount) {Shields = InAmount;}
 	FORCEINLINE float GetMaxHealth() const {return MaxHealth;}
+	FORCEINLINE float GetMaxShields() const {return MaxShields;}
 	FORCEINLINE bool GetDisableGameplay() const {return bDisableGameplay;}
 	AWeapon* GetEquippedWeapon();
 	FVector GetHitTarget() const;
 	ECombatState GetCombatState() const;
 	int32 GetTotalAmmo() const;
 	UCombatComponent* GetCombatComponent() const;
+	UBuffComponent* GetBuffComponent() const;
 	
 	
 };

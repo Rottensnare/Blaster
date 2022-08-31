@@ -25,6 +25,7 @@ public:
 
 	bool SetCrosshairs();
 	void EquipWeapon(class AWeapon* WeaponToEquip);
+	void SwapWeapons();
 	void Reload();
 	UFUNCTION(BlueprintCallable)
 	void FinishReloading();
@@ -43,6 +44,12 @@ protected:
 
 	UFUNCTION()
 	void OnRep_EquippedWeapon();
+	UFUNCTION()
+	void OnRep_SecondaryWeapon();
+
+	void EquipPrimaryWeapon(AWeapon* WeaponToEquip);
+	void EquipSecondaryWeapon(AWeapon* WeaponToEquip);
+	
 	void Fire();
 
 	UFUNCTION(Server, Reliable)
@@ -71,8 +78,14 @@ private:
 	UPROPERTY()
 	class ABlasterHUD* BlasterHUD;
 	
-	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon)
-	AWeapon* EquippedWeapon;
+	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon, VisibleAnywhere)
+	AWeapon* EquippedWeapon{nullptr};
+
+	UPROPERTY(ReplicatedUsing = OnRep_SecondaryWeapon, VisibleAnywhere)
+	AWeapon* SecondaryWeapon{nullptr};
+
+	UPROPERTY()
+	AWeapon* EquippedWeaponLastFrame;
 
 	UPROPERTY(Replicated)
 	bool bAiming;
@@ -150,9 +163,15 @@ private:
 
 	UFUNCTION()
 	void OnRep_CombatState();
+
+	FTimerHandle RefreshHUDTimer;
+	float RefreshHUDDelay{0.1f};
+	void RefreshHUDTimerFinished();
+	
 	
 
 public:
 
 	FORCEINLINE int32 GetTotalAmmo() const {return TotalAmmo;}
+	void SetSpeeds(const float InAimSpeed, const float InBaseSpeed);
 };

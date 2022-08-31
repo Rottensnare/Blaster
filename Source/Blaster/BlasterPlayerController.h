@@ -17,6 +17,7 @@ class BLASTER_API ABlasterPlayerController : public APlayerController
 public:
 
 	void SetHUDHealth(float Health, float MaxHealth);
+	void SetHUDShields(float Shields, float MaxShields);
 	virtual void OnPossess(APawn* InPawn) override;
 	void SetHUDScore(float Score);
 	void SetHUDElims(int32 Elims);
@@ -36,6 +37,7 @@ public:
 protected:
 
 	virtual void BeginPlay() override;
+	void CheckPing(float DeltaSeconds);
 	virtual void Tick(float DeltaSeconds) override;
 	void SetHUDTime();
 	void HandleMatchHasStarted();
@@ -57,6 +59,17 @@ protected:
 	float TimeSyncFrequency{5.f};
 	
 	float TimeSyncRunningTime{0.f};
+
+	void HighPingWarning();
+	void StopHighPingWarning();
+
+	float HighPingRunningTime{0.f};
+	UPROPERTY(EditAnywhere)
+	float HighPingDuration{5.f};
+	float PingAnimRunningTime{0.f};
+	float CheckPingFrequency{20.f};
+	UPROPERTY(EditAnywhere)
+	float HighPingThreshold{50.f};
 
 private:
 	UPROPERTY()
@@ -90,6 +103,18 @@ private:
 	//Overlay will be initialized late so we need to do this.
 	float HUDHealth;
 	float HUDMaxHealth;
+	bool bInitializeHealth{false}; // All bInit booleans are set to true when HUD is valid.
+	float HUDShields;
+	float HUDMaxShields;
+	bool bInitializeShields{false}; 
 	float HUDScore;
 	float HUDElims;
+	bool bInitializeDefeats{false}; 
+	bool bInitializeScore{false};
+	bool bInitializeShield{false};
+	
+	float HUDCarriedAmmo;
+	bool bInitializeCarriedAmmo = false;
+	float HUDWeaponAmmo;
+	bool bInitializeWeaponAmmo = false;
 };

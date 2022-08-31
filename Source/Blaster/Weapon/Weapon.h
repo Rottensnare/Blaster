@@ -7,16 +7,18 @@
 #include "WeaponType.h"
 #include "Weapon.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPickedUp);
+
 UENUM(BlueprintType)
 enum class EWeaponState : uint8
 {
 	EWS_Initial UMETA(DisplayName = "Initial State"),
 	EWS_Equipped UMETA(DisplayName = "Equipped State"),
 	EWS_Dropped UMETA(DisplayName = "Dropped State"),
+	EWS_UnEquipped UMETA(DisplayName = "UnEquipped State"),
 	
 	EWS_MAX UMETA(DisplayName = "MAX"),
 };
-
 
 UCLASS()
 class BLASTER_API AWeapon : public AActor
@@ -40,11 +42,14 @@ public:
 	virtual void OnRep_Owner() override;
 	void SetHUDAmmo();
 	void SetHUDMagAmmo();
-	void SetTotalAmmo();
 	void SetHUDWeaponType();
 	void AddAmmo(int32 AmmoToAdd);
 
 	void EnableCustomDepth(bool bEnable);
+	
+	bool bDestroyWeapon = false;
+
+	FOnPickedUp OnPickedUpDelegate;
 
 protected:
 	// Called when the game starts or when spawned
@@ -149,6 +154,11 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	int32 CustomDepthValue{CUSTOM_DEPTH_TAN};
+
+	UPROPERTY(EditAnywhere)
+	float BaseTurnRate{25.f};
+
+	
 	
 public:
 

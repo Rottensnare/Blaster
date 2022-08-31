@@ -76,6 +76,14 @@ void AWeapon::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if(WeaponState == EWeaponState::EWS_Initial)
+	{
+		if(WeaponMesh)
+		{
+			WeaponMesh->AddLocalRotation(FRotator(0.f, BaseTurnRate * DeltaTime, 0.f));
+		}
+	}
+
 }
 
 void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -128,6 +136,19 @@ void AWeapon::OnRep_WeaponState()
 		WeaponMesh->MarkRenderStateDirty();
 		EnableCustomDepth(true);
 		break;
+	case EWeaponState::EWS_UnEquipped:
+		ShowPickupWidget(false);
+		WeaponMesh->SetEnableGravity(false);
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		if(WeaponType == EWeaponType::EWT_SubmachineGun)
+		{
+			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			WeaponMesh->SetEnableGravity(true);
+			WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		}
+		EnableCustomDepth(false);
+		break;
 	default:
 		break;
 		
@@ -147,6 +168,12 @@ void AWeapon::SpendRound()
 
 void AWeapon::SetWeaponState(EWeaponState State)
 {
+	//This should only happen once, because the state is only set to EWS_Initial when spawning it from a weapon spawner
+	//Later unused weapons will be despawned by the game mode
+	if(WeaponState == EWeaponState::EWS_Initial && State != EWeaponState::EWS_Initial)
+	{
+		OnPickedUpDelegate.Broadcast();
+	}
 	WeaponState = State;
 	switch(WeaponState)
 	{
@@ -166,6 +193,18 @@ void AWeapon::SetWeaponState(EWeaponState State)
 		EnableCustomDepth(false);
 		break;
 	case EWeaponState::EWS_Initial:
+		if(HasAuthority())
+		{
+			AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+			SetReplicateMovement(true);
+		}
+		WeaponMesh->SetSimulatePhysics(false);
+		WeaponMesh->SetEnableGravity(false);
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		WeaponMesh->SetCustomDepthStencilValue(CustomDepthValue);
+		WeaponMesh->MarkRenderStateDirty();
+		EnableCustomDepth(true);
 		break;
 	case EWeaponState::EWS_Dropped:
 		if(HasAuthority())
@@ -182,6 +221,21 @@ void AWeapon::SetWeaponState(EWeaponState State)
 		WeaponMesh->SetCustomDepthStencilValue(CustomDepthValue);
 		WeaponMesh->MarkRenderStateDirty();
 		EnableCustomDepth(true);
+		break;
+	case EWeaponState::EWS_UnEquipped:
+		ShowPickupWidget(false);
+		SetReplicateMovement(false);
+		WeaponMesh->SetSimulatePhysics(false);
+		WeaponMesh->SetEnableGravity(false);
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		if(WeaponType == EWeaponType::EWT_SubmachineGun)
+		{
+			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+			WeaponMesh->SetEnableGravity(true);
+			WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		}
+		EnableCustomDepth(false);
 		break;
 	default:
 		break;
@@ -242,13 +296,13 @@ void AWeapon::OnRep_Owner()
 		OwnerController = nullptr;
 	}else
 	{
-		SetHUDAmmo();
 		SetHUDMagAmmo();
-		SetTotalAmmo();
 		SetHUDWeaponType();
+		if(OwnerCharacter)
+		{
+			OwnerCharacter->UpdateHUDAmmo();
+		}
 	}
-
-	
 }
 
 void AWeapon::SetHUDAmmo()
@@ -259,7 +313,7 @@ void AWeapon::SetHUDAmmo()
 		OwnerController = OwnerController == nullptr ? Cast<ABlasterPlayerController>(OwnerCharacter->Controller) : OwnerController;
 		if(OwnerController)
 		{
-			OwnerController->SetHUDAmmo(Ammo);
+			OwnerCharacter->UpdateHUDAmmo();
 		}
 	}
 }
@@ -274,19 +328,6 @@ void AWeapon::SetHUDMagAmmo()
 		if(OwnerController)
 		{
 			OwnerController->SetHUDMagText(MagCapacity);
-		}
-	}
-}
-
-void AWeapon::SetTotalAmmo()
-{
-	OwnerCharacter = OwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : OwnerCharacter;
-	if(OwnerCharacter)
-	{
-		OwnerController = OwnerController == nullptr ? Cast<ABlasterPlayerController>(OwnerCharacter->Controller) : OwnerController;
-		if(OwnerController)
-		{
-			OwnerController->SetHUDTotalAmmo(OwnerCharacter->GetTotalAmmo());
 		}
 	}
 }
@@ -309,7 +350,6 @@ void AWeapon::AddAmmo(int32 AmmoToAdd)
 {
 	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
 	SetHUDAmmo();
-	SetTotalAmmo();
 }
 
 void AWeapon::EnableCustomDepth(bool bEnable)

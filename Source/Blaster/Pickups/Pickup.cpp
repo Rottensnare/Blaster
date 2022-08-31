@@ -3,6 +3,8 @@
 
 #include "Pickup.h"
 
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Blaster/Weapon/WeaponType.h"
 #include "Components/SphereComponent.h"
 #include "Sound/SoundCue.h"
@@ -28,6 +30,9 @@ APickup::APickup()
 	PickupMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	PickupMesh->SetRenderCustomDepth(true);
 	PickupMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
+
+	PickupEffectComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("PickupEffectComponent"));
+	PickupEffectComponent->SetupAttachment(RootComponent);
 }
 
 void APickup::BeginPlay()
@@ -36,8 +41,9 @@ void APickup::BeginPlay()
 
 	if(HasAuthority())
 	{
-		OverlapSphere->OnComponentBeginOverlap.AddDynamic(this, &APickup::OnSphereOverlap);
+		GetWorldTimerManager().SetTimer(OverlapBeginTimer, this, &APickup::OverlapBeginTimerFinished, OverlapBeginTime);
 	}
+	
 }
 
 void APickup::Tick(float DeltaTime)
@@ -65,11 +71,17 @@ void APickup::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	
 }
 
+void APickup::OverlapBeginTimerFinished()
+{
+	OverlapSphere->OnComponentBeginOverlap.AddDynamic(this, &APickup::OnSphereOverlap);
+}
+
 void APickup::Destroyed()
 {
 	Super::Destroyed();
 	
 	UGameplayStatics::PlaySoundAtLocation(this, PickupSound, GetActorLocation(), GetActorRotation(), 1.f, 1.f, 0.f, PickupAttenuation);
+	UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, PickedUpEffect, GetActorLocation(), GetActorRotation());
 	
 	
 }

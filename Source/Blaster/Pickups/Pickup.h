@@ -27,6 +27,13 @@ protected:
 	UFUNCTION()
 	void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	UPROPERTY(VisibleAnywhere)
+	class UNiagaraComponent* PickupEffectComponent;
+
+	UPROPERTY(EditAnywhere)
+	class UNiagaraSystem* PickedUpEffect;
+
+
 private:
 
 	UPROPERTY(EditAnywhere)
@@ -40,6 +47,12 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	UStaticMeshComponent* PickupMesh;
+
+	//Needed because if a character is standing inside a pickup spawn, the pickup is destroyed so fast that the respawn function won't get bound.
+	FTimerHandle OverlapBeginTimer;
+	float OverlapBeginTime{0.2f};
+	void OverlapBeginTimerFinished();
+
 
 	UPROPERTY(EditAnywhere)
 	float BaseTurnRate{45.f};

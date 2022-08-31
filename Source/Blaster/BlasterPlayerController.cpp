@@ -6,6 +6,7 @@
 #include "BlasterPlayerState.h"
 #include "BlasterComponents/CombatComponent.h"
 #include "Character/BlasterCharacter.h"
+#include "Components/Image.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "GameFramework/GameMode.h"
@@ -26,6 +27,35 @@ void ABlasterPlayerController::BeginPlay()
 	ServerCheckMatchState();
 }
 
+void ABlasterPlayerController::CheckPing(float DeltaSeconds)
+{
+	HighPingRunningTime += DeltaSeconds;
+	if(HighPingRunningTime >= CheckPingFrequency)
+	{
+		PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : PlayerState;
+		if(PlayerState)
+		{
+			if(PlayerState->GetCompressedPing() * 4 > HighPingThreshold) //GetCompressedPing returns ping / 4 to compress it to a uint8
+			{
+				HighPingWarning();
+				PingAnimRunningTime = 0.f;
+			}
+		}
+		HighPingRunningTime = 0.f;
+	}
+	if(BlasterHUD &&
+		BlasterHUD->BlasterOverlay &&
+		BlasterHUD->BlasterOverlay->HighPingAnimation &&
+		BlasterHUD->BlasterOverlay->IsAnimationPlaying(BlasterHUD->BlasterOverlay->HighPingAnimation))
+	{
+		PingAnimRunningTime += DeltaSeconds;
+		if(PingAnimRunningTime >= HighPingDuration)
+		{
+			StopHighPingWarning();
+		}
+	}
+}
+
 void ABlasterPlayerController::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
@@ -40,6 +70,8 @@ void ABlasterPlayerController::Tick(float DeltaSeconds)
 	}
 	
 	PollInit();
+
+	CheckPing(DeltaSeconds);
 }
 
 void ABlasterPlayerController::SetHUDTime()
@@ -109,18 +141,55 @@ void ABlasterPlayerController::ServerCheckMatchState_Implementation()
 
 void ABlasterPlayerController::PollInit()
 {
-	if(CharacterOverlay == nullptr) //Waiting for character overlay to be initialized so that HUD can be updated.
+	if (CharacterOverlay == nullptr)
 	{
-		if(BlasterHUD && BlasterHUD->BlasterOverlay)
+		if (BlasterHUD && BlasterHUD->BlasterOverlay)
 		{
 			CharacterOverlay = BlasterHUD->BlasterOverlay;
-			if(CharacterOverlay)
+			if (CharacterOverlay)
 			{
-				SetHUDHealth(HUDHealth, HUDMaxHealth);
-				SetHUDScore(HUDScore);
-				SetHUDElims(HUDElims);
-				bInitializeCharacterOverlay = false;
+				if (bInitializeHealth) SetHUDHealth(HUDHealth, HUDMaxHealth);
+				if (bInitializeShield) SetHUDShields(HUDShields, HUDMaxShields);
+				if (bInitializeScore) SetHUDScore(HUDScore);
+				if (bInitializeDefeats) SetHUDElims(HUDElims);
+				if (bInitializeCarriedAmmo) SetHUDTotalAmmo(HUDCarriedAmmo);
+				if (bInitializeWeaponAmmo) SetHUDAmmo(HUDWeaponAmmo);
 			}
+		}
+	}
+}
+
+void ABlasterPlayerController::HighPingWarning()
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	
+	bool bIsHUDValid = BlasterHUD
+	&& BlasterHUD->BlasterOverlay
+	&& BlasterHUD->BlasterOverlay->HighPingImage
+	&& BlasterHUD->BlasterOverlay->HighPingAnimation;
+	
+	if(bIsHUDValid)
+	{
+		BlasterHUD->BlasterOverlay->HighPingImage->SetOpacity(1.f);
+		BlasterHUD->BlasterOverlay->PlayAnimation(BlasterHUD->BlasterOverlay->HighPingAnimation, 0.f, 5);
+	}
+}
+
+void ABlasterPlayerController::StopHighPingWarning()
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	
+	bool bIsHUDValid = BlasterHUD
+	&& BlasterHUD->BlasterOverlay
+	&& BlasterHUD->BlasterOverlay->HighPingImage
+	&& BlasterHUD->BlasterOverlay->HighPingAnimation;
+	
+	if(bIsHUDValid)
+	{
+		BlasterHUD->BlasterOverlay->HighPingImage->SetOpacity(0.f);
+		if(BlasterHUD->BlasterOverlay->IsAnimationPlaying(BlasterHUD->BlasterOverlay->HighPingAnimation))
+		{
+			BlasterHUD->BlasterOverlay->StopAnimation(BlasterHUD->BlasterOverlay->HighPingAnimation);
 		}
 	}
 }
@@ -196,6 +265,30 @@ void ABlasterPlayerController::SetHUDHealth(const float Health, const float MaxH
 	}
 }
 
+void ABlasterPlayerController::SetHUDShields(float Shields, float MaxShields)
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+
+	bool bIsHUDValid = BlasterHUD
+		&& BlasterHUD->BlasterOverlay
+		&& BlasterHUD->BlasterOverlay->ShieldBar
+		&& BlasterHUD->BlasterOverlay->ShieldText;
+	
+	if(bIsHUDValid)
+	{
+		const float ShieldPercentage = Shields / MaxShields;
+		BlasterHUD->BlasterOverlay->ShieldBar->SetPercent(ShieldPercentage);
+		FString ShieldText = FString::Printf(TEXT("%d / %d"), FMath::TruncToInt32(Shields), FMath::TruncToInt32(MaxShields));
+		BlasterHUD->BlasterOverlay->ShieldText->SetText(FText::FromString(ShieldText));
+	}
+	else
+	{
+		bInitializeCharacterOverlay = true;
+		HUDShields = Shields;
+		HUDMaxShields = MaxShields;
+	}
+}
+
 void ABlasterPlayerController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
@@ -256,6 +349,10 @@ void ABlasterPlayerController::SetHUDAmmo(int32 Ammo)
 	{
 		FString AmmoText = FString::Printf(TEXT("%d"), Ammo);
 		BlasterHUD->BlasterOverlay->AmmoText->SetText(FText::FromString(AmmoText));
+	}else
+	{
+		bInitializeWeaponAmmo = true;
+		HUDWeaponAmmo = Ammo;
 	}
 }
 
@@ -284,6 +381,10 @@ void ABlasterPlayerController::SetHUDTotalAmmo(int32 TotalAmmo)
 	{
 		FString TotalText = FString::Printf(TEXT("%d"), TotalAmmo);
 		BlasterHUD->BlasterOverlay->TotalAmmoText->SetText(FText::FromString(TotalText));
+	}else
+	{
+		bInitializeCarriedAmmo = true;
+		HUDCarriedAmmo = TotalAmmo;
 	}
 }
 

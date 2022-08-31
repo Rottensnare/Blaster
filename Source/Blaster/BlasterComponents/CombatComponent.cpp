@@ -76,6 +76,7 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 	if(Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle)
 	{
 		Character->ShowSniperScopeWidget(bIsAiming);
+		//BUG: Following code needs to be replicated
 		if(bIsAiming) //BUG: Quickscoping is too effective, need to add a small delay before setting scatter usage
 		{
 			EquippedWeapon->SetUseScatter(false);
@@ -93,7 +94,14 @@ void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)
 	bAiming = bIsAiming;
 
 	Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
-	
+	if(EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle && bIsAiming)
+	{
+		EquippedWeapon->SetUseScatter(false);
+	}
+	else if(EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle && !bIsAiming)
+	{
+		EquippedWeapon->SetUseScatter(true);
+	}
 }
 
 void UCombatComponent::OnRep_EquippedWeapon()
@@ -109,8 +117,25 @@ void UCombatComponent::OnRep_EquippedWeapon()
 		}
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 		Character->bUseControllerRotationYaw = true;
+		Character->GetWorldTimerManager().SetTimer(RefreshHUDTimer, this, &UCombatComponent::RefreshHUDTimerFinished, RefreshHUDDelay);
 	}
 }
+
+void UCombatComponent::OnRep_SecondaryWeapon()
+{
+	if(SecondaryWeapon && Character)
+	{
+		SecondaryWeapon->SetWeaponState(EWeaponState::EWS_UnEquipped);
+	
+		const USkeletalMeshSocket* BackpackSocket = Character->GetMesh()->GetSocketByName(FName("BackpackSocket"));
+		if(BackpackSocket)
+		{
+			BackpackSocket->AttachActor(SecondaryWeapon, Character->GetMesh());
+		}
+		Character->GetWorldTimerManager().SetTimer(RefreshHUDTimer, this, &UCombatComponent::RefreshHUDTimerFinished, RefreshHUDDelay);
+	}
+}
+
 
 void UCombatComponent::Fire()
 {
@@ -260,10 +285,11 @@ bool UCombatComponent::CanFire()
 
 void UCombatComponent::OnRep_CarriedAmmo()
 {
-	EquippedWeapon->SetTotalAmmo();
+	if(Character)
+	{
+		Character->UpdateHUDAmmo();
+	}
 }
-
-
 
 void UCombatComponent::InitializeCarriedAmmo()
 {
@@ -333,12 +359,40 @@ bool UCombatComponent::SetCrosshairs()
 void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
 	if(Character == nullptr || WeaponToEquip == nullptr) return;
+	if(CombatState != ECombatState::ECS_Unoccupied) return; 
+	
+	if(SecondaryWeapon != nullptr)
+	{
+		EquipPrimaryWeapon(WeaponToEquip);
+	}else
+	{
+		EquipSecondaryWeapon(WeaponToEquip);
+	}
+}
 
+void UCombatComponent::SwapWeapons() //BUG: When swapping weapons, clients HUD isn't updated correctly.
+{
+	if(EquippedWeapon == nullptr || SecondaryWeapon == nullptr || Character == nullptr || Character->GetCombatState() != ECombatState::ECS_Unoccupied) return;
+
+	FDetachmentTransformRules DetachmentTransformRules(EDetachmentRule::KeepWorld, true);
+	EquippedWeapon->GetWeaponMesh()->DetachFromComponent(DetachmentTransformRules);
+	SecondaryWeapon->GetWeaponMesh()->DetachFromComponent(DetachmentTransformRules);
+	
+	EquippedWeaponLastFrame = EquippedWeapon;
+	EquippedWeapon = nullptr;
+	EquipPrimaryWeapon(SecondaryWeapon);
+	EquipSecondaryWeapon(EquippedWeaponLastFrame);
+	
+}
+
+void UCombatComponent::EquipPrimaryWeapon(AWeapon* WeaponToEquip)
+{
 	if(EquippedWeapon)
 	{
 		EquippedWeapon->Dropped();
 	}
 	EquippedWeapon = WeaponToEquip;
+	if(Character == nullptr || Character->GetMesh() == nullptr) return;
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
 	
 	const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("hand_rSocket"));
@@ -355,7 +409,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 		TotalAmmo = CarriedAmmoMap[EquippedWeapon->GetWeaponType()];
 		if(Character->HasAuthority())
 		{
-			EquippedWeapon->SetTotalAmmo();
+			Character->UpdateHUDAmmo();
 		}
 	}
 
@@ -363,13 +417,24 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, EquippedWeapon->GetEquipSound(), Character->GetActorLocation());
 	}
-
+	
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
-
-
-	SetCrosshairs();
 	
+	SetCrosshairs();
+}
+
+void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
+{
+	SecondaryWeapon = WeaponToEquip;
+	if(SecondaryWeapon == nullptr || Character == nullptr || Character->GetMesh() == nullptr) return;
+	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_UnEquipped);
+	SecondaryWeapon->SetOwner(Character);
+	const USkeletalMeshSocket* BackpackSocket = Character->GetMesh()->GetSocketByName(FName("BackpackSocket"));
+	if(BackpackSocket)
+	{
+		BackpackSocket->AttachActor(SecondaryWeapon, Character->GetMesh());
+	}
 }
 
 void UCombatComponent::Reload()
@@ -423,7 +488,7 @@ void UCombatComponent::PickupAmmo(const EWeaponType InWeaponType, const int32 In
 		BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Character->Controller) : BlasterPlayerController;
 		if(BlasterPlayerController)
 		{
-			if(EquippedWeapon->GetWeaponType() == InWeaponType)
+			if(EquippedWeapon && EquippedWeapon->GetWeaponType() == InWeaponType)
 			{
 				TotalAmmo = CarriedAmmoMap[InWeaponType];
 				BlasterPlayerController->SetHUDTotalAmmo(TotalAmmo);
@@ -472,11 +537,24 @@ void UCombatComponent::OnRep_CombatState()
 	}
 }
 
+void UCombatComponent::RefreshHUDTimerFinished()
+{
+	SetCrosshairs();
+	if(Character) Character->UpdateHUDAmmo();
+}
+
+void UCombatComponent::SetSpeeds(const float InAimSpeed, const float InBaseSpeed)
+{
+	BaseWalkSpeed = InBaseSpeed;
+	AimWalkSpeed = InAimSpeed;
+}
+
 void UCombatComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(UCombatComponent, EquippedWeapon);
+	DOREPLIFETIME(UCombatComponent, SecondaryWeapon);
 	DOREPLIFETIME(UCombatComponent, bAiming);
 	DOREPLIFETIME(UCombatComponent, CombatState);
 	DOREPLIFETIME_CONDITION(UCombatComponent, TotalAmmo, COND_OwnerOnly);
