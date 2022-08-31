@@ -37,6 +37,7 @@ public:
 protected:
 
 	virtual void BeginPlay() override;
+	void CheckPing(float DeltaSeconds);
 	virtual void Tick(float DeltaSeconds) override;
 	void SetHUDTime();
 	void HandleMatchHasStarted();
@@ -58,6 +59,17 @@ protected:
 	float TimeSyncFrequency{5.f};
 	
 	float TimeSyncRunningTime{0.f};
+
+	void HighPingWarning();
+	void StopHighPingWarning();
+
+	float HighPingRunningTime{0.f};
+	UPROPERTY(EditAnywhere)
+	float HighPingDuration{5.f};
+	float PingAnimRunningTime{0.f};
+	float CheckPingFrequency{20.f};
+	UPROPERTY(EditAnywhere)
+	float HighPingThreshold{50.f};
 
 private:
 	UPROPERTY()

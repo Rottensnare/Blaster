@@ -420,8 +420,7 @@ void UCombatComponent::EquipPrimaryWeapon(AWeapon* WeaponToEquip)
 	
 	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 	Character->bUseControllerRotationYaw = true;
-
-
+	
 	SetCrosshairs();
 }
 
@@ -429,7 +428,6 @@ void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
 {
 	SecondaryWeapon = WeaponToEquip;
 	if(SecondaryWeapon == nullptr || Character == nullptr || Character->GetMesh() == nullptr) return;
-	UE_LOG(LogTemp, Warning, TEXT("EquipSecondaryWeapon if check passed"))
 	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_UnEquipped);
 	SecondaryWeapon->SetOwner(Character);
 	const USkeletalMeshSocket* BackpackSocket = Character->GetMesh()->GetSocketByName(FName("BackpackSocket"));

@@ -518,10 +518,7 @@ void ABlasterCharacter::HUDInitTimerFinished()
 	{
 		FText WeaponText = UEnum::GetDisplayValueAsText(CombatComponent->EquippedWeapon->GetWeaponType());
 		BlasterPlayerController->SetHUDWeaponType(WeaponText.ToString());
-
-		CombatComponent->SecondaryWeapon = nullptr;
 	}
-	
 }
 
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)

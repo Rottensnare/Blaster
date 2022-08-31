@@ -76,6 +76,14 @@ void AWeapon::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	if(WeaponState == EWeaponState::EWS_Initial)
+	{
+		if(WeaponMesh)
+		{
+			WeaponMesh->AddLocalRotation(FRotator(0.f, BaseTurnRate * DeltaTime, 0.f));
+		}
+	}
+
 }
 
 void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -160,6 +168,12 @@ void AWeapon::SpendRound()
 
 void AWeapon::SetWeaponState(EWeaponState State)
 {
+	//This should only happen once, because the state is only set to EWS_Initial when spawning it from a weapon spawner
+	//Later unused weapons will be despawned by the game mode
+	if(WeaponState == EWeaponState::EWS_Initial && State != EWeaponState::EWS_Initial)
+	{
+		OnPickedUpDelegate.Broadcast();
+	}
 	WeaponState = State;
 	switch(WeaponState)
 	{
@@ -179,6 +193,18 @@ void AWeapon::SetWeaponState(EWeaponState State)
 		EnableCustomDepth(false);
 		break;
 	case EWeaponState::EWS_Initial:
+		if(HasAuthority())
+		{
+			AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+			SetReplicateMovement(true);
+		}
+		WeaponMesh->SetSimulatePhysics(false);
+		WeaponMesh->SetEnableGravity(false);
+		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
+		WeaponMesh->SetCustomDepthStencilValue(CustomDepthValue);
+		WeaponMesh->MarkRenderStateDirty();
+		EnableCustomDepth(true);
 		break;
 	case EWeaponState::EWS_Dropped:
 		if(HasAuthority())

@@ -7,6 +7,8 @@
 #include "WeaponType.h"
 #include "Weapon.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPickedUp);
+
 UENUM(BlueprintType)
 enum class EWeaponState : uint8
 {
@@ -17,7 +19,6 @@ enum class EWeaponState : uint8
 	
 	EWS_MAX UMETA(DisplayName = "MAX"),
 };
-
 
 UCLASS()
 class BLASTER_API AWeapon : public AActor
@@ -47,6 +48,8 @@ public:
 	void EnableCustomDepth(bool bEnable);
 	
 	bool bDestroyWeapon = false;
+
+	FOnPickedUp OnPickedUpDelegate;
 
 protected:
 	// Called when the game starts or when spawned
@@ -151,6 +154,11 @@ private:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	int32 CustomDepthValue{CUSTOM_DEPTH_TAN};
+
+	UPROPERTY(EditAnywhere)
+	float BaseTurnRate{25.f};
+
+	
 	
 public:
 
