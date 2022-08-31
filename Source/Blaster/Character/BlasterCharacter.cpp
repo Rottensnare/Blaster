@@ -81,8 +81,6 @@ void ABlasterCharacter::BeginPlay()
 	{
 		OnTakeAnyDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
 	}
-
-	
 }
 
 void ABlasterCharacter::RotateInPlace(float DeltaTime)
@@ -167,11 +165,7 @@ void ABlasterCharacter::EquipButtonPressed()
 	if(bDisableGameplay) return;
 	if(CombatComponent)
 	{
-		if(CombatComponent->SecondaryWeapon == nullptr)
-		{
-			CombatComponent->EquipSecondaryWeapon(OverlappingWeapon);
-		}
-		else
+		if(OverlappingWeapon)
 		{
 			if(HasAuthority())
 			{
@@ -189,18 +183,7 @@ void ABlasterCharacter::EquipButtonPressed()
 void ABlasterCharacter::SwapButtonPressed()
 {
 	if(bDisableGameplay) return;
-	if(CombatComponent)
-	{
-		if(HasAuthority())
-		{
-			CombatComponent->SwapWeapons();
-		}
-		else
-		{
-			ServerSwapButtonPressed();
-			CombatComponent->SetCrosshairs();
-		}
-	}
+	ServerSwapButtonPressed();
 }
 
 void ABlasterCharacter::CrouchButtonPressed()
@@ -467,7 +450,11 @@ void ABlasterCharacter::SpawnDefaultWeapon()
 	if(BlasterGameMode && World && !bEliminated && DefaultWeaponClass)
 	{
 		AWeapon* StartingWeapon =  World->SpawnActor<AWeapon>(DefaultWeaponClass);
-		StartingWeapon->bDestroyWeapon = true;
+		if(StartingWeapon)
+		{
+			StartingWeapon->bDestroyWeapon = true;
+			DefaultWeapon = StartingWeapon;
+		}
 		if(CombatComponent)
 		{
 			CombatComponent->EquipPrimaryWeapon(StartingWeapon);
@@ -521,14 +508,18 @@ void ABlasterCharacter::StartDissolve()
 
 void ABlasterCharacter::HUDInitTimerFinished()
 {
+	EquipButtonPressed();
 	UpdateHUDAmmo();
 	UpdateHUDHealth();
 	UpdateHUDShields();
+	
 	
 	if(BlasterPlayerController && CombatComponent && CombatComponent->EquippedWeapon)
 	{
 		FText WeaponText = UEnum::GetDisplayValueAsText(CombatComponent->EquippedWeapon->GetWeaponType());
 		BlasterPlayerController->SetHUDWeaponType(WeaponText.ToString());
+
+		CombatComponent->SecondaryWeapon = nullptr;
 	}
 	
 }
@@ -839,13 +830,25 @@ void ABlasterCharacter::Elim()
 		if(CombatComponent->EquippedWeapon->bDestroyWeapon)
 		{
 			CombatComponent->EquippedWeapon->Destroy();
-		}else
+		}
+		else
 		{
 			CombatComponent->EquippedWeapon->Dropped();
 		}
 		
-		
+		if(CombatComponent->SecondaryWeapon)
+		{
+			if(CombatComponent->SecondaryWeapon->bDestroyWeapon)
+			{
+				CombatComponent->SecondaryWeapon->Destroy();
+			}
+			else
+			{
+				CombatComponent->SecondaryWeapon->Dropped();
+			}
+		}
 	}
+	
 	MulticastElim();
 	GetWorldTimerManager().SetTimer(ElimTimer, this, &ABlasterCharacter::ElimTimerFinished, ElimDelay);
 	
@@ -875,6 +878,10 @@ void ABlasterCharacter::Destroyed()
 	if(ElimBotComponent)
 	{
 		ElimBotComponent->DestroyComponent();
+	}
+	if(DefaultWeapon)
+	{
+		DefaultWeapon->Destroy(); //TODO: Will destroy weapon even if someone is using it. Will fix later with an overhaul
 	}
 	
 	Super::Destroyed();

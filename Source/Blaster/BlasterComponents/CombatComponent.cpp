@@ -117,12 +117,23 @@ void UCombatComponent::OnRep_EquippedWeapon()
 		}
 		Character->GetCharacterMovement()->bOrientRotationToMovement = false;
 		Character->bUseControllerRotationYaw = true;
+		Character->GetWorldTimerManager().SetTimer(RefreshHUDTimer, this, &UCombatComponent::RefreshHUDTimerFinished, RefreshHUDDelay);
 	}
 }
 
 void UCombatComponent::OnRep_SecondaryWeapon()
 {
+	if(SecondaryWeapon && Character)
+	{
+		SecondaryWeapon->SetWeaponState(EWeaponState::EWS_UnEquipped);
 	
+		const USkeletalMeshSocket* BackpackSocket = Character->GetMesh()->GetSocketByName(FName("BackpackSocket"));
+		if(BackpackSocket)
+		{
+			BackpackSocket->AttachActor(SecondaryWeapon, Character->GetMesh());
+		}
+		Character->GetWorldTimerManager().SetTimer(RefreshHUDTimer, this, &UCombatComponent::RefreshHUDTimerFinished, RefreshHUDDelay);
+	}
 }
 
 
@@ -349,7 +360,7 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 {
 	if(Character == nullptr || WeaponToEquip == nullptr) return;
 	if(CombatState != ECombatState::ECS_Unoccupied) return; 
-
+	
 	if(SecondaryWeapon != nullptr)
 	{
 		EquipPrimaryWeapon(WeaponToEquip);
@@ -357,19 +368,12 @@ void UCombatComponent::EquipWeapon(AWeapon* WeaponToEquip)
 	{
 		EquipSecondaryWeapon(WeaponToEquip);
 	}
-	
-	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
-	Character->bUseControllerRotationYaw = true;
-
-
-	SetCrosshairs();
-	
 }
 
-void UCombatComponent::SwapWeapons()
+void UCombatComponent::SwapWeapons() //BUG: When swapping weapons, clients HUD isn't updated correctly.
 {
 	if(EquippedWeapon == nullptr || SecondaryWeapon == nullptr || Character == nullptr || Character->GetCombatState() != ECombatState::ECS_Unoccupied) return;
-	
+
 	FDetachmentTransformRules DetachmentTransformRules(EDetachmentRule::KeepWorld, true);
 	EquippedWeapon->GetWeaponMesh()->DetachFromComponent(DetachmentTransformRules);
 	SecondaryWeapon->GetWeaponMesh()->DetachFromComponent(DetachmentTransformRules);
@@ -378,6 +382,7 @@ void UCombatComponent::SwapWeapons()
 	EquippedWeapon = nullptr;
 	EquipPrimaryWeapon(SecondaryWeapon);
 	EquipSecondaryWeapon(EquippedWeaponLastFrame);
+	
 }
 
 void UCombatComponent::EquipPrimaryWeapon(AWeapon* WeaponToEquip)
@@ -412,13 +417,19 @@ void UCombatComponent::EquipPrimaryWeapon(AWeapon* WeaponToEquip)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, EquippedWeapon->GetEquipSound(), Character->GetActorLocation());
 	}
+	
+	Character->GetCharacterMovement()->bOrientRotationToMovement = false;
+	Character->bUseControllerRotationYaw = true;
+
+
+	SetCrosshairs();
 }
 
 void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
 {
 	SecondaryWeapon = WeaponToEquip;
 	if(SecondaryWeapon == nullptr || Character == nullptr || Character->GetMesh() == nullptr) return;
-	
+	UE_LOG(LogTemp, Warning, TEXT("EquipSecondaryWeapon if check passed"))
 	SecondaryWeapon->SetWeaponState(EWeaponState::EWS_UnEquipped);
 	SecondaryWeapon->SetOwner(Character);
 	const USkeletalMeshSocket* BackpackSocket = Character->GetMesh()->GetSocketByName(FName("BackpackSocket"));
@@ -526,6 +537,12 @@ void UCombatComponent::OnRep_CombatState()
 	default:
 		break;
 	}
+}
+
+void UCombatComponent::RefreshHUDTimerFinished()
+{
+	SetCrosshairs();
+	if(Character) Character->UpdateHUDAmmo();
 }
 
 void UCombatComponent::SetSpeeds(const float InAimSpeed, const float InBaseSpeed)

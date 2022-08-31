@@ -155,8 +155,9 @@ private:
 	UPROPERTY(EditAnywhere)
 	TSubclassOf<AWeapon> DefaultWeaponClass;
 
-
-
+	UPROPERTY()
+	AWeapon* DefaultWeapon;
+	
 	//The distance to the camera at which the character should be set invisible.
 	UPROPERTY(EditDefaultsOnly)
 	float CharacterHideThreshold;

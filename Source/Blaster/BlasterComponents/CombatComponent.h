@@ -79,10 +79,10 @@ private:
 	class ABlasterHUD* BlasterHUD;
 	
 	UPROPERTY(ReplicatedUsing = OnRep_EquippedWeapon, VisibleAnywhere)
-	AWeapon* EquippedWeapon;
+	AWeapon* EquippedWeapon{nullptr};
 
 	UPROPERTY(ReplicatedUsing = OnRep_SecondaryWeapon, VisibleAnywhere)
-	AWeapon* SecondaryWeapon;
+	AWeapon* SecondaryWeapon{nullptr};
 
 	UPROPERTY()
 	AWeapon* EquippedWeaponLastFrame;
@@ -163,6 +163,11 @@ private:
 
 	UFUNCTION()
 	void OnRep_CombatState();
+
+	FTimerHandle RefreshHUDTimer;
+	float RefreshHUDDelay{0.1f};
+	void RefreshHUDTimerFinished();
+	
 	
 
 public:
