@@ -20,6 +20,16 @@ enum class EWeaponState : uint8
 	EWS_MAX UMETA(DisplayName = "MAX"),
 };
 
+UENUM()
+enum class EFireType : uint8
+{
+	EFT_Hitscan UMETA(DisplayName = "Hitscan Weapon"),
+	EFT_Projectile UMETA(DisplayName = "Projectile Weapon"),
+	EFT_Shotgun UMETA(DisplayName = "Shotgun Weapon"),
+
+	EFT_MAX UMETA(DisplayName = "DefaultMAX")
+};
+
 UCLASS()
 class BLASTER_API AWeapon : public AActor
 {
@@ -49,6 +59,10 @@ public:
 	
 	bool bDestroyWeapon = false;
 
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	bool bUseScatter{false};
+	FVector TraceEndWithScatter(const FVector& HitTarget);
+
 	FOnPickedUp OnPickedUpDelegate;
 
 protected:
@@ -60,9 +74,6 @@ protected:
 	UFUNCTION()
 	void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
-	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
-	bool bUseScatter{false};
-
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	class USkeletalMeshComponent* WeaponMesh;
@@ -73,6 +84,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_WeaponState)
 	EWeaponState WeaponState;
+
+	UPROPERTY(EditAnywhere)
+	EFireType FireType;
 	
 	//For clients to set the WeaponState
 	UFUNCTION()
@@ -157,8 +171,11 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	float BaseTurnRate{25.f};
-
 	
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	float DistanceToSphere{800.f};
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	float SphereRadius{75.f};
 	
 public:
 
@@ -175,6 +192,7 @@ public:
 	FORCEINLINE float GetFireDelay() const {return FireDelay;}
 	FORCEINLINE bool IsEmpty() const {return Ammo <= 0;}
 	FORCEINLINE EWeaponType GetWeaponType() const {return WeaponType;}
+	FORCEINLINE EFireType GetFireType() const {return FireType;}
 	FORCEINLINE bool MagazineIsFull() const {return Ammo >= MagCapacity;}
 	FORCEINLINE int32 GetAmmo() const {return Ammo;}
 	FORCEINLINE int32 GetMagCapacity() const {return MagCapacity;}

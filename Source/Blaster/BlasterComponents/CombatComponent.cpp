@@ -141,12 +141,47 @@ void UCombatComponent::Fire()
 {
 	if(!CanFire()) return;
 	bCanFire = false;
-	ServerFire(HitTarget);
+	
 	StartFireTimer();
 	if(EquippedWeapon)
 	{
 		CrosshairShootFactor = FMath::Clamp(CrosshairShootFactor += EquippedWeapon->GetRecoilPerShot(), 0.f, EquippedWeapon->GetMaxRecoil());
+		switch (EquippedWeapon->GetFireType())
+		{
+		case EFireType::EFT_Hitscan:
+			FireHitscanWeapon();
+			break;
+		case EFireType::EFT_Projectile:
+			FireProjectileWeapon();
+			break;
+		case EFireType::EFT_Shotgun:
+			FireShotgunWeapon();
+			break;
+		default:
+			break;
+		}
 	}
+}
+
+void UCombatComponent::FireProjectileWeapon()
+{
+	LocalFire(HitTarget);
+	ServerFire(HitTarget);
+}
+
+void UCombatComponent::FireHitscanWeapon()
+{
+	if(EquippedWeapon)
+	{
+		HitTarget = EquippedWeapon->bUseScatter ? EquippedWeapon->TraceEndWithScatter(HitTarget) : HitTarget;
+		LocalFire(HitTarget);
+		ServerFire(HitTarget);
+	}
+}
+
+void UCombatComponent::FireShotgunWeapon()
+{
+	
 }
 
 void UCombatComponent::FireButtonPressed(bool bPressed)
@@ -303,8 +338,7 @@ void UCombatComponent::InitializeCarriedAmmo()
 }
 
 
-
-void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
+void UCombatComponent::LocalFire(const FVector_NetQuantize& TraceHitTarget)
 {
 	if(EquippedWeapon == nullptr) return;
 	if(Character && CombatState == ECombatState::ECS_Unoccupied)
@@ -313,6 +347,13 @@ void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& T
 		EquippedWeapon->Fire(TraceHitTarget);
 		
 	}
+}
+
+void UCombatComponent::MulticastFire_Implementation(const FVector_NetQuantize& TraceHitTarget)
+{
+	if(Character && Character->IsLocallyControlled()) return;
+	
+	LocalFire(TraceHitTarget);
 }
 
 void UCombatComponent::ServerFire_Implementation(const FVector_NetQuantize& TraceHitTarget)

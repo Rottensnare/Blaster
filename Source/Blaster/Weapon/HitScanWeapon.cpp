@@ -15,7 +15,7 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 {
 	Super::Fire(HitTarget);
 
-	if(!HasAuthority()) return;
+	
 	const APawn* InstigatorPawn = Cast<APawn>(GetOwner());
 	if(InstigatorPawn == nullptr) return;
 	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName(FName("MuzzleFlash"));
@@ -25,6 +25,11 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 		const FVector Start = SocketTransform.GetLocation();
 		FVector End = Start + (HitTarget - Start) * 1.25f;
 		FHitResult HitResult;
+		if(!HasAuthority()) //////////////////////////////////////
+		{
+			WeaponTraceHit(Start, HitTarget, HitResult);
+			return;
+		}
 		WeaponTraceHit(Start, HitTarget, HitResult);
 		
 		if(HitResult.bBlockingHit)
@@ -74,11 +79,12 @@ void AHitScanWeapon::MulticastSetImpactEffects_Implementation(EHitType HitType, 
 
 void AHitScanWeapon::WeaponTraceHit(const FVector& InTraceStart, const FVector& InHitTarget, FHitResult& OutHitResult)
 {
-	const FVector End = bUseScatter ? TraceEndWithScatter(InTraceStart, InHitTarget) : InTraceStart + (InHitTarget - InTraceStart) * 1.2f;
+	const FVector End = InTraceStart + (InHitTarget - InTraceStart) * 1.2f;
 	
 	UWorld* World = GetWorld();
 	if(World)
 	{
+		
 		World->LineTraceSingleByChannel(OutHitResult, InTraceStart, End, ECC_Visibility);
 
 		FVector BeamEnd = End;
@@ -86,6 +92,7 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& InTraceStart, const FVector& 
 		{
 			BeamEnd = OutHitResult.ImpactPoint;
 		}
+		DrawDebugSphere(World, BeamEnd, 16.f, 12, FColor::Orange, false, 5.f);
 	}
 }
 
@@ -109,23 +116,3 @@ void AHitScanWeapon::ShowEffects(const FVector& Location, const FVector& StartLo
 	}
 }
 
-FVector AHitScanWeapon::TraceEndWithScatter(const FVector& TraceStart, const FVector& HitTarget)
-{
-	FVector ToTargetNormalized = (HitTarget - TraceStart).GetSafeNormal();
-	FVector SphereCenter = TraceStart + ToTargetNormalized * DistanceToSphere;
-
-	FVector RandVec = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0.f, SphereRadius);
-	FVector EndLoc = SphereCenter + RandVec;
-	FVector ToEndLoc = EndLoc - TraceStart;
-/*
-	DrawDebugSphere(GetWorld(), SphereCenter, SphereRadius, 12, FColor::Red, true);
-	DrawDebugSphere(GetWorld(), EndLoc, 4.f, 12, FColor::Orange, true);
-	DrawDebugLine(
-		GetWorld(),
-		TraceStart,
-		FVector(TraceStart + ToEndLoc * TRACE_LENGTH / ToEndLoc.Size()),
-		FColor::Cyan,
-		true);
-*/
-	return FVector(TraceStart + ToEndLoc * TRACE_LENGTH / ToEndLoc.Size());
-}

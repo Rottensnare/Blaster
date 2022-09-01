@@ -29,6 +29,7 @@ public:
 
 	virtual void Fire(const FVector& HitTarget) override;
 
+
 protected:
 
 	UFUNCTION(NetMulticast, Reliable)
@@ -36,9 +37,7 @@ protected:
 	void WeaponTraceHit(const FVector& InTraceStart, const FVector& InHitTarget, FHitResult& OutHitResult);
 
 	virtual void ShowEffects(const FVector& Location, const FVector& StartLocation = FVector());
-
-	FVector TraceEndWithScatter(const FVector& TraceStart, const FVector& HitTarget);
-
+	
 	UPROPERTY(VisibleAnywhere)
 	class UParticleSystem* ImpactParticles;
 
@@ -56,12 +55,7 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	USoundCue* MetalImpactSound;
-
-	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
-	float DistanceToSphere{800.f};
-	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
-	float SphereRadius{75.f};
-
+	
 	UPROPERTY(EditAnywhere)
 	float Damage{10.f};
 
