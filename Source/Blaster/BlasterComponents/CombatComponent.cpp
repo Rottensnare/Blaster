@@ -87,6 +87,7 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 			EquippedWeapon->SetUseScatter(true);
 		}
 	}
+	bAimButtonPressed = bIsAiming; //For Locally Controlled Character
 }
 
 void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)
@@ -330,7 +331,7 @@ void UCombatComponent::FireTimerFinished()
 bool UCombatComponent::CanFire()
 {
 	if(EquippedWeapon == nullptr) return false;
-	if(EquippedWeapon->IsEmpty() || !bCanFire ||CombatState != ECombatState::ECS_Unoccupied) return false;
+	if(EquippedWeapon->IsEmpty() || !bCanFire ||CombatState != ECombatState::ECS_Unoccupied || bLocallyReloading) return false;
 	return true;
 }
 
@@ -519,14 +520,17 @@ void UCombatComponent::EquipSecondaryWeapon(AWeapon* WeaponToEquip)
 void UCombatComponent::Reload()
 {
 	if(EquippedWeapon == nullptr) return;
-	if(TotalAmmo > 0 && !EquippedWeapon->MagazineIsFull() && CombatState == ECombatState::ECS_Unoccupied)
+	if(TotalAmmo > 0 && !EquippedWeapon->MagazineIsFull() && CombatState == ECombatState::ECS_Unoccupied && !bLocallyReloading)
 	{
 		ServerReload();
+		HandleReload();
+		bLocallyReloading = true;
 	}
 }
 
 void UCombatComponent::FinishReloading()
 {
+	bLocallyReloading = false;
 	if(Character && Character->HasAuthority())
 	{
 		CombatState = ECombatState::ECS_Unoccupied;
@@ -556,6 +560,14 @@ int32 UCombatComponent::AmountToReload()
 	}
 	
 	return 0;
+}
+
+void UCombatComponent::OnRep_Aiming()
+{
+	if(Character && Character->IsLocallyControlled())
+	{
+		bAiming = bAimButtonPressed;
+	}
 }
 
 void UCombatComponent::PickupAmmo(const EWeaponType InWeaponType, const int32 InAmmoAmount)
@@ -594,7 +606,7 @@ void UCombatComponent::ServerReload_Implementation()
 		BlasterPlayerController->SetHUDTotalAmmo(TotalAmmo);
 	}
 	
-	HandleReload();
+	if(!Character->IsLocallyControlled()) HandleReload();
 	
 }
 
@@ -609,7 +621,7 @@ void UCombatComponent::OnRep_CombatState()
 		}
 		break;
 	case ECombatState::ECS_Reloading:
-		HandleReload();
+		if(Character && !Character->IsLocallyControlled()) HandleReload();
 		break;
 	default:
 		break;

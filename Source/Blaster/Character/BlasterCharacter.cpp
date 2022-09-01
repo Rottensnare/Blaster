@@ -11,6 +11,7 @@
 #include "Blaster/GameMode/BlasterGameMode.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Camera/CameraComponent.h"
+#include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Components/WidgetComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -65,6 +66,80 @@ TurningInPlace(ETurningInPlace::ETIP_NotTurning)
 	MinNetUpdateFrequency = 33.f;
 
 	DissolveTimeline = CreateDefaultSubobject<UTimelineComponent>(TEXT("DissolveTimelineComponent"));
+
+	//Server-Side Rewind
+
+	HeadBox = CreateDefaultSubobject<UBoxComponent>(TEXT("HeadBox"));
+	HeadBox->SetupAttachment(GetMesh(), FName("head"));
+	HeadBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	PelvisBox = CreateDefaultSubobject<UBoxComponent>(TEXT("PelvisBox"));
+	PelvisBox->SetupAttachment(GetMesh(), FName("Pelvis"));
+	PelvisBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	Spine02Box = CreateDefaultSubobject<UBoxComponent>(TEXT("Spine02Box"));
+	Spine02Box->SetupAttachment(GetMesh(), FName("spine_02"));
+	Spine02Box->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	Spine03Box = CreateDefaultSubobject<UBoxComponent>(TEXT("Spine03Box"));
+	Spine03Box->SetupAttachment(GetMesh(), FName("spine_03"));
+	Spine03Box->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	
+	UpperArmLBox = CreateDefaultSubobject<UBoxComponent>(TEXT("UpperArmLBox"));
+	UpperArmLBox->SetupAttachment(GetMesh(), FName("UpperArm_L"));
+	UpperArmLBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	UpperArmRBox = CreateDefaultSubobject<UBoxComponent>(TEXT("UpperArmRBox"));
+	UpperArmRBox->SetupAttachment(GetMesh(), FName("UpperArm_R"));
+	UpperArmRBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	LowerArmLBox = CreateDefaultSubobject<UBoxComponent>(TEXT("LowerArmLBox"));
+	LowerArmLBox->SetupAttachment(GetMesh(), FName("LowerArm_L"));
+	LowerArmLBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	LowerArmRBox = CreateDefaultSubobject<UBoxComponent>(TEXT("LowerArmRBox"));
+	LowerArmRBox->SetupAttachment(GetMesh(), FName("LowerArm_R"));
+	LowerArmRBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	HandLBox = CreateDefaultSubobject<UBoxComponent>(TEXT("HandLBox"));
+	HandLBox->SetupAttachment(GetMesh(), FName("Hand_L"));
+	HandLBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	HandRBox = CreateDefaultSubobject<UBoxComponent>(TEXT("HandRBox"));
+	HandRBox->SetupAttachment(GetMesh(), FName("Hand_R"));
+	HandRBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	BackpackBox = CreateDefaultSubobject<UBoxComponent>(TEXT("BackpackBox"));
+	BackpackBox->SetupAttachment(GetMesh(), FName("backpack"));
+	BackpackBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	BlanketBox = CreateDefaultSubobject<UBoxComponent>(TEXT("BlanketBox"));
+	BlanketBox->SetupAttachment(GetMesh(), FName("blanket_l"));
+	BlanketBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	ThighLBox = CreateDefaultSubobject<UBoxComponent>(TEXT("ThighLBox"));
+	ThighLBox->SetupAttachment(GetMesh(), FName("Thigh_L"));
+	ThighLBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	ThighRBox = CreateDefaultSubobject<UBoxComponent>(TEXT("ThighRBox"));
+	ThighRBox->SetupAttachment(GetMesh(), FName("Thigh_R"));
+	ThighRBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	CalfLBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CalfLBox"));
+	CalfLBox->SetupAttachment(GetMesh(), FName("Calf_L"));
+	CalfLBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	CalfRBox = CreateDefaultSubobject<UBoxComponent>(TEXT("CalfRBox"));
+	CalfRBox->SetupAttachment(GetMesh(), FName("Calf_R"));
+	CalfRBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	FootLBox = CreateDefaultSubobject<UBoxComponent>(TEXT("FootLBox"));
+	FootLBox->SetupAttachment(GetMesh(), FName("Foot_L"));
+	FootLBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	FootRBox = CreateDefaultSubobject<UBoxComponent>(TEXT("FootRBox"));
+	FootRBox->SetupAttachment(GetMesh(), FName("Foot_R"));
+	FootRBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 
@@ -557,6 +632,12 @@ bool ABlasterCharacter::IsAiming()
 	return (CombatComponent && CombatComponent->bAiming);
 }
 
+
+bool ABlasterCharacter::IsLocallyReloading() const
+{
+	if(CombatComponent) return CombatComponent->bLocallyReloading;
+	else return false;
+}
 
 AWeapon* ABlasterCharacter::GetEquippedWeapon()
 {

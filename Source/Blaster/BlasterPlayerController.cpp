@@ -39,6 +39,7 @@ void ABlasterPlayerController::CheckPing(float DeltaSeconds)
 			{
 				HighPingWarning();
 				PingAnimRunningTime = 0.f;
+				
 			}
 		}
 		HighPingRunningTime = 0.f;

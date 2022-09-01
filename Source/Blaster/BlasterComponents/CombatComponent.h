@@ -32,6 +32,7 @@ public:
 	void FireButtonPressed(bool bPressed);
 	void PickupAmmo(const EWeaponType InWeaponType, const int32 InAmmoAmount);
 
+	bool bLocallyReloading{false};
 
 protected:
 	// Called when the game starts
@@ -98,8 +99,13 @@ private:
 	UPROPERTY()
 	AWeapon* EquippedWeaponLastFrame;
 
-	UPROPERTY(Replicated)
-	bool bAiming;
+	UPROPERTY(ReplicatedUsing = "OnRep_Aiming")
+	bool bAiming{false};
+
+	bool bAimButtonPressed{false};
+
+	UFUNCTION()
+	void OnRep_Aiming();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	float BaseWalkSpeed;
