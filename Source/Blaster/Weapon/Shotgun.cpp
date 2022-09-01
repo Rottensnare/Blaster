@@ -6,62 +6,74 @@
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 
-void AShotgun::Fire(const FVector& HitTarget)
+
+void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 {
-	
-	AWeapon::Fire(HitTarget);
-	if(!HasAuthority()) return;
+	AWeapon::Fire(FVector());
 	APawn* OwnerPawn = Cast<APawn>(GetOwner());
 	if (OwnerPawn == nullptr) return;
 	AController* InstigatorController = OwnerPawn->GetController();
-
+	
 	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName("MuzzleFlash");
 	if (MuzzleFlashSocket)
 	{
-		FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
-		FVector Start = SocketTransform.GetLocation();
-		FVector End = Start + (HitTarget - Start) * 1.25f;
-		//Number of hits each character was hit. Needed because shotgun can hit multiple characters per shot.
+		const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
+		const FVector Start = SocketTransform.GetLocation();
+		//Tracks how many pellets hit which character
 		TMap<ABlasterCharacter*, uint32> HitActors;
-		for (uint32 i = 0; i < NumberOfPellets; i++)
+		for(FVector_NetQuantize HitTarget : HitTargets)
 		{
 			FHitResult HitResult;
 			WeaponTraceHit(Start, HitTarget, HitResult);
-			if(HitResult.bBlockingHit)
+			if(ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(HitResult.GetActor()))
 			{
-				if(ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(HitResult.GetActor()))
+				if(HitActors.Contains(BlasterCharacter))
 				{
-					if(InstigatorController)
-					{
-						if(HitActors.Contains(BlasterCharacter))
-						{
-							HitActors[BlasterCharacter]++;
-						}else
-						{
-							HitActors.Emplace(BlasterCharacter, 1);
-						}
-						
-						MulticastSetImpactEffects(EHT_Character, HitResult.Location, SocketTransform.GetLocation());
-					}
-				}
-				else
+					HitActors[BlasterCharacter]++;
+				}else
 				{
-					MulticastSetImpactEffects(EHT_Other, HitResult.Location, SocketTransform.GetLocation());
+					HitActors.Emplace(BlasterCharacter, 1);
 				}
+				MulticastSetImpactEffects(EHT_Character, HitResult.Location, SocketTransform.GetLocation());
 			}
 			else
 			{
-				MulticastSetImpactEffects(EHT_MAX, End, SocketTransform.GetLocation());
+				MulticastSetImpactEffects(EHT_Other, HitResult.Location, SocketTransform.GetLocation());
 			}
 		}
-		for(auto HitPair : HitActors)
+		if(HasAuthority())
 		{
-			if(InstigatorController && HitPair.Key)
+			for(auto HitPair : HitActors)
 			{
-				UGameplayStatics::ApplyDamage(HitPair.Key, Damage * HitPair.Value, InstigatorController, this, UDamageType::StaticClass());
+				if(InstigatorController && HitPair.Key)
+				{
+					UGameplayStatics::ApplyDamage(HitPair.Key, Damage * HitPair.Value, InstigatorController, this, UDamageType::StaticClass());
+				}
 			}
 		}
 	}
+}
+
+void AShotgun::ShotgunTraceEndWithScatter(const FVector& HitTarget, TArray<FVector_NetQuantize>& OutHitTargets)
+{
+	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName(FName("MuzzleFlash"));
+	if (MuzzleFlashSocket == nullptr) return;
 	
+	const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
+	const FVector TraceStart = SocketTransform.GetLocation();
+	
+	const FVector ToTargetNormalized = (HitTarget - TraceStart).GetSafeNormal();
+	const FVector SphereCenter = TraceStart + ToTargetNormalized * DistanceToSphere;
+	
+	for (uint32 i = 0; i < NumberOfPellets; i++)
+	{
+		const FVector RandVec = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0.f, SphereRadius);
+		const FVector EndLoc = SphereCenter + RandVec;
+		FVector ToEndLoc = EndLoc - TraceStart;
+		ToEndLoc = TraceStart + ToEndLoc * TRACE_LENGTH / ToEndLoc.Size();
+		OutHitTargets.Add(ToEndLoc);
+		
+	}
 }

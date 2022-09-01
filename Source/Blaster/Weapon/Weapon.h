@@ -74,6 +74,11 @@ protected:
 	UFUNCTION()
 	void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	float DistanceToSphere{800.f};
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	float SphereRadius{75.f};
+
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	class USkeletalMeshComponent* WeaponMesh;
@@ -138,13 +143,19 @@ private:
 	float FireDelay{.15f};
 
 	//Current ammo in the magazine/weapon
-	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
+	UPROPERTY(EditAnywhere)
 	int32 Ammo;
 
-	//For clients. Only calls SetHUDAmmo
-	UFUNCTION()
-	void OnRep_Ammo();
+	//Number of unprocessed server requests for ammo
+	//Incremented in SpendRound, Decremented in ClientUpdateAmmo
+	int32 Sequence{0};
 
+	UFUNCTION(Client, Reliable)
+	void ClientUpdateAmmo(int32 ServerAmmo);
+
+	UFUNCTION(Client, Reliable)
+	void ClientAddAmmo(int32 AmmoToAdd);
+	
 	//Decreases ammo by 1, then calls SetHUDAmmo
 	void SpendRound();
 
@@ -172,10 +183,7 @@ private:
 	UPROPERTY(EditAnywhere)
 	float BaseTurnRate{25.f};
 	
-	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
-	float DistanceToSphere{800.f};
-	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
-	float SphereRadius{75.f};
+
 	
 public:
 
