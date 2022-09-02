@@ -79,6 +79,18 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
 	float SphereRadius{75.f};
 
+	UPROPERTY(EditAnywhere)
+	float Damage{10.f};
+
+	UPROPERTY(EditAnywhere)
+	bool bUseServerSideRewind{false};
+
+	UPROPERTY()
+	class ABlasterCharacter* OwnerCharacter;
+
+	UPROPERTY()
+	class ABlasterPlayerController* OwnerController;
+
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
 	class USkeletalMeshComponent* WeaponMesh;
@@ -162,12 +174,6 @@ private:
 	UPROPERTY(EditAnywhere)
 	int32 MagCapacity;
 	
-	UPROPERTY()
-	class ABlasterCharacter* OwnerCharacter;
-
-	UPROPERTY()
-	class ABlasterPlayerController* OwnerController;
-
 	UPROPERTY(EditAnywhere)
 	EWeaponType WeaponType;
 
@@ -208,7 +214,7 @@ public:
 	FORCEINLINE USoundCue* GetEquipSound() const {return EquipSound;}
 	FORCEINLINE float GetBaseAccuracy() const {return BaseAccuracy;}
 	FORCEINLINE void SetUseScatter(bool bInUseScatter) {bUseScatter = bInUseScatter;}
-
+	FORCEINLINE float GetDamage() const {return Damage;}
 	
 };
 

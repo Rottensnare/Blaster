@@ -50,6 +50,8 @@ public:
 	UPROPERTY(Replicated)
 	bool bDisableGameplay{false};
 
+	TMap<FName, class UBoxComponent*> HitCollisionBoxes;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -129,8 +131,7 @@ protected:
 	UBoxComponent* FootRBox;
 	
 	
-	UPROPERTY()
-	class ULagCompensationComponent* LagCompensationComponent;
+	
 	
 
 private:
@@ -164,6 +165,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UBuffComponent* BuffComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class ULagCompensationComponent* LagCompensationComponent;
 
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
@@ -295,6 +299,7 @@ public:
 	FORCEINLINE float GetMaxHealth() const {return MaxHealth;}
 	FORCEINLINE float GetMaxShields() const {return MaxShields;}
 	FORCEINLINE bool GetDisableGameplay() const {return bDisableGameplay;}
+	FORCEINLINE ULagCompensationComponent* GetLagCompensationComponent() const {return LagCompensationComponent;}
 	bool IsLocallyReloading() const;
 	AWeapon* GetEquippedWeapon();
 	FVector GetHitTarget() const;

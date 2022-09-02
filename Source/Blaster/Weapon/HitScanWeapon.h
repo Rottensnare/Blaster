@@ -55,9 +55,6 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	USoundCue* MetalImpactSound;
-	
-	UPROPERTY(EditAnywhere)
-	float Damage{10.f};
 
 
 private:

@@ -4,6 +4,8 @@
 #include "HitScanWeapon.h"
 
 #include "Blaster/Blaster.h"
+#include "Blaster/BlasterPlayerController.h"
+#include "Blaster/BlasterComponents/LagCompensationComponent.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
@@ -16,8 +18,8 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 	Super::Fire(HitTarget);
 
 	
-	const APawn* InstigatorPawn = Cast<APawn>(GetOwner());
-	if(InstigatorPawn == nullptr) return;
+	APawn* InstigatorPawn = Cast<APawn>(GetOwner());
+	AController* InstigatorController = InstigatorPawn->GetController();
 	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName(FName("MuzzleFlash"));
 	if (MuzzleFlashSocket)
 	{
@@ -25,11 +27,6 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 		const FVector Start = SocketTransform.GetLocation();
 		FVector End = Start + (HitTarget - Start) * 1.25f;
 		FHitResult HitResult;
-		if(!HasAuthority()) //////////////////////////////////////
-		{
-			WeaponTraceHit(Start, HitTarget, HitResult);
-			return;
-		}
 		WeaponTraceHit(Start, HitTarget, HitResult);
 		
 		if(HitResult.bBlockingHit)
@@ -37,9 +34,26 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 			ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(HitResult.GetActor());
 			if(BlasterCharacter)
 			{
-				if(InstigatorPawn->GetController())
+				if(InstigatorController)
 				{
-					UGameplayStatics::ApplyDamage(BlasterCharacter, Damage, InstigatorPawn->GetController(), this, UDamageType::StaticClass());
+					if(HasAuthority() && !bUseServerSideRewind)
+					{
+						UGameplayStatics::ApplyDamage(BlasterCharacter, Damage, InstigatorController, this, UDamageType::StaticClass());
+					}
+					if(!HasAuthority() && bUseServerSideRewind)
+					{
+						OwnerCharacter = OwnerCharacter == nullptr ? Cast<ABlasterCharacter>(InstigatorPawn) : OwnerCharacter;
+						if(OwnerCharacter)
+						{
+							OwnerController = OwnerController == nullptr ? Cast<ABlasterPlayerController>(OwnerCharacter->Controller) : OwnerController;
+							if(OwnerController && OwnerCharacter->GetLagCompensationComponent())
+							{
+								const float TripTime = OwnerController->GetServerTime() - OwnerController->SingleTripTime;
+								OwnerCharacter->GetLagCompensationComponent()->ServerScoreRequest(BlasterCharacter, Start, HitTarget, TripTime, this);
+							}
+						}
+					}
+					
 					MulticastSetImpactEffects(EHT_Character, HitResult.Location, SocketTransform.GetLocation());
 				}
 			}
