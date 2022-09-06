@@ -1,6 +1,6 @@
 ﻿#pragma once
 
-#define TRACE_LENGTH 80000.f
+#define TRACE_LENGTH 5000.f
 
 #define CUSTOM_DEPTH_RED 247
 #define CUSTOM_DEPTH_GREEN 248

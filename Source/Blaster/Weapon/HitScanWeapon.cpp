@@ -16,7 +16,6 @@
 void AHitScanWeapon::Fire(const FVector& HitTarget)
 {
 	Super::Fire(HitTarget);
-
 	
 	APawn* InstigatorPawn = Cast<APawn>(GetOwner());
 	AController* InstigatorController = InstigatorPawn->GetController();
@@ -43,13 +42,14 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 					if(!HasAuthority() && bUseServerSideRewind)
 					{
 						OwnerCharacter = OwnerCharacter == nullptr ? Cast<ABlasterCharacter>(InstigatorPawn) : OwnerCharacter;
-						if(OwnerCharacter)
+						if(OwnerCharacter && OwnerCharacter->IsLocallyControlled())
 						{
 							OwnerController = OwnerController == nullptr ? Cast<ABlasterPlayerController>(OwnerCharacter->Controller) : OwnerController;
 							if(OwnerController && OwnerCharacter->GetLagCompensationComponent())
 							{
-								const float TripTime = OwnerController->GetServerTime() - OwnerController->SingleTripTime;
-								OwnerCharacter->GetLagCompensationComponent()->ServerScoreRequest(BlasterCharacter, Start, HitTarget, TripTime, this);
+								//ClientHitTime is the time on the server when the client hit the target on their machine
+								const float ClientHitTime = OwnerController->GetServerTime() - OwnerController->SingleTripTime;
+								OwnerCharacter->GetLagCompensationComponent()->ServerScoreRequest(BlasterCharacter, Start, HitTarget, ClientHitTime, this);
 							}
 						}
 					}

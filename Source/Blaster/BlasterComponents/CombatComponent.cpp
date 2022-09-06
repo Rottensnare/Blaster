@@ -187,16 +187,13 @@ void UCombatComponent::FireHitscanWeapon()
 
 void UCombatComponent::FireShotgunWeapon()
 {
-	if(EquippedWeapon)
+	AShotgun* Shotgun = Cast<AShotgun>(EquippedWeapon);
+	if (Shotgun && Character)
 	{
 		TArray<FVector_NetQuantize> HitTargets;
-		AShotgun* Shotgun = Cast<AShotgun>(EquippedWeapon);
-		if(Shotgun)
-		{
-			Shotgun->ShotgunTraceEndWithScatter(HitTarget,HitTargets);
-			ShotgunLocalFire(HitTargets);
-			ServerShotgunFire(HitTargets);
-		}
+		Shotgun->ShotgunTraceEndWithScatter(HitTarget, HitTargets);
+		if (!Character->HasAuthority()) ShotgunLocalFire(HitTargets);
+		ServerShotgunFire(HitTargets);
 	}
 }
 

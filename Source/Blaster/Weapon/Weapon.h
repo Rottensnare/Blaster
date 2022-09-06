@@ -61,6 +61,11 @@ public:
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
 	bool bUseScatter{false};
+	
+	//Delay between shots. Lower is better.
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float FireDelay{.15f};
+	
 	FVector TraceEndWithScatter(const FVector& HitTarget);
 
 	FOnPickedUp OnPickedUpDelegate;
@@ -149,10 +154,6 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	bool bAutomatic{true};
-
-	//Delay between shots. Lower is better.
-	UPROPERTY(EditAnywhere, Category = Combat)
-	float FireDelay{.15f};
 
 	//Current ammo in the magazine/weapon
 	UPROPERTY(EditAnywhere)

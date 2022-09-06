@@ -3,6 +3,8 @@
 
 #include "Shotgun.h"
 
+#include "Blaster/BlasterPlayerController.h"
+#include "Blaster/BlasterComponents/LagCompensationComponent.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
@@ -43,13 +45,31 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 				MulticastSetImpactEffects(EHT_Other, HitResult.Location, SocketTransform.GetLocation());
 			}
 		}
-		if(HasAuthority())
+
+		TArray<ABlasterCharacter*> HitCharacters;
+		
+		for(auto HitPair : HitActors)
 		{
-			for(auto HitPair : HitActors)
+			if(InstigatorController && HitPair.Key)
 			{
-				if(InstigatorController && HitPair.Key)
+				if(HasAuthority() && !bUseServerSideRewind)
 				{
 					UGameplayStatics::ApplyDamage(HitPair.Key, Damage * HitPair.Value, InstigatorController, this, UDamageType::StaticClass());
+				}
+				HitCharacters.Add(HitPair.Key);
+			}
+		}
+		if(!HasAuthority() && bUseServerSideRewind)
+		{
+			OwnerCharacter = OwnerCharacter == nullptr ? Cast<ABlasterCharacter>(OwnerPawn) : OwnerCharacter;
+			if(OwnerCharacter && OwnerCharacter->IsLocallyControlled())
+			{
+				OwnerController = OwnerController == nullptr ? Cast<ABlasterPlayerController>(OwnerCharacter->Controller) : OwnerController;
+				if(OwnerController && OwnerCharacter->GetLagCompensationComponent())
+				{
+					//ClientHitTime is the time on the server when the client hit the target on their machine
+					const float ClientHitTime = OwnerController->GetServerTime() - OwnerController->SingleTripTime;
+					OwnerCharacter->GetLagCompensationComponent()->ServerShotgunScoreRequest(HitCharacters, Start, HitTargets, ClientHitTime, this);
 				}
 			}
 		}
