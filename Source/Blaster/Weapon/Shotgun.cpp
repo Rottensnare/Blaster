@@ -23,27 +23,37 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 	{
 		const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
 		const FVector Start = SocketTransform.GetLocation();
+		
 		//Tracks how many pellets hit which character
 		TMap<ABlasterCharacter*, uint32> HitActors;
 		for(FVector_NetQuantize HitTarget : HitTargets)
 		{
+			const FVector End = Start + (HitTarget - Start) * 1.25f;
 			FHitResult HitResult;
 			WeaponTraceHit(Start, HitTarget, HitResult);
-			if(ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(HitResult.GetActor()))
+			if(HitResult.bBlockingHit)
 			{
-				if(HitActors.Contains(BlasterCharacter))
+				if(ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(HitResult.GetActor()))
 				{
-					HitActors[BlasterCharacter]++;
-				}else
-				{
-					HitActors.Emplace(BlasterCharacter, 1);
+					if(HitActors.Contains(BlasterCharacter))
+					{
+						HitActors[BlasterCharacter]++;
+					}else
+					{
+						HitActors.Emplace(BlasterCharacter, 1);
+					}
+					MulticastSetImpactEffects(EHT_Character, HitResult.Location, SocketTransform.GetLocation());
 				}
-				MulticastSetImpactEffects(EHT_Character, HitResult.Location, SocketTransform.GetLocation());
+				else
+				{
+					MulticastSetImpactEffects(EHT_Other, HitResult.Location, SocketTransform.GetLocation());
+				}
 			}
 			else
 			{
-				MulticastSetImpactEffects(EHT_Other, HitResult.Location, SocketTransform.GetLocation());
+				MulticastSetImpactEffects(EHT_MAX, End, SocketTransform.GetLocation());
 			}
+			
 		}
 
 		TArray<ABlasterCharacter*> HitCharacters;
@@ -52,7 +62,8 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 		{
 			if(InstigatorController && HitPair.Key)
 			{
-				if(HasAuthority() && !bUseServerSideRewind)
+				bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
+				if(HasAuthority() && bCauseAuthDamage)
 				{
 					UGameplayStatics::ApplyDamage(HitPair.Key, Damage * HitPair.Value, InstigatorController, this, UDamageType::StaticClass());
 				}
@@ -65,7 +76,7 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 			if(OwnerCharacter && OwnerCharacter->IsLocallyControlled())
 			{
 				OwnerController = OwnerController == nullptr ? Cast<ABlasterPlayerController>(OwnerCharacter->Controller) : OwnerController;
-				if(OwnerController && OwnerCharacter->GetLagCompensationComponent())
+				if(OwnerController && OwnerCharacter->GetLagCompensationComponent() && OwnerCharacter->IsLocallyControlled())
 				{
 					//ClientHitTime is the time on the server when the client hit the target on their machine
 					const float ClientHitTime = OwnerController->GetServerTime() - OwnerController->SingleTripTime;

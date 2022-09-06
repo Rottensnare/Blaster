@@ -85,10 +85,15 @@ public:
 
 	//Simply put, it is similar to the ServerSideRewind, but iterates over HitCharacters and HitLocations
 	FShotgunServerSideRewindResult ShotgunServerSideRewind(const TArray<ABlasterCharacter*>& HitCharacters, const FVector_NetQuantize& TraceStart, const TArray<FVector_NetQuantize>& HitLocations, const float HitTime);
+
+	FServerSideRewindResult ProjectileServerSideRewind(ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize100& InitialVelocity, const float HitTime);
 	
 	//Called by the clients weapon. Calls ServerSideRewind and if hit was successful, applies damage.
 	UFUNCTION(Server, Reliable)
 	void ServerScoreRequest(ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation, const float HitTime, class AWeapon* DamageCauser);
+
+	UFUNCTION(Server, Reliable)
+	void ProjectileServerScoreRequest(ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize100& InitialVelocity, const float HitTime);
 
 	UFUNCTION(Server, Reliable)
 	void ServerShotgunScoreRequest(const TArray<ABlasterCharacter*>& HitCharacters, const FVector_NetQuantize& TraceStart, const TArray<FVector_NetQuantize>& HitLocations, const float HitTime, AWeapon* DamageCauser);
@@ -108,8 +113,10 @@ protected:
 	//Checks with line traces whether or not client hit the player at their specified place in time
 	FServerSideRewindResult ConfirmHit(const FFramePackage& Package, ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize& HitLocation);
 
-	FShotgunServerSideRewindResult ShotgunConfirmHit(const TArray<FFramePackage>& Packages, const FVector_NetQuantize& TraceStart, const TArray<FVector_NetQuantize>& HitLocations);
+	FServerSideRewindResult ProjectileConfirmHit(const FFramePackage& Package, ABlasterCharacter* HitCharacter, const FVector_NetQuantize& TraceStart, const FVector_NetQuantize100& InitialVelocity, const float HitTime);
 
+	FShotgunServerSideRewindResult ShotgunConfirmHit(const TArray<FFramePackage>& Packages, const FVector_NetQuantize& TraceStart, const TArray<FVector_NetQuantize>& HitLocations);
+	
 	//Saves a FramePackage so that after moving the hitboxes they can be put back to their original places.
 	void CacheBoxTransform(ABlasterCharacter* HitCharacter, FFramePackage& OutFramePackage);
 	
@@ -124,9 +131,6 @@ protected:
 
 	//In short, tries to find 2 FramePackages that are on both sides of the hit time, sends those 2 packages to InterpBetweenFrames and then returns the interpolated FramePackage
 	FFramePackage GetFrameToCheck(ABlasterCharacter* HitCharacter, const float HitTime);
-
-
-	
 	
 private:
 

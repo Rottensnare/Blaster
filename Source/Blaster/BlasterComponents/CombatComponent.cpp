@@ -192,7 +192,7 @@ void UCombatComponent::FireShotgunWeapon()
 	{
 		TArray<FVector_NetQuantize> HitTargets;
 		Shotgun->ShotgunTraceEndWithScatter(HitTarget, HitTargets);
-		if (!Character->HasAuthority()) ShotgunLocalFire(HitTargets);
+		if(!Character->HasAuthority()) ShotgunLocalFire(HitTargets);
 		ServerShotgunFire(HitTargets);
 	}
 }
@@ -393,7 +393,7 @@ void UCombatComponent::ServerShotgunFire_Implementation(const TArray<FVector_Net
 
 void UCombatComponent::MulticastShotgunFire_Implementation(const TArray<FVector_NetQuantize>& TraceHitTargets)
 {
-	if(Character && Character->IsLocallyControlled()) return;
+	if(Character && (Character->IsLocallyControlled() && !Character->HasAuthority())) return;
 	ShotgunLocalFire(TraceHitTargets);
 }
 
@@ -591,6 +591,7 @@ void UCombatComponent::ServerReload_Implementation()
 	CombatState = ECombatState::ECS_Reloading;
 	
 	int32 ReloadAmount = AmountToReload();
+	UE_LOG(LogTemp, Warning, TEXT("AmountToReload: %d"), ReloadAmount)
 	if(CarriedAmmoMap.Contains(EquippedWeapon->GetWeaponType()))
 	{
 		CarriedAmmoMap[EquippedWeapon->GetWeaponType()] -= ReloadAmount;

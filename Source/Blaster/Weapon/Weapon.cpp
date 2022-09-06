@@ -13,6 +13,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Net/UnrealNetwork.h"
 
+
 // Sets default values
 AWeapon::AWeapon()
 {
@@ -104,6 +105,11 @@ void AWeapon::OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActo
 	}
 }
 
+void AWeapon::OnPingTooHigh(bool bPingTooHigh)
+{
+	bUseServerSideRewind = !bPingTooHigh;
+}
+
 void AWeapon::OnRep_WeaponState()
 {
 	switch(WeaponState)
@@ -163,6 +169,7 @@ void AWeapon::ClientUpdateAmmo_Implementation(int32 ServerAmmo)
 
 void AWeapon::ClientAddAmmo_Implementation(int32 AmmoToAdd)
 {
+	if(HasAuthority()) return;
 	Ammo = FMath::Clamp(Ammo + AmmoToAdd, 0, MagCapacity);
 	OwnerCharacter = OwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : OwnerCharacter;
 	SetHUDAmmo();
@@ -214,6 +221,21 @@ void AWeapon::SetWeaponState(EWeaponState State)
 			WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 		}
 		EnableCustomDepth(false);
+
+		OwnerCharacter = OwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : OwnerCharacter;
+		if(OwnerCharacter && bUseServerSideRewind)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Binding"))
+			OwnerController = OwnerController == nullptr ? Cast<ABlasterPlayerController>(OwnerCharacter->Controller) : OwnerController;
+			if(OwnerController)
+			{
+				if(!OwnerController->OnHighPingChecked.IsBound())
+				{
+					OwnerController->OnHighPingChecked.AddDynamic(this, &ThisClass::OnPingTooHigh);
+				}
+			}
+		}
+		
 		break;
 	case EWeaponState::EWS_Initial:
 		if(HasAuthority())
@@ -244,6 +266,18 @@ void AWeapon::SetWeaponState(EWeaponState State)
 		WeaponMesh->SetCustomDepthStencilValue(CustomDepthValue);
 		WeaponMesh->MarkRenderStateDirty();
 		EnableCustomDepth(true);
+		OwnerCharacter = OwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : OwnerCharacter;
+		if(OwnerCharacter && bUseServerSideRewind)
+		{
+			OwnerController = OwnerController == nullptr ? Cast<ABlasterPlayerController>(OwnerCharacter->Controller) : OwnerController;
+			if(OwnerController)
+			{
+				if(OwnerController->OnHighPingChecked.IsBound())
+				{
+					OwnerController->OnHighPingChecked.RemoveDynamic(this, &ThisClass::OnPingTooHigh);
+				}
+			}
+		}
 		break;
 	case EWeaponState::EWS_UnEquipped:
 		ShowPickupWidget(false);
@@ -259,6 +293,17 @@ void AWeapon::SetWeaponState(EWeaponState State)
 			WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 		}
 		EnableCustomDepth(false);
+		if(OwnerCharacter && bUseServerSideRewind)
+		{
+			OwnerController = OwnerController == nullptr ? Cast<ABlasterPlayerController>(OwnerCharacter->Controller) : OwnerController;
+			if(OwnerController)
+			{
+				if(OwnerController->OnHighPingChecked.IsBound())
+				{
+					OwnerController->OnHighPingChecked.RemoveDynamic(this, &ThisClass::OnPingTooHigh);
+				}
+			}
+		}
 		break;
 	default:
 		break;
@@ -410,4 +455,5 @@ void AWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeP
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
 	DOREPLIFETIME(AWeapon, WeaponState)
+	DOREPLIFETIME_CONDITION(AWeapon, bUseServerSideRewind, COND_OwnerOnly)
 }

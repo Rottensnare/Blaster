@@ -79,6 +79,9 @@ protected:
 	UFUNCTION()
 	void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	UFUNCTION()
+	void OnPingTooHigh(bool bPingTooHigh);
+
 	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
 	float DistanceToSphere{800.f};
 	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
@@ -87,8 +90,11 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float Damage{10.f};
 
-	UPROPERTY(EditAnywhere)
+	UPROPERTY(EditAnywhere, Replicated)
 	bool bUseServerSideRewind{false};
+
+	UPROPERTY(EditAnywhere)
+	bool bCanUseServerSideRewind{true};
 
 	UPROPERTY()
 	class ABlasterCharacter* OwnerCharacter;

@@ -19,6 +19,8 @@
 #include "Net/UnrealNetwork.h"
 
 
+
+
 void ABlasterPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -27,35 +29,7 @@ void ABlasterPlayerController::BeginPlay()
 	ServerCheckMatchState();
 }
 
-void ABlasterPlayerController::CheckPing(float DeltaSeconds)
-{
-	HighPingRunningTime += DeltaSeconds;
-	if(HighPingRunningTime >= CheckPingFrequency)
-	{
-		PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : PlayerState;
-		if(PlayerState)
-		{
-			if(PlayerState->GetCompressedPing() * 4 > HighPingThreshold) //GetCompressedPing returns ping / 4 to compress it to a uint8
-			{
-				HighPingWarning();
-				PingAnimRunningTime = 0.f;
-				
-			}
-		}
-		HighPingRunningTime = 0.f;
-	}
-	if(BlasterHUD &&
-		BlasterHUD->BlasterOverlay &&
-		BlasterHUD->BlasterOverlay->HighPingAnimation &&
-		BlasterHUD->BlasterOverlay->IsAnimationPlaying(BlasterHUD->BlasterOverlay->HighPingAnimation))
-	{
-		PingAnimRunningTime += DeltaSeconds;
-		if(PingAnimRunningTime >= HighPingDuration)
-		{
-			StopHighPingWarning();
-		}
-	}
-}
+
 
 void ABlasterPlayerController::Tick(float DeltaSeconds)
 {
@@ -160,6 +134,45 @@ void ABlasterPlayerController::PollInit()
 	}
 }
 
+void ABlasterPlayerController::CheckPing(float DeltaSeconds)
+{
+	HighPingRunningTime += DeltaSeconds;
+	if(HighPingRunningTime >= CheckPingFrequency)
+	{
+		PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : PlayerState;
+		if(PlayerState)
+		{
+			if(PlayerState->GetCompressedPing() * 4 > HighPingThreshold) //GetCompressedPing returns ping / 4 to compress it to a uint8
+			{
+				HighPingWarning();
+				PingAnimRunningTime = 0.f;
+				ServerReportPingStatus(true);
+			}
+			else
+			{
+				ServerReportPingStatus(false);
+			}
+		}
+		HighPingRunningTime = 0.f;
+	}
+	if(BlasterHUD &&
+		BlasterHUD->BlasterOverlay &&
+		BlasterHUD->BlasterOverlay->HighPingAnimation &&
+		BlasterHUD->BlasterOverlay->IsAnimationPlaying(BlasterHUD->BlasterOverlay->HighPingAnimation))
+	{
+		PingAnimRunningTime += DeltaSeconds;
+		if(PingAnimRunningTime >= HighPingDuration)
+		{
+			StopHighPingWarning();
+		}
+	}
+}
+
+void ABlasterPlayerController::ServerReportPingStatus_Implementation(bool bHighPing)
+{
+	OnHighPingChecked.Broadcast(bHighPing);
+}
+
 void ABlasterPlayerController::HighPingWarning()
 {
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
@@ -194,6 +207,8 @@ void ABlasterPlayerController::StopHighPingWarning()
 		}
 	}
 }
+
+
 
 void ABlasterPlayerController::OnRep_MatchState()
 {

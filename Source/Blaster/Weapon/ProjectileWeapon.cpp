@@ -27,7 +27,7 @@ void AProjectileWeapon::Fire(const FVector& HitTarget)
 		{
 			if(InstigatorPawn->HasAuthority())
 			{
-				if(InstigatorPawn->IsLocallyControlled())
+				if(InstigatorPawn->IsLocallyControlled() && SSRProjectileClass)
 				{
 					SpawnedProjectile = World->SpawnActor<AProjectile>(ProjectileClass, SocketTransform.GetLocation(), TargetRotation, SpawnParameters);
 					SpawnedProjectile->bUseServerSideRewind = false;
@@ -36,7 +36,7 @@ void AProjectileWeapon::Fire(const FVector& HitTarget)
 				else
 				{
 					SpawnedProjectile = World->SpawnActor<AProjectile>(SSRProjectileClass, SocketTransform.GetLocation(), TargetRotation, SpawnParameters);
-					SpawnedProjectile->bUseServerSideRewind = false;
+					SpawnedProjectile->bUseServerSideRewind = true;
 				}
 			}
 			else
@@ -47,7 +47,6 @@ void AProjectileWeapon::Fire(const FVector& HitTarget)
 					SpawnedProjectile->bUseServerSideRewind = true;
 					SpawnedProjectile->TraceStart = SocketTransform.GetLocation();
 					SpawnedProjectile->InitialVelocity = SpawnedProjectile->GetActorForwardVector() * SpawnedProjectile->InitialSpeed;
-					SpawnedProjectile->Damage = Damage;
 				}
 				else
 				{
