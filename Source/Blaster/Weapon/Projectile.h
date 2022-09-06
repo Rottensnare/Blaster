@@ -16,7 +16,17 @@ public:
 	AProjectile();
 	virtual void Tick(float DeltaTime) override;
 	virtual void Destroyed() override;
+	
 
+	bool bUseServerSideRewind{false};
+	FVector_NetQuantize TraceStart;
+	FVector_NetQuantize100 InitialVelocity;
+	
+	UPROPERTY(EditAnywhere)
+	float InitialSpeed{25000.f};
+
+	UPROPERTY(EditAnywhere)
+	float Damage {10.f};
 
 protected:
 
@@ -40,10 +50,6 @@ protected:
 	void StartDestroyTimer();
 
 	void ExplodeDamage();
-	
-	UPROPERTY(EditAnywhere)
-	float Damage {10.f};
-
 	
 	UPROPERTY(EditDefaultsOnly)
 	class UStaticMeshComponent* ProjectileMesh;
