@@ -6,6 +6,8 @@
 #include "GameFramework/PlayerController.h"
 #include "BlasterPlayerController.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHighPingChecked, bool, bPingTooHigh);
+
 /**
  * 
  */
@@ -16,6 +18,8 @@ class BLASTER_API ABlasterPlayerController : public APlayerController
 
 public:
 
+	
+	
 	void SetHUDHealth(float Health, float MaxHealth);
 	void SetHUDShields(float Shields, float MaxShields);
 	virtual void OnPossess(APawn* InPawn) override;
@@ -34,8 +38,16 @@ public:
 	void HandleCooldown();
 	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	float SingleTripTime = 0.f;
+
+	FOnHighPingChecked OnHighPingChecked;
+	
 protected:
 
+	virtual void SetupInputComponent() override;
+	void ShowReturnToMainMenu();
+	
 	virtual void BeginPlay() override;
 	void CheckPing(float DeltaSeconds);
 	virtual void Tick(float DeltaSeconds) override;
@@ -63,15 +75,28 @@ protected:
 	void HighPingWarning();
 	void StopHighPingWarning();
 
+	UFUNCTION(Server, Reliable)
+	void ServerReportPingStatus(bool bHighPing);
+
 	float HighPingRunningTime{0.f};
 	UPROPERTY(EditAnywhere)
 	float HighPingDuration{5.f};
 	float PingAnimRunningTime{0.f};
+	UPROPERTY(EditAnywhere)
 	float CheckPingFrequency{20.f};
 	UPROPERTY(EditAnywhere)
-	float HighPingThreshold{50.f};
+	float HighPingThreshold{85.f};
 
 private:
+
+	UPROPERTY(EditAnywhere, Category = HUD)
+	TSubclassOf<class UUserWidget> ReturnToMainMenuClass;
+
+	UPROPERTY()
+	class UReturnToMainMenu* ReturnToMainMenu;
+
+	bool bReturnToMainMenuOpen{false};
+	
 	UPROPERTY()
 	class ABlasterHUD* BlasterHUD;
 

@@ -15,8 +15,11 @@
 #include "HUD/Announcement.h"
 #include "HUD/BlasterHUD.h"
 #include "HUD/CharacterOverlay.h"
+#include "HUD/ReturnToMainMenu.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+
+
 
 
 void ABlasterPlayerController::BeginPlay()
@@ -27,34 +30,7 @@ void ABlasterPlayerController::BeginPlay()
 	ServerCheckMatchState();
 }
 
-void ABlasterPlayerController::CheckPing(float DeltaSeconds)
-{
-	HighPingRunningTime += DeltaSeconds;
-	if(HighPingRunningTime >= CheckPingFrequency)
-	{
-		PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : PlayerState;
-		if(PlayerState)
-		{
-			if(PlayerState->GetCompressedPing() * 4 > HighPingThreshold) //GetCompressedPing returns ping / 4 to compress it to a uint8
-			{
-				HighPingWarning();
-				PingAnimRunningTime = 0.f;
-			}
-		}
-		HighPingRunningTime = 0.f;
-	}
-	if(BlasterHUD &&
-		BlasterHUD->BlasterOverlay &&
-		BlasterHUD->BlasterOverlay->HighPingAnimation &&
-		BlasterHUD->BlasterOverlay->IsAnimationPlaying(BlasterHUD->BlasterOverlay->HighPingAnimation))
-	{
-		PingAnimRunningTime += DeltaSeconds;
-		if(PingAnimRunningTime >= HighPingDuration)
-		{
-			StopHighPingWarning();
-		}
-	}
-}
+
 
 void ABlasterPlayerController::Tick(float DeltaSeconds)
 {
@@ -73,6 +49,8 @@ void ABlasterPlayerController::Tick(float DeltaSeconds)
 
 	CheckPing(DeltaSeconds);
 }
+
+
 
 void ABlasterPlayerController::SetHUDTime()
 {
@@ -159,6 +137,45 @@ void ABlasterPlayerController::PollInit()
 	}
 }
 
+void ABlasterPlayerController::CheckPing(float DeltaSeconds)
+{
+	HighPingRunningTime += DeltaSeconds;
+	if(HighPingRunningTime >= CheckPingFrequency)
+	{
+		PlayerState = PlayerState == nullptr ? GetPlayerState<APlayerState>() : PlayerState;
+		if(PlayerState)
+		{
+			if(PlayerState->GetCompressedPing() * 4 > HighPingThreshold) //GetCompressedPing returns ping / 4 to compress it to a uint8
+			{
+				HighPingWarning();
+				PingAnimRunningTime = 0.f;
+				ServerReportPingStatus(true);
+			}
+			else
+			{
+				ServerReportPingStatus(false);
+			}
+		}
+		HighPingRunningTime = 0.f;
+	}
+	if(BlasterHUD &&
+		BlasterHUD->BlasterOverlay &&
+		BlasterHUD->BlasterOverlay->HighPingAnimation &&
+		BlasterHUD->BlasterOverlay->IsAnimationPlaying(BlasterHUD->BlasterOverlay->HighPingAnimation))
+	{
+		PingAnimRunningTime += DeltaSeconds;
+		if(PingAnimRunningTime >= HighPingDuration)
+		{
+			StopHighPingWarning();
+		}
+	}
+}
+
+void ABlasterPlayerController::ServerReportPingStatus_Implementation(bool bHighPing)
+{
+	OnHighPingChecked.Broadcast(bHighPing);
+}
+
 void ABlasterPlayerController::HighPingWarning()
 {
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
@@ -194,6 +211,8 @@ void ABlasterPlayerController::StopHighPingWarning()
 	}
 }
 
+
+
 void ABlasterPlayerController::OnRep_MatchState()
 {
 	if(MatchState == MatchState::InProgress)
@@ -227,6 +246,7 @@ void ABlasterPlayerController::ClientReportServerTime_Implementation(const float
                                                                      const float TimeServerReceivedClientRequest)
 {
 	const float RoundTripTime = GetWorld()->GetTimeSeconds() - TimeOfClientRequest;
+	SingleTripTime = RoundTripTime / 2;
 	const float CurrentServerTime = TimeServerReceivedClientRequest + (0.5f * RoundTripTime);
 	ClientServerDelta = CurrentServerTime - GetWorld()->GetTimeSeconds();
 }
@@ -236,6 +256,8 @@ void ABlasterPlayerController::ServerRequestServerTime_Implementation(const floa
 	const float ServerTimeOfRReceipt = GetWorld()->GetTimeSeconds();
 	ClientReportServerTime(TimeOfClientRequest, ServerTimeOfRReceipt);
 }
+
+
 
 void ABlasterPlayerController::SetHUDHealth(const float Health, const float MaxHealth)
 {
@@ -512,6 +534,39 @@ void ABlasterPlayerController::HandleCooldown()
 			}
 		}
 	}
+}
+
+
+
+void ABlasterPlayerController::ShowReturnToMainMenu()
+{
+	if(ReturnToMainMenuClass == nullptr) return;
+	if(ReturnToMainMenu == nullptr)
+	{
+		ReturnToMainMenu = CreateWidget<UReturnToMainMenu>(this, ReturnToMainMenuClass);
+	}
+	if(ReturnToMainMenu)
+	{
+		bReturnToMainMenuOpen = !bReturnToMainMenuOpen;
+		if(bReturnToMainMenuOpen)
+		{
+			ReturnToMainMenu->MenuSetup();
+		}
+		else
+		{
+			ReturnToMainMenu->MenuTearDown();
+		}
+	}
+}
+
+void ABlasterPlayerController::SetupInputComponent()
+{
+	Super::SetupInputComponent();
+
+	if(InputComponent == nullptr) return;
+
+	InputComponent->BindAction("Quit", IE_Pressed, this, &ABlasterPlayerController::ShowReturnToMainMenu);
+	
 }
 
 void ABlasterPlayerController::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const

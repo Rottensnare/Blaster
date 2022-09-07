@@ -4,6 +4,8 @@
 #include "HitScanWeapon.h"
 
 #include "Blaster/Blaster.h"
+#include "Blaster/BlasterPlayerController.h"
+#include "Blaster/BlasterComponents/LagCompensationComponent.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Engine/SkeletalMeshSocket.h"
 #include "Kismet/GameplayStatics.h"
@@ -14,10 +16,9 @@
 void AHitScanWeapon::Fire(const FVector& HitTarget)
 {
 	Super::Fire(HitTarget);
-
-	if(!HasAuthority()) return;
-	const APawn* InstigatorPawn = Cast<APawn>(GetOwner());
-	if(InstigatorPawn == nullptr) return;
+	
+	APawn* InstigatorPawn = Cast<APawn>(GetOwner());
+	AController* InstigatorController = InstigatorPawn->GetController();
 	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName(FName("MuzzleFlash"));
 	if (MuzzleFlashSocket)
 	{
@@ -32,9 +33,28 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 			ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(HitResult.GetActor());
 			if(BlasterCharacter)
 			{
-				if(InstigatorPawn->GetController())
+				if(InstigatorController)
 				{
-					UGameplayStatics::ApplyDamage(BlasterCharacter, Damage, InstigatorPawn->GetController(), this, UDamageType::StaticClass());
+					bool bCauseAuthDamage = !bUseServerSideRewind || InstigatorPawn->IsLocallyControlled();
+					if(HasAuthority() && bCauseAuthDamage)
+					{
+						UGameplayStatics::ApplyDamage(BlasterCharacter, Damage, InstigatorController, this, UDamageType::StaticClass());
+					}
+					if(!HasAuthority() && bUseServerSideRewind)
+					{
+						OwnerCharacter = OwnerCharacter == nullptr ? Cast<ABlasterCharacter>(InstigatorPawn) : OwnerCharacter;
+						if(OwnerCharacter && OwnerCharacter->IsLocallyControlled())
+						{
+							OwnerController = OwnerController == nullptr ? Cast<ABlasterPlayerController>(OwnerCharacter->Controller) : OwnerController;
+							if(OwnerController && OwnerCharacter->GetLagCompensationComponent())
+							{
+								//ClientHitTime is the time on the server when the client hit the target on their machine
+								const float ClientHitTime = OwnerController->GetServerTime() - OwnerController->SingleTripTime;
+								OwnerCharacter->GetLagCompensationComponent()->ServerScoreRequest(BlasterCharacter, Start, HitTarget, ClientHitTime, this);
+							}
+						}
+					}
+					
 					MulticastSetImpactEffects(EHT_Character, HitResult.Location, SocketTransform.GetLocation());
 				}
 			}
@@ -74,11 +94,12 @@ void AHitScanWeapon::MulticastSetImpactEffects_Implementation(EHitType HitType, 
 
 void AHitScanWeapon::WeaponTraceHit(const FVector& InTraceStart, const FVector& InHitTarget, FHitResult& OutHitResult)
 {
-	const FVector End = bUseScatter ? TraceEndWithScatter(InTraceStart, InHitTarget) : InTraceStart + (InHitTarget - InTraceStart) * 1.2f;
+	const FVector End = InTraceStart + (InHitTarget - InTraceStart) * 1.2f;
 	
 	UWorld* World = GetWorld();
 	if(World)
 	{
+		
 		World->LineTraceSingleByChannel(OutHitResult, InTraceStart, End, ECC_Visibility);
 
 		FVector BeamEnd = End;
@@ -86,6 +107,7 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& InTraceStart, const FVector& 
 		{
 			BeamEnd = OutHitResult.ImpactPoint;
 		}
+		DrawDebugSphere(World, BeamEnd, 16.f, 12, FColor::Orange, false, 5.f);
 	}
 }
 
@@ -109,23 +131,3 @@ void AHitScanWeapon::ShowEffects(const FVector& Location, const FVector& StartLo
 	}
 }
 
-FVector AHitScanWeapon::TraceEndWithScatter(const FVector& TraceStart, const FVector& HitTarget)
-{
-	FVector ToTargetNormalized = (HitTarget - TraceStart).GetSafeNormal();
-	FVector SphereCenter = TraceStart + ToTargetNormalized * DistanceToSphere;
-
-	FVector RandVec = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0.f, SphereRadius);
-	FVector EndLoc = SphereCenter + RandVec;
-	FVector ToEndLoc = EndLoc - TraceStart;
-/*
-	DrawDebugSphere(GetWorld(), SphereCenter, SphereRadius, 12, FColor::Red, true);
-	DrawDebugSphere(GetWorld(), EndLoc, 4.f, 12, FColor::Orange, true);
-	DrawDebugLine(
-		GetWorld(),
-		TraceStart,
-		FVector(TraceStart + ToEndLoc * TRACE_LENGTH / ToEndLoc.Size()),
-		FColor::Cyan,
-		true);
-*/
-	return FVector(TraceStart + ToEndLoc * TRACE_LENGTH / ToEndLoc.Size());
-}

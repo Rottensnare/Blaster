@@ -20,6 +20,16 @@ enum class EWeaponState : uint8
 	EWS_MAX UMETA(DisplayName = "MAX"),
 };
 
+UENUM()
+enum class EFireType : uint8
+{
+	EFT_Hitscan UMETA(DisplayName = "Hitscan Weapon"),
+	EFT_Projectile UMETA(DisplayName = "Projectile Weapon"),
+	EFT_Shotgun UMETA(DisplayName = "Shotgun Weapon"),
+
+	EFT_MAX UMETA(DisplayName = "DefaultMAX")
+};
+
 UCLASS()
 class BLASTER_API AWeapon : public AActor
 {
@@ -49,6 +59,15 @@ public:
 	
 	bool bDestroyWeapon = false;
 
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	bool bUseScatter{false};
+	
+	//Delay between shots. Lower is better.
+	UPROPERTY(EditAnywhere, Category = Combat)
+	float FireDelay{.15f};
+	
+	FVector TraceEndWithScatter(const FVector& HitTarget);
+
 	FOnPickedUp OnPickedUpDelegate;
 
 protected:
@@ -60,8 +79,28 @@ protected:
 	UFUNCTION()
 	void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	UFUNCTION()
+	void OnPingTooHigh(bool bPingTooHigh);
+
 	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
-	bool bUseScatter{false};
+	float DistanceToSphere{800.f};
+	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
+	float SphereRadius{75.f};
+
+	UPROPERTY(EditAnywhere)
+	float Damage{10.f};
+
+	UPROPERTY(EditAnywhere, Replicated)
+	bool bUseServerSideRewind{false};
+
+	UPROPERTY(EditAnywhere)
+	bool bCanUseServerSideRewind{true};
+
+	UPROPERTY()
+	class ABlasterCharacter* OwnerCharacter;
+
+	UPROPERTY()
+	class ABlasterPlayerController* OwnerController;
 
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Weapon Properties")
@@ -73,6 +112,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, ReplicatedUsing = OnRep_WeaponState)
 	EWeaponState WeaponState;
+
+	UPROPERTY(EditAnywhere)
+	EFireType FireType;
 	
 	//For clients to set the WeaponState
 	UFUNCTION()
@@ -119,30 +161,26 @@ private:
 	UPROPERTY(EditAnywhere, Category = Combat)
 	bool bAutomatic{true};
 
-	//Delay between shots. Lower is better.
-	UPROPERTY(EditAnywhere, Category = Combat)
-	float FireDelay{.15f};
-
 	//Current ammo in the magazine/weapon
-	UPROPERTY(EditAnywhere, ReplicatedUsing = OnRep_Ammo)
+	UPROPERTY(EditAnywhere)
 	int32 Ammo;
 
-	//For clients. Only calls SetHUDAmmo
-	UFUNCTION()
-	void OnRep_Ammo();
+	//Number of unprocessed server requests for ammo
+	//Incremented in SpendRound, Decremented in ClientUpdateAmmo
+	int32 Sequence{0};
 
+	UFUNCTION(Client, Reliable)
+	void ClientUpdateAmmo(int32 ServerAmmo);
+
+	UFUNCTION(Client, Reliable)
+	void ClientAddAmmo(int32 AmmoToAdd);
+	
 	//Decreases ammo by 1, then calls SetHUDAmmo
 	void SpendRound();
 
 	UPROPERTY(EditAnywhere)
 	int32 MagCapacity;
 	
-	UPROPERTY()
-	class ABlasterCharacter* OwnerCharacter;
-
-	UPROPERTY()
-	class ABlasterPlayerController* OwnerController;
-
 	UPROPERTY(EditAnywhere)
 	EWeaponType WeaponType;
 
@@ -157,8 +195,8 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	float BaseTurnRate{25.f};
-
 	
+
 	
 public:
 
@@ -175,6 +213,7 @@ public:
 	FORCEINLINE float GetFireDelay() const {return FireDelay;}
 	FORCEINLINE bool IsEmpty() const {return Ammo <= 0;}
 	FORCEINLINE EWeaponType GetWeaponType() const {return WeaponType;}
+	FORCEINLINE EFireType GetFireType() const {return FireType;}
 	FORCEINLINE bool MagazineIsFull() const {return Ammo >= MagCapacity;}
 	FORCEINLINE int32 GetAmmo() const {return Ammo;}
 	FORCEINLINE int32 GetMagCapacity() const {return MagCapacity;}
@@ -182,7 +221,7 @@ public:
 	FORCEINLINE USoundCue* GetEquipSound() const {return EquipSound;}
 	FORCEINLINE float GetBaseAccuracy() const {return BaseAccuracy;}
 	FORCEINLINE void SetUseScatter(bool bInUseScatter) {bUseScatter = bInUseScatter;}
-
+	FORCEINLINE float GetDamage() const {return Damage;}
 	
 };
 

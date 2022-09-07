@@ -32,6 +32,7 @@ public:
 	void FireButtonPressed(bool bPressed);
 	void PickupAmmo(const EWeaponType InWeaponType, const int32 InAmmoAmount);
 
+	bool bLocallyReloading{false};
 
 protected:
 	// Called when the game starts
@@ -49,14 +50,25 @@ protected:
 
 	void EquipPrimaryWeapon(AWeapon* WeaponToEquip);
 	void EquipSecondaryWeapon(AWeapon* WeaponToEquip);
-	
+
+	void LocalFire(const FVector_NetQuantize& TraceHitTarget);
+	void ShotgunLocalFire(const TArray<FVector_NetQuantize>& HitTargets);
 	void Fire();
+	void FireProjectileWeapon();
+	void FireHitscanWeapon();
+	void FireShotgunWeapon();
 
 	UFUNCTION(Server, Reliable)
 	void ServerFire(const FVector_NetQuantize& TraceHitTarget );
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastFire(const FVector_NetQuantize& TraceHitTarget );
+
+	UFUNCTION(Server, Reliable)
+	void ServerShotgunFire(const TArray<FVector_NetQuantize>& TraceHitTargets);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastShotgunFire(const TArray<FVector_NetQuantize>& TraceHitTargets);
 	
 	void TraceUnderCrosshairs(FHitResult& TraceHitResult);
 
@@ -87,8 +99,13 @@ private:
 	UPROPERTY()
 	AWeapon* EquippedWeaponLastFrame;
 
-	UPROPERTY(Replicated)
-	bool bAiming;
+	UPROPERTY(ReplicatedUsing = "OnRep_Aiming")
+	bool bAiming{false};
+
+	bool bAimButtonPressed{false};
+
+	UFUNCTION()
+	void OnRep_Aiming();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
 	float BaseWalkSpeed;

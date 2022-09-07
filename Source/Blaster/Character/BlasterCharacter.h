@@ -50,6 +50,8 @@ public:
 	UPROPERTY(Replicated)
 	bool bDisableGameplay{false};
 
+	TMap<FName, class UBoxComponent*> HitCollisionBoxes;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -90,6 +92,46 @@ protected:
 	//Initialize HUD if relevant info is missing
 	void PollInit();
 
+	//Server-Side Rewind HitBoxes
+	UPROPERTY(EditAnywhere)
+	class UBoxComponent* HeadBox;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* PelvisBox;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Spine02Box;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* Spine03Box;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* UpperArmLBox;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* UpperArmRBox;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* LowerArmLBox;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* LowerArmRBox;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* HandLBox;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* HandRBox;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* BackpackBox;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* BlanketBox;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* ThighLBox;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* ThighRBox;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* CalfLBox;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* CalfRBox;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* FootLBox;
+	UPROPERTY(EditAnywhere)
+	UBoxComponent* FootRBox;
+	
+	
+	
 	
 
 private:
@@ -123,6 +165,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	class UBuffComponent* BuffComponent;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	class ULagCompensationComponent* LagCompensationComponent;
 
 	UFUNCTION()
 	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
@@ -254,6 +299,8 @@ public:
 	FORCEINLINE float GetMaxHealth() const {return MaxHealth;}
 	FORCEINLINE float GetMaxShields() const {return MaxShields;}
 	FORCEINLINE bool GetDisableGameplay() const {return bDisableGameplay;}
+	FORCEINLINE ULagCompensationComponent* GetLagCompensationComponent() const {return LagCompensationComponent;}
+	bool IsLocallyReloading() const;
 	AWeapon* GetEquippedWeapon();
 	FVector GetHitTarget() const;
 	ECombatState GetCombatState() const;
