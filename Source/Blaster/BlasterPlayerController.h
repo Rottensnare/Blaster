@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/PlayerState.h"
 #include "BlasterPlayerController.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHighPingChecked, bool, bPingTooHigh);
@@ -31,6 +32,7 @@ public:
 	void SetHUDWeaponType(FString WeaponType);
 	void SetMatchTimeText(float MatchTime);
 	void SetHUDAnnouncementTime(float WarmupTime);
+	void BroadCastElim(APlayerState* Attacker, APlayerState* Victim);
 
 	virtual float GetServerTime();
 	virtual void ReceivedPlayer() override;
@@ -86,6 +88,9 @@ protected:
 	float CheckPingFrequency{20.f};
 	UPROPERTY(EditAnywhere)
 	float HighPingThreshold{85.f};
+
+	UFUNCTION(Client, Reliable)
+	void ClientElimAnnouncement(APlayerState* Attacker, APlayerState* Victim);
 
 private:
 

@@ -211,6 +211,47 @@ void ABlasterPlayerController::StopHighPingWarning()
 	}
 }
 
+void ABlasterPlayerController::BroadCastElim(APlayerState* Attacker, APlayerState* Victim)
+{
+	ClientElimAnnouncement(Attacker, Victim);
+}
+
+void ABlasterPlayerController::ClientElimAnnouncement_Implementation(APlayerState* Attacker, APlayerState* Victim)
+{
+	APlayerState* Self = GetPlayerState<APlayerState>();
+	if(Attacker && Victim && Self)
+	{
+		BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+		if(BlasterHUD)
+		{
+			if(Attacker != Self && Victim != Self)
+			{
+				BlasterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), Victim->GetPlayerName());
+				return;
+			} 
+			if(Attacker == Self && Victim != Self)
+			{
+				BlasterHUD->AddElimAnnouncement("You", Victim->GetPlayerName());
+				return;
+			}
+			if(Victim == Self && Attacker != Self)
+			{
+				BlasterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), "You");
+				return;
+			}
+			if(Attacker == Self && Victim == Self)
+			{
+				BlasterHUD->AddElimAnnouncement("You", "Yourself");
+				return;
+			}
+			if(Attacker == Victim && Attacker != Self)
+			{
+				BlasterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), "Themselves");
+			}
+			
+		}
+	}
+}
 
 
 void ABlasterPlayerController::OnRep_MatchState()
@@ -455,6 +496,7 @@ void ABlasterPlayerController::SetHUDAnnouncementTime(float InWarmupTime)
 		UE_LOG(LogTemp, Warning, TEXT("SetHUDAnnouncement: %02d : %02d"),MatchMinutes, MatchSeconds)
 	}
 }
+
 
 float ABlasterPlayerController::GetServerTime()
 {

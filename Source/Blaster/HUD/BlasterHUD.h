@@ -31,6 +31,7 @@ public:
 	virtual void DrawHUD() override;
 	void AddCharacterOverlay();
 	void AddWarmupWidget();
+	void AddElimAnnouncement(FString Attacker, FString Victim);
 	
 	UPROPERTY(EditAnywhere, Category = "Player Status")
 	TSubclassOf<class UUserWidget> CharacterOverlayClass;
@@ -52,6 +53,9 @@ protected:
 
 private:
 
+	UPROPERTY()
+	class APlayerController* OwningPlayerController;
+
 	FHUDPackage HUDPackage;
 
 	void DrawCrosshair(UTexture2D* Texture, FVector2D ViewportCenter, FVector2D Spread);
@@ -61,6 +65,10 @@ private:
 	float CrosshairSpread;
 
 	FLinearColor CrosshairColor{FLinearColor::White};
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class UElimAnnouncement> ElimAnnouncementClass;
+	
 public:
 
 	FORCEINLINE void SetHUDPackage(const FHUDPackage& Package) {HUDPackage = Package;}

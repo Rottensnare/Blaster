@@ -3,6 +3,8 @@
 
 #include "BlasterCharacter.h"
 
+#include "NiagaraComponent.h"
+#include "NiagaraFunctionLibrary.h"
 #include "Blaster/Blaster.h"
 #include "Blaster/BlasterPlayerController.h"
 #include "Blaster/BlasterPlayerState.h"
@@ -10,6 +12,7 @@
 #include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Blaster/BlasterComponents/LagCompensationComponent.h"
 #include "Blaster/GameMode/BlasterGameMode.h"
+#include "Blaster/GameState/BlasterGameState.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Camera/CameraComponent.h"
 #include "Components/BoxComponent.h"
@@ -158,6 +161,8 @@ TurningInPlace(ETurningInPlace::ETIP_NotTurning)
 }
 
 
+
+
 // Called when the game starts or when spawned
 void ABlasterCharacter::BeginPlay()
 {
@@ -171,6 +176,8 @@ void ABlasterCharacter::BeginPlay()
 	{
 		OnTakeAnyDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
 	}
+
+	
 }
 
 void ABlasterCharacter::RotateInPlace(float DeltaTime)
@@ -814,7 +821,13 @@ void ABlasterCharacter::PollInit()
 		{
 			BlasterPlayerState->AddToScore(0.f);
 			BlasterPlayerState->AddToElims(0);
+			ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this));
+			if(BlasterGameState && BlasterGameState->TopScoringPlayers.Contains(BlasterPlayerState))
+			{
+				MulticastGainedTheLead();
+			}
 		}
+		
 	}
 }
 
@@ -924,6 +937,10 @@ void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 	{
 		UGameplayStatics::SpawnSoundAtLocation(this, BotSoundCue, BotSpawnPoint);
 	}
+	if(CrownComponent)
+	{
+		CrownComponent->DestroyComponent();
+	}
 	
 	GetWorldTimerManager().SetTimer(ElimTimer, this, &ABlasterCharacter::ElimTimerFinished, ElimDelay);
 }
@@ -989,6 +1006,27 @@ void ABlasterCharacter::PlayElimMontage()
 	if(AnimInstance && EliminationMontage)
 	{
 		AnimInstance->Montage_Play(EliminationMontage);
+	}
+}
+
+void ABlasterCharacter::MulticastGainedTheLead_Implementation()
+{
+	if(CrownSystem == nullptr) return;
+	if(CrownComponent == nullptr)
+	{
+		CrownComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(CrownSystem, GetCapsuleComponent(), FName(), GetActorLocation() + FVector(0.f, 0.f, 100.f), GetActorRotation(), EAttachLocation::KeepWorldPosition, false);
+	}
+	if(CrownComponent)
+	{
+		CrownComponent->Activate();
+	}
+}
+
+void ABlasterCharacter::MultiCastLostTheLead_Implementation()
+{
+	if(CrownComponent)
+	{
+		CrownComponent->DestroyComponent();
 	}
 }
 

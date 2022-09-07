@@ -75,17 +75,53 @@ void ABlasterGameMode::Tick(float DeltaSeconds)
 void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedCharacter,
                                         ABlasterPlayerController* VictimPlayerController, ABlasterPlayerController* AttackerController)
 {
-	
+	if(AttackerController == nullptr || AttackerController->PlayerState == nullptr) return;
+	if(VictimPlayerController == nullptr || VictimPlayerController->PlayerState == nullptr) return;
 	ABlasterPlayerState* AttackerPlayerState = AttackerController ? Cast<ABlasterPlayerState>(AttackerController->PlayerState) : nullptr;
 	ABlasterPlayerState* VictimPlayerState = VictimPlayerController ? Cast<ABlasterPlayerState>(VictimPlayerController->PlayerState) : nullptr;
 	ABlasterGameState* BlasterGameState = GetGameState<ABlasterGameState>();
 	
 	if(AttackerPlayerState && AttackerPlayerState != VictimPlayerState)
 	{
+		TArray<ABlasterPlayerState*> PlayersInTheLead;
+		for(auto LeadPlayer : BlasterGameState->TopScoringPlayers)
+		{
+			PlayersInTheLead.Add(LeadPlayer);
+		}
+		
 		AttackerPlayerState->AddToScore(50.f);
 		AttackerPlayerState->AddToElims(1);
 		BlasterGameState->UpdateTopScore(AttackerPlayerState);
-		
+
+		if(BlasterGameState->TopScoringPlayers.Contains(AttackerPlayerState))
+		{
+			ABlasterCharacter* Leader = Cast<ABlasterCharacter>(AttackerPlayerState->GetPawn());
+			if(Leader)
+			{
+				Leader->MulticastGainedTheLead();
+			}
+		}
+
+		for(int i = 0; i < PlayersInTheLead.Num(); i++)
+		{
+			if(!BlasterGameState->TopScoringPlayers.Contains(PlayersInTheLead[i]))
+			{
+				ABlasterCharacter* Loser = Cast<ABlasterCharacter>(PlayersInTheLead[i]->GetPawn());
+				if(Loser)
+				{
+					Loser->MultiCastLostTheLead();
+				}
+			}
+		}
+	}
+	
+	for(FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		ABlasterPlayerController* TempBlasterPlayerController = Cast<ABlasterPlayerController>(*It);
+		if(TempBlasterPlayerController && AttackerPlayerState && VictimPlayerState)
+		{
+			TempBlasterPlayerController->BroadCastElim(AttackerPlayerState, VictimPlayerState);
+		}
 	}
 	
 	if(EliminatedCharacter == nullptr) return;
