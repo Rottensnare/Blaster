@@ -876,8 +876,10 @@ void ABlasterCharacter::UpdateHUDAmmo()
 	}
 }
 
-void ABlasterCharacter::MulticastElim_Implementation()
+void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 {
+	bLeftGame =  bPlayerLeftGame;
+	
 	if(BlasterPlayerController)
 	{
 		BlasterPlayerController->SetHUDAmmo(0);
@@ -922,10 +924,12 @@ void ABlasterCharacter::MulticastElim_Implementation()
 	{
 		UGameplayStatics::SpawnSoundAtLocation(this, BotSoundCue, BotSpawnPoint);
 	}
+	
+	GetWorldTimerManager().SetTimer(ElimTimer, this, &ABlasterCharacter::ElimTimerFinished, ElimDelay);
 }
 
 
-void ABlasterCharacter::Elim()
+void ABlasterCharacter::Elim(bool bPlayerLeftGame)
 {
 	if(CombatComponent && CombatComponent->EquippedWeapon)
 	{
@@ -951,19 +955,32 @@ void ABlasterCharacter::Elim()
 		}
 	}
 	
-	MulticastElim();
-	GetWorldTimerManager().SetTimer(ElimTimer, this, &ABlasterCharacter::ElimTimerFinished, ElimDelay);
+	MulticastElim(bPlayerLeftGame);
 	
+	
+}
+
+void ABlasterCharacter::ServerLeaveGame_Implementation()
+{
+	ABlasterGameMode* GameMode = Cast<ABlasterGameMode>(GetWorld()->GetAuthGameMode());
+	BlasterPlayerState = BlasterPlayerState == nullptr ? GetPlayerState<ABlasterPlayerState>() : BlasterPlayerState;
+	if(GameMode && BlasterPlayerState)
+	{
+		GameMode->PlayerLeftGame(BlasterPlayerState);
+	}
 }
 
 void ABlasterCharacter::ElimTimerFinished()
 {
 	ABlasterGameMode* GameMode = Cast<ABlasterGameMode>(GetWorld()->GetAuthGameMode());
-	if(GameMode)
+	if(GameMode && !bLeftGame)
 	{
 		GameMode->RequestRespawn(this, Controller);
 	}
-	
+	if(bLeftGame && IsLocallyControlled())
+	{
+		OnLeftGame.Broadcast();
+	}
 }
 
 void ABlasterCharacter::PlayElimMontage()

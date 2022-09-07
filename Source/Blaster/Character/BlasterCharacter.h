@@ -10,6 +10,8 @@
 #include "Components/TimelineComponent.h"
 #include "BlasterCharacter.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLeftGame);
+
 UCLASS()
 class BLASTER_API ABlasterCharacter : public ACharacter, public IInteractWithCrosshairsInterface
 {
@@ -34,8 +36,8 @@ public:
 	void UpdateHUDAmmo();
 	
 	UFUNCTION(NetMulticast, Reliable)
-	void MulticastElim();
-	void Elim();
+	void MulticastElim(bool bPlayerLeftGame);
+	void Elim(bool bPlayerLeftGame);
 	void PlayElimMontage();
 	virtual void Destroyed() override;
 
@@ -51,6 +53,11 @@ public:
 	bool bDisableGameplay{false};
 
 	TMap<FName, class UBoxComponent*> HitCollisionBoxes;
+
+	UFUNCTION(Server, Reliable)
+	void ServerLeaveGame();
+
+	FOnLeftGame OnLeftGame;
 
 protected:
 	// Called when the game starts or when spawned
@@ -237,11 +244,13 @@ private:
 	class ABlasterPlayerController* BlasterPlayerController;
 
 	bool bEliminated{false};
-
+	
 	FTimerHandle ElimTimer;
 	UPROPERTY(EditDefaultsOnly);
 	float ElimDelay{3.f};
 	void ElimTimerFinished();
+
+	bool bLeftGame{false};
 
 	FOnTimelineFloat DissolveTrack;
 	UPROPERTY(VisibleAnywhere)
@@ -277,6 +286,8 @@ private:
 	FTimerHandle HUDInitTimer;
 	void HUDInitTimerFinished();
 	float HUDInitDelay{0.2f};
+
+	
 
 	
 public:

@@ -28,6 +28,8 @@ public:
 	virtual void RequestRespawn(ACharacter* EliminatedCharacter, AController* EliminatedController);
 	virtual void OnMatchStateSet() override;
 
+	void PlayerLeftGame(class ABlasterPlayerState* PlayerLeaving);
+
 	UPROPERTY(EditDefaultsOnly)
 	float WarmupTime{10.f};
 
