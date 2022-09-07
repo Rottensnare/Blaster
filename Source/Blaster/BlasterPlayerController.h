@@ -18,6 +18,8 @@ class BLASTER_API ABlasterPlayerController : public APlayerController
 
 public:
 
+	
+	
 	void SetHUDHealth(float Health, float MaxHealth);
 	void SetHUDShields(float Shields, float MaxShields);
 	virtual void OnPossess(APawn* InPawn) override;
@@ -43,6 +45,9 @@ public:
 	
 protected:
 
+	virtual void SetupInputComponent() override;
+	void ShowReturnToMainMenu();
+	
 	virtual void BeginPlay() override;
 	void CheckPing(float DeltaSeconds);
 	virtual void Tick(float DeltaSeconds) override;
@@ -83,6 +88,15 @@ protected:
 	float HighPingThreshold{85.f};
 
 private:
+
+	UPROPERTY(EditAnywhere, Category = HUD)
+	TSubclassOf<class UUserWidget> ReturnToMainMenuClass;
+
+	UPROPERTY()
+	class UReturnToMainMenu* ReturnToMainMenu;
+
+	bool bReturnToMainMenuOpen{false};
+	
 	UPROPERTY()
 	class ABlasterHUD* BlasterHUD;
 

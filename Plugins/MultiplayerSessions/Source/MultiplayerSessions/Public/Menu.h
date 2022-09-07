@@ -50,6 +50,7 @@ private:
 
 	void MenuTearDown();
 
+	UPROPERTY()
 	class UMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem;
 
 	int32 NumPublicConnections{4};
