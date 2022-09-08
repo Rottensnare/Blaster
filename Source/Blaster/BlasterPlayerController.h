@@ -49,6 +49,7 @@ protected:
 
 	virtual void SetupInputComponent() override;
 	void ShowReturnToMainMenu();
+	void ShowChatBox();
 	
 	virtual void BeginPlay() override;
 	void CheckPing(float DeltaSeconds);

@@ -94,6 +94,8 @@ void ABlasterPlayerController::HandleMatchHasStarted()
 		{
 			BlasterHUD->WarmupWidget->SetVisibility(ESlateVisibility::Hidden);
 		}
+		
+		BlasterHUD->AddChatBox();
 	}
 }
 
@@ -601,6 +603,15 @@ void ABlasterPlayerController::ShowReturnToMainMenu()
 	}
 }
 
+void ABlasterPlayerController::ShowChatBox()
+{
+	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
+	if(BlasterHUD)
+	{
+		BlasterHUD->ToggleChatBox();
+	}
+}
+
 void ABlasterPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
@@ -608,6 +619,7 @@ void ABlasterPlayerController::SetupInputComponent()
 	if(InputComponent == nullptr) return;
 
 	InputComponent->BindAction("Quit", IE_Pressed, this, &ABlasterPlayerController::ShowReturnToMainMenu);
+	InputComponent->BindAction("Chat", IE_Pressed, this, &ABlasterPlayerController::ShowChatBox);
 	
 }
 

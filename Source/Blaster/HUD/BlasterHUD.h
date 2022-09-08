@@ -32,6 +32,11 @@ public:
 	void AddCharacterOverlay();
 	void AddWarmupWidget();
 	void AddElimAnnouncement(FString Attacker, FString Victim);
+	void AddChatBox();
+	void ToggleChatBox();
+	
+	UFUNCTION()
+	void OnChatCommitted(const FText& Text, ETextCommit::Type CommitMethod);
 	
 	UPROPERTY(EditAnywhere, Category = "Player Status")
 	TSubclassOf<class UUserWidget> CharacterOverlayClass;
@@ -77,6 +82,12 @@ private:
 
 	UPROPERTY()
 	TArray<UElimAnnouncement*> ElimMessages;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class UChatBox> ChatBoxClass;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UChatBox* ChatBox;
 	
 public:
 
