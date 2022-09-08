@@ -38,7 +38,14 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 					bool bCauseAuthDamage = !bUseServerSideRewind || InstigatorPawn->IsLocallyControlled();
 					if(HasAuthority() && bCauseAuthDamage)
 					{
-						UGameplayStatics::ApplyDamage(BlasterCharacter, Damage, InstigatorController, this, UDamageType::StaticClass());
+						if(HitResult.BoneName == FName("head"))
+						{
+							UGameplayStatics::ApplyDamage(BlasterCharacter, Damage * HeadshotMultiplier, InstigatorController, this, UDamageType::StaticClass());
+						}
+						else
+						{
+							UGameplayStatics::ApplyDamage(BlasterCharacter, Damage, InstigatorController, this, UDamageType::StaticClass());
+						}
 					}
 					if(!HasAuthority() && bUseServerSideRewind)
 					{

@@ -58,8 +58,8 @@ void AProjectile::Tick(float DeltaTime)
 void AProjectile::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
 	FVector NormalImpulse, const FHitResult& HitResult)
 {
-	
-	MulticastSetImpactEffects(OtherActor);
+	//TODO: Rather than sending an Actor across the network, use an int or an enum to save bandwidth
+	MulticastSetImpactEffects(OtherActor); //TODO: Only call if the last hit object is not of the same type. If same, then just call ShowEffects as a multicast
 	
 	Destroy();
 }

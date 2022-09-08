@@ -7,6 +7,7 @@
 #include "Blaster/BlasterPlayerState.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/GameState/BlasterGameState.h"
+#include "Blueprint/WidgetLayoutLibrary.h"
 #include "GameFramework/PlayerStart.h"
 #include "Kismet/GameplayStatics.h"
 
@@ -39,6 +40,7 @@ void ABlasterGameMode::Tick(float DeltaSeconds)
 		if(CountdownTime <= 0.f)
 		{
 			SetMatchState(MatchState::Cooldown);
+			
 		}
 	}
 	else if(MatchState == MatchState::Cooldown)
@@ -46,7 +48,7 @@ void ABlasterGameMode::Tick(float DeltaSeconds)
 		CountdownTime = CooldownTime + WarmupTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
 		if(CountdownTime <= 0.f && !bRestartingGame)
 		{
-			
+			UWidgetLayoutLibrary::RemoveAllWidgets(this);
 #if WITH_EDITOR
 			bUseSeamlessTravel = false;
 			RestartGame();
@@ -54,6 +56,7 @@ void ABlasterGameMode::Tick(float DeltaSeconds)
 			UE_LOG(LogTemp, Warning, TEXT("With Editor"))
 #else 
 			UE_LOG(LogTemp, Warning, TEXT("Not with Editor"))
+			
 			LevelStartingTime = 0.f;
 			bUseSeamlessTravel = true;
 			bRestartingGame = true;

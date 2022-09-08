@@ -90,6 +90,9 @@ protected:
 	UPROPERTY(EditAnywhere)
 	float Damage{10.f};
 
+	UPROPERTY(EditAnywhere)
+	float HeadshotMultiplier{1.5f};
+
 	UPROPERTY(EditAnywhere, Replicated)
 	bool bUseServerSideRewind{false};
 
@@ -222,6 +225,7 @@ public:
 	FORCEINLINE float GetBaseAccuracy() const {return BaseAccuracy;}
 	FORCEINLINE void SetUseScatter(bool bInUseScatter) {bUseScatter = bInUseScatter;}
 	FORCEINLINE float GetDamage() const {return Damage;}
+	FORCEINLINE float GetHeadshotMultiplier() const {return HeadshotMultiplier;}
 	
 };
 
