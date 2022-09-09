@@ -67,6 +67,12 @@ public:
 
 	void SetTeamColor(ETeams Team);
 
+	UFUNCTION(Server, Reliable)
+	void ServerAttachOrb(class AOrb* Orb);
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastAttachOrb(AOrb* Orb);
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -318,6 +324,9 @@ private:
 
 	UPROPERTY()
 	class ABlasterGameMode* CurrentGameMode;
+
+	UPROPERTY(EditAnywhere)
+	USceneComponent* OrbAttachLocation;
 	
 public:
 

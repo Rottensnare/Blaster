@@ -13,6 +13,7 @@
 #include "Blaster/BlasterComponents/LagCompensationComponent.h"
 #include "Blaster/GameMode/BlasterGameMode.h"
 #include "Blaster/GameState/BlasterGameState.h"
+#include "Blaster/Items/Orb.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Camera/CameraComponent.h"
 #include "Components/BoxComponent.h"
@@ -47,6 +48,9 @@ TurningInPlace(ETurningInPlace::ETIP_NotTurning)
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
 	CameraComponent->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	CameraComponent->bUsePawnControlRotation = false;
+
+	OrbAttachLocation = CreateDefaultSubobject<USceneComponent>(TEXT("OrbAttachLocation"));
+	OrbAttachLocation->SetupAttachment(RootComponent);
 	
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
@@ -181,6 +185,17 @@ void ABlasterCharacter::SetTeamColor(ETeams Team)
 	default:
 		break;
 	}
+}
+
+void ABlasterCharacter::ServerAttachOrb_Implementation(AOrb* Orb)
+{
+	MulticastAttachOrb(Orb);
+}
+
+void ABlasterCharacter::MulticastAttachOrb_Implementation(AOrb* Orb)
+{
+	Orb->AttachToComponent(OrbAttachLocation, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	
 }
 
 // Called when the game starts or when spawned

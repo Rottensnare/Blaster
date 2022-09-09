@@ -23,8 +23,6 @@
 #include "Net/UnrealNetwork.h"
 
 
-
-
 void ABlasterPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
@@ -32,8 +30,6 @@ void ABlasterPlayerController::BeginPlay()
 	BlasterHUD = Cast<ABlasterHUD>(GetHUD());
 	ServerCheckMatchState();
 }
-
-
 
 void ABlasterPlayerController::Tick(float DeltaSeconds)
 {
@@ -299,8 +295,6 @@ void ABlasterPlayerController::OnRep_ShowTeamScores()
 	}
 }
 
-
-
 void ABlasterPlayerController::BroadCastElim(APlayerState* Attacker, APlayerState* Victim)
 {
 	ClientElimAnnouncement(Attacker, Victim);
@@ -338,11 +332,9 @@ void ABlasterPlayerController::ClientElimAnnouncement_Implementation(APlayerStat
 			{
 				BlasterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), "Themselves");
 			}
-			
 		}
 	}
 }
-
 
 void ABlasterPlayerController::OnRep_MatchState()
 {
@@ -693,7 +685,7 @@ void ABlasterPlayerController::HandleCooldown()
 				if(BlasterGameState)
 				{
 					FString InfoTextString = bShowTeamScores ? GetTeamsInfoText(BlasterGameState) : GetInfoText(BlasterGameState->TopScoringPlayers);
-					BlasterHUD->WarmupWidget->TopPlayerText->SetText(FText::FromString(InfoTextString));
+					BlasterHUD->WarmupWidget->TopPlayerText->SetText(FText::FromString(InfoTextString)); //BUG: Doesn't work, but fix at some point, doesn't matter atm.
 				}
 			}
 		}
