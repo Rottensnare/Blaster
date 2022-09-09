@@ -161,7 +161,27 @@ TurningInPlace(ETurningInPlace::ETIP_NotTurning)
 }
 
 
-
+void ABlasterCharacter::SetTeamColor(ETeams Team)
+{
+	if(GetMesh() == nullptr || OriginalMaterial == nullptr || BlueMaterial == nullptr ||RedMaterial == nullptr) return;
+	switch(Team)
+	{
+	case ETeams::ET_NoTeam:
+		GetMesh()->SetMaterial(0, OriginalMaterial);
+		DissolveMaterialInstance = BlueDissolveMatInst;
+		break;
+	case ETeams::ET_BlueTeam:
+		GetMesh()->SetMaterial(0, BlueMaterial);
+		DissolveMaterialInstance = BlueDissolveMatInst;
+		break;
+	case ETeams::ET_RedTeam:
+		GetMesh()->SetMaterial(0, RedMaterial);
+		DissolveMaterialInstance = RedDissolveMatInst;
+		break;
+	default:
+		break;
+	}
+}
 
 // Called when the game starts or when spawned
 void ABlasterCharacter::BeginPlay()
@@ -781,7 +801,13 @@ void ABlasterCharacter::PlayHitReactMontage()
 void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const UDamageType* DamageType,
 	AController* InstigatorController, AActor* DamageCauser)
 {
-	if(bEliminated) return;
+	
+	CurrentGameMode = CurrentGameMode == nullptr ? Cast<ABlasterGameMode>(GetWorld()->GetAuthGameMode()) : CurrentGameMode;
+	if(bEliminated || CurrentGameMode == nullptr) return;
+
+	Damage = CurrentGameMode->CalculateDamage(Controller, InstigatorController, Damage);
+	if(Damage == 0.f) return;
+	
 	//BUG: Possibly will cause a bug in the future. Reference Lecture 166 "Updating the Shield"
 	float DamageToHealth; 
 	if(Shields - Damage < 0.f)
@@ -802,12 +828,11 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 
 	if(Health == 0.f)
 	{
-		ABlasterGameMode* GameMode = Cast<ABlasterGameMode>(GetWorld()->GetAuthGameMode());
-		if(GameMode)
+		if(CurrentGameMode)
 		{
 			BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
 			ABlasterPlayerController* AttackerController = Cast<ABlasterPlayerController>(InstigatorController);
-			GameMode->PlayerEliminated(this, BlasterPlayerController, AttackerController);
+			CurrentGameMode->PlayerEliminated(this, BlasterPlayerController, AttackerController);
 		}
 	}
 }
@@ -821,13 +846,13 @@ void ABlasterCharacter::PollInit()
 		{
 			BlasterPlayerState->AddToScore(0.f);
 			BlasterPlayerState->AddToElims(0);
+			SetTeamColor(BlasterPlayerState->GetTeam());
 			ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this));
 			if(BlasterGameState && BlasterGameState->TopScoringPlayers.Contains(BlasterPlayerState))
 			{
 				MulticastGainedTheLead();
 			}
 		}
-		
 	}
 }
 
@@ -1014,7 +1039,7 @@ void ABlasterCharacter::MulticastGainedTheLead_Implementation()
 	if(CrownSystem == nullptr) return;
 	if(CrownComponent == nullptr)
 	{
-		CrownComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(CrownSystem, GetCapsuleComponent(), FName(), GetActorLocation() + FVector(0.f, 0.f, 100.f), GetActorRotation(), EAttachLocation::KeepWorldPosition, false);
+		CrownComponent = UNiagaraFunctionLibrary::SpawnSystemAttached(CrownSystem, GetMesh(), FName("head"), GetActorLocation() + FVector(0.f, 0.f, 120.f), GetActorRotation(), EAttachLocation::KeepWorldPosition, false);
 	}
 	if(CrownComponent)
 	{

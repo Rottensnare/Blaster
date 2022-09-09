@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "Blaster/TurningInPlace.h"
 #include "Blaster/BlasterComponents/CombatState.h"
+#include "Blaster/GameMode/Teams.h"
 #include "GameFramework/Character.h"
 #include "Blaster/Interfaces/InteractWithCrosshairsInterface.h"
 #include "Components/TimelineComponent.h"
@@ -63,6 +64,8 @@ public:
 	void MulticastGainedTheLead();
 	UFUNCTION(NetMulticast, Reliable)
 	void MultiCastLostTheLead();
+
+	void SetTeamColor(ETeams Team);
 
 protected:
 	// Called when the game starts or when spawned
@@ -273,8 +276,23 @@ private:
 	UMaterialInstanceDynamic* DynamicDissolveMaterialInstance;
 
 	//Set on the blueprint used by the dynamic version
-	UPROPERTY(EditAnywhere, Category = Elim)
+	UPROPERTY(VisibleAnywhere, Category = Elim)
 	UMaterialInstance* DissolveMaterialInstance;
+
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterialInstance* RedDissolveMatInst;
+
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterialInstance* BlueDissolveMatInst;
+
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterialInstance* RedMaterial;
+
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterialInstance* BlueMaterial;
+
+	UPROPERTY(EditAnywhere, Category = Elim)
+	UMaterialInstance* OriginalMaterial;
 
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* ElimBotEffect;
@@ -298,6 +316,8 @@ private:
 	UPROPERTY()
 	class UNiagaraComponent* CrownComponent;
 
+	UPROPERTY()
+	class ABlasterGameMode* CurrentGameMode;
 	
 public:
 

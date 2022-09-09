@@ -3,8 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "BlasterPlayerState.h"
 #include "GameFramework/PlayerController.h"
-#include "GameFramework/PlayerState.h"
 #include "BlasterPlayerController.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHighPingChecked, bool, bPingTooHigh);
@@ -36,7 +36,7 @@ public:
 
 	virtual float GetServerTime();
 	virtual void ReceivedPlayer() override;
-	void OnMatchStateSet(FName State);
+	void OnMatchStateSet(FName State, bool bTeamsMatch);
 	void HandleCooldown();
 	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
@@ -53,6 +53,9 @@ public:
 	
 	UFUNCTION(Client, Reliable)
 	void ClientChatCommitted(const FText& Text, const FString& PlayerName);
+
+	void SetHUDRedTeamScore(int32 RedScore);
+	void SetHUDBlueTeamScore(int32 BlueScore);
 	
 protected:
 
@@ -63,8 +66,10 @@ protected:
 	void CheckPing(float DeltaSeconds);
 	virtual void Tick(float DeltaSeconds) override;
 	void SetHUDTime();
-	void HandleMatchHasStarted();
-
+	void HandleMatchHasStarted(bool bTeamsMatch = false);
+	void HideTeamScores();
+	void InitTeamScores();
+	
 	UFUNCTION(Server, Reliable)
 	void ServerCheckMatchState();
 
@@ -103,6 +108,15 @@ protected:
 
 	UFUNCTION(Client, Reliable)
 	void ClientElimAnnouncement(APlayerState* Attacker, APlayerState* Victim);
+
+	UPROPERTY(ReplicatedUsing = OnRep_ShowTeamScores)
+	bool bShowTeamScores = false;
+
+	UFUNCTION()
+	void OnRep_ShowTeamScores();
+
+	FString GetInfoText(const TArray<class ABlasterPlayerState*>& PlayerStates);
+	FString GetTeamsInfoText(class ABlasterGameState const * BlasterGameState);
 
 private:
 
