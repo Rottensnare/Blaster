@@ -1,0 +1,78 @@
+// Fill out your copyright notice in the Description page of Project Settings.
+
+
+#include "TeamsGameMode.h"
+
+#include "Blaster/BlasterPlayerState.h"
+#include "Blaster/GameState/BlasterGameState.h"
+#include "Kismet/GameplayStatics.h"
+
+void ATeamsGameMode::PostLogin(APlayerController* NewPlayer)
+{
+	Super::PostLogin(NewPlayer);
+
+	ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this));
+	if(BlasterGameState)
+	{
+		ABlasterPlayerState* BPState = NewPlayer->GetPlayerState<ABlasterPlayerState>();
+		if(BPState && BPState->GetTeam() == ETeams::ET_NoTeam)
+		{
+			if(BlasterGameState->BlueTeamPlayers.Num() >= BlasterGameState->RedTeamPlayers.Num())
+			{
+				BlasterGameState->RedTeamPlayers.AddUnique(BPState);
+				BPState->SetTeam(ETeams::ET_RedTeam);
+			}
+			else
+			{
+				BlasterGameState->BlueTeamPlayers.AddUnique(BPState);
+				BPState->SetTeam(ETeams::ET_BlueTeam);
+			}
+		}
+	}
+}
+
+void ATeamsGameMode::Logout(AController* Exiting)
+{
+	Super::Logout(Exiting);
+
+	ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this));
+	ABlasterPlayerState* BPState = Exiting->GetPlayerState<ABlasterPlayerState>();
+	if(BlasterGameState && BPState)
+	{
+		if(BlasterGameState->RedTeamPlayers.Contains(BPState))
+		{
+			BlasterGameState->RedTeamPlayers.Remove(BPState);
+		}
+		if(BlasterGameState->BlueTeamPlayers.Contains(BPState))
+		{
+			BlasterGameState->BlueTeamPlayers.Remove(BPState);
+		}
+	}
+}
+
+void ATeamsGameMode::HandleMatchHasStarted()
+{
+	Super::HandleMatchHasStarted();
+
+	ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this));
+	if(BlasterGameState)
+	{
+		for(auto PState : BlasterGameState->PlayerArray)
+		{
+			ABlasterPlayerState* BPState = Cast<ABlasterPlayerState>(PState.Get());
+			if(BPState && BPState->GetTeam() == ETeams::ET_NoTeam)
+			{
+				if(BlasterGameState->BlueTeamPlayers.Num() >= BlasterGameState->RedTeamPlayers.Num())
+				{
+					BlasterGameState->RedTeamPlayers.AddUnique(BPState);
+					BPState->SetTeam(ETeams::ET_RedTeam);
+				}
+				else
+				{
+					BlasterGameState->BlueTeamPlayers.AddUnique(BPState);
+					BPState->SetTeam(ETeams::ET_BlueTeam);
+				}
+			}
+		}
+	}
+}

@@ -55,13 +55,6 @@ void ABlasterPlayerState::AddToElims(int32 ElimAmount)
 	}
 }
 
-void ABlasterPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-
-	DOREPLIFETIME(ABlasterPlayerState, Elims);
-}
-
 void ABlasterPlayerState::OnRep_Elims()
 {
 	BlasterCharacter = BlasterCharacter == nullptr ? Cast<ABlasterCharacter>(GetPawn()) : BlasterCharacter;
@@ -75,3 +68,13 @@ void ABlasterPlayerState::OnRep_Elims()
 		}
 	}
 }
+
+void ABlasterPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ABlasterPlayerState, Elims);
+	DOREPLIFETIME(ABlasterPlayerState, Team);
+}
+
+

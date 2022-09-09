@@ -6,12 +6,7 @@
 #include "Blaster/BlasterPlayerState.h"
 #include "Net/UnrealNetwork.h"
 
-void ABlasterGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
 
-	DOREPLIFETIME(ABlasterGameState, TopScoringPlayers);
-}
 
 void ABlasterGameState::UpdateTopScore(ABlasterPlayerState* TopScoringPlayer)
 {
@@ -28,4 +23,23 @@ void ABlasterGameState::UpdateTopScore(ABlasterPlayerState* TopScoringPlayer)
 		TopScoringPlayers.AddUnique(TopScoringPlayer);
 		TopScore = TopScoringPlayer->GetScore();
 	}
+}
+
+void ABlasterGameState::OnRep_RedTeamScore()
+{
+	
+}
+
+void ABlasterGameState::OnRep_BlueTeamScore()
+{
+	
+}
+
+void ABlasterGameState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+	DOREPLIFETIME(ABlasterGameState, TopScoringPlayers);
+	DOREPLIFETIME(ABlasterGameState, RedTeamScore);
+	DOREPLIFETIME(ABlasterGameState, BlueTeamScore);
 }

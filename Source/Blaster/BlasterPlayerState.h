@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerState.h"
+#include "GameMode/Teams.h"
 #include "BlasterPlayerState.generated.h"
+
 
 /**
  * 
@@ -32,5 +34,14 @@ private:
 
 	UPROPERTY(ReplicatedUsing = OnRep_Elims)
 	int32 Elims;
+
+	UPROPERTY(Replicated)
+	ETeams Team{ETeams::ET_NoTeam};
+
+public:
+	
+	FORCEINLINE ETeams GetTeam() const {return Team;}
+	FORCEINLINE void SetTeam(const ETeams InTeam) {Team = InTeam;}
+	
 	
 };
