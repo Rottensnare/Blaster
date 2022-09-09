@@ -11,8 +11,6 @@
 
 void UChatBox::OnTextCommitted(const FText& Text, const FString& PlayerName)
 {
-	UE_LOG(LogTemp, Warning, TEXT("%s"), *PlayerName)
-
 	OwningController = OwningController == nullptr ? GetOwningPlayer() : OwningController;
 	
 	if(ChatTextBlockClass && OwningController)
