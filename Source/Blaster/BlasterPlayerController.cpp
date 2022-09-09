@@ -6,6 +6,7 @@
 #include "BlasterPlayerState.h"
 #include "BlasterComponents/CombatComponent.h"
 #include "Character/BlasterCharacter.h"
+#include "Components/EditableTextBox.h"
 #include "Components/Image.h"
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
@@ -15,6 +16,7 @@
 #include "HUD/Announcement.h"
 #include "HUD/BlasterHUD.h"
 #include "HUD/CharacterOverlay.h"
+#include "HUD/ChatBox.h"
 #include "HUD/ReturnToMainMenu.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
@@ -95,7 +97,7 @@ void ABlasterPlayerController::HandleMatchHasStarted()
 			BlasterHUD->WarmupWidget->SetVisibility(ESlateVisibility::Hidden);
 		}
 		
-		BlasterHUD->AddChatBox();
+		AddChatBox();
 	}
 }
 
@@ -580,8 +582,6 @@ void ABlasterPlayerController::HandleCooldown()
 	}
 }
 
-
-
 void ABlasterPlayerController::ShowReturnToMainMenu()
 {
 	if(ReturnToMainMenuClass == nullptr) return;
@@ -603,14 +603,73 @@ void ABlasterPlayerController::ShowReturnToMainMenu()
 	}
 }
 
-void ABlasterPlayerController::ShowChatBox()
+void ABlasterPlayerController::ToggleChatBox()
 {
-	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
-	if(BlasterHUD)
+	if(ChatBox && ChatBox->ChatInput)
 	{
-		BlasterHUD->ToggleChatBox();
+		if(ChatBox->GetVisibility() == ESlateVisibility::Collapsed)
+		{
+			ChatBox->SetVisibility(ESlateVisibility::Visible);
+			FInputModeGameAndUI InputModeGameAndUI;
+			InputModeGameAndUI.SetWidgetToFocus(ChatBox->ChatInput->TakeWidget());
+			SetInputMode(InputModeGameAndUI);
+			SetShowMouseCursor(true);
+		}
+		else if(ChatBox->GetVisibility() == ESlateVisibility::Visible)
+		{
+			ChatBox->SetVisibility(ESlateVisibility::Collapsed);
+			FInputModeGameOnly InputModeGameOnly;
+			SetInputMode(InputModeGameOnly);
+			SetShowMouseCursor(false);
+		}
 	}
 }
+
+void ABlasterPlayerController::AddChatBox()
+{
+	if(ChatBoxClass)
+	{
+		ChatBox = CreateWidget<UChatBox>(this, ChatBoxClass);
+		if(ChatBox && ChatBox->ChatInput)
+		{
+			ChatBox->AddToViewport();
+			ChatBox->ChatInput->SetHintText(FText(FText::FromString("-")));
+			ChatBox->SetVisibility(ESlateVisibility::Collapsed);
+			ChatBox->ChatInput->RevertTextOnEscape = true;
+			ChatBox->ChatInput->OnTextCommitted.AddDynamic(this, &ABlasterPlayerController::OnChatCommitted);
+		}
+	}
+}
+
+
+void ABlasterPlayerController::OnChatCommitted(const FText& Text, ETextCommit::Type CommitMethod)
+{
+	if(CommitMethod != ETextCommit::OnEnter) return;
+	
+	FString PlayerName{""};
+	
+	APlayerState* TempPlayerState = GetPlayerState<APlayerState>();
+	if(TempPlayerState)
+	{
+		PlayerName = TempPlayerState->GetPlayerName();
+	}
+	
+	ServerChatCommitted(Text, PlayerName); //TODO: Add a delay so that some absolute cucumber can't spam the chat.
+}
+
+void ABlasterPlayerController::ClientChatCommitted_Implementation(const FText& Text, const FString& PlayerName)
+{
+	if(ChatBox)
+	{
+		ChatBox->OnTextCommitted(Text, PlayerName);
+	}
+}
+
+void ABlasterPlayerController::ServerChatCommitted_Implementation(const FText& Text, const FString& PlayerName)
+{
+	BlasterGameMode->SendChatMsg(Text, PlayerName);
+}
+
 
 void ABlasterPlayerController::SetupInputComponent()
 {
@@ -619,7 +678,7 @@ void ABlasterPlayerController::SetupInputComponent()
 	if(InputComponent == nullptr) return;
 
 	InputComponent->BindAction("Quit", IE_Pressed, this, &ABlasterPlayerController::ShowReturnToMainMenu);
-	InputComponent->BindAction("Chat", IE_Pressed, this, &ABlasterPlayerController::ShowChatBox);
+	InputComponent->BindAction("Chat", IE_Pressed, this, &ABlasterPlayerController::ToggleChatBox);
 	
 }
 

@@ -16,12 +16,26 @@ class BLASTER_API UChatBox : public UUserWidget
 
 public:
 	
-	void OnTextCommitted(const FText& Text, ETextCommit::Type CommitMethod);
+	void OnTextCommitted(const FText& Text, const FString& PlayerName);
 
 	UPROPERTY(meta = (BindWidget))
 	class UScrollBox* ChatTextBox;
 
 	UPROPERTY(meta = (BindWidget))
 	class UEditableTextBox* ChatInput;
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class UChatTextBlock> ChatTextBlockClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TArray<UChatTextBlock*> ChatTextBlocks;
+
+private:
+
+	UPROPERTY()
+	APlayerController* OwningController;
+
+	UPROPERTY()
+	class ABlasterPlayerState* BlasterPlayerState;
 	
 };

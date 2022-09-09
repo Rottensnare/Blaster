@@ -44,12 +44,20 @@ public:
 	float SingleTripTime = 0.f;
 
 	FOnHighPingChecked OnHighPingChecked;
+
+	void AddChatBox();
+	void ToggleChatBox();
+
+	UFUNCTION()
+	void OnChatCommitted(const FText& Text, ETextCommit::Type CommitMethod);
+	
+	UFUNCTION(Client, Reliable)
+	void ClientChatCommitted(const FText& Text, const FString& PlayerName);
 	
 protected:
 
 	virtual void SetupInputComponent() override;
 	void ShowReturnToMainMenu();
-	void ShowChatBox();
 	
 	virtual void BeginPlay() override;
 	void CheckPing(float DeltaSeconds);
@@ -65,7 +73,10 @@ protected:
 
 	UFUNCTION(Client, Reliable)
 	void ClientReportServerTime(const float TimeOfClientRequest, const float TimeServerReceivedClientRequest);
-
+	
+	UFUNCTION(Server, Reliable)
+	void ServerChatCommitted(const FText& Text, const FString& PlayerName);
+	
 	void PollInit();
 
 	float ClientServerDelta{0.f};
@@ -129,6 +140,12 @@ private:
 	class UCharacterOverlay* CharacterOverlay;
 
 	bool bInitializeCharacterOverlay{false};
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class UChatBox> ChatBoxClass;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UChatBox* ChatBox;
 
 	//Cached values that will be used to set HUD element values when Overlay is initialized.
 	//Overlay will be initialized late so we need to do this.

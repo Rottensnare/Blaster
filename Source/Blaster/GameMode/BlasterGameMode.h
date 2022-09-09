@@ -29,6 +29,8 @@ public:
 	virtual void OnMatchStateSet() override;
 
 	void PlayerLeftGame(class ABlasterPlayerState* PlayerLeaving);
+	
+	void SendChatMsg(const FText& Text, const FString& PlayerName);
 
 	UPROPERTY(EditDefaultsOnly)
 	float WarmupTime{10.f};

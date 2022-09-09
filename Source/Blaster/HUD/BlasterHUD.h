@@ -13,10 +13,15 @@ struct FHUDPackage
 	GENERATED_BODY()
 
 public:
+	UPROPERTY()
 	class UTexture2D* CrosshairsCenter;
+	UPROPERTY()
 	UTexture2D* CrosshairsBottom;
+	UPROPERTY()
 	UTexture2D* CrosshairsTop;
+	UPROPERTY()
 	UTexture2D* CrosshairsLeft;
+	UPROPERTY()
 	UTexture2D* CrosshairsRight;
 	float CrosshairSpread;
 };
@@ -32,11 +37,6 @@ public:
 	void AddCharacterOverlay();
 	void AddWarmupWidget();
 	void AddElimAnnouncement(FString Attacker, FString Victim);
-	void AddChatBox();
-	void ToggleChatBox();
-	
-	UFUNCTION()
-	void OnChatCommitted(const FText& Text, ETextCommit::Type CommitMethod);
 	
 	UPROPERTY(EditAnywhere, Category = "Player Status")
 	TSubclassOf<class UUserWidget> CharacterOverlayClass;
@@ -54,7 +54,6 @@ public:
 protected:
 
 	virtual void BeginPlay() override;
-	
 
 private:
 
@@ -83,11 +82,6 @@ private:
 	UPROPERTY()
 	TArray<UElimAnnouncement*> ElimMessages;
 
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<class UChatBox> ChatBoxClass;
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	UChatBox* ChatBox;
 	
 public:
 

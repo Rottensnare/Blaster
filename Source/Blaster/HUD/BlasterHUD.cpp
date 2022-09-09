@@ -7,6 +7,7 @@
 #include "CharacterOverlay.h"
 #include "ChatBox.h"
 #include "ElimAnnouncement.h"
+#include "Blaster/BlasterPlayerState.h"
 #include "Blueprint/UserWidget.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "Components/CanvasPanelSlot.h"
@@ -112,53 +113,6 @@ void ABlasterHUD::AddElimAnnouncement(FString Attacker, FString Victim)
 			ElimMsgDelegate.BindUFunction(this, FName("ElimAnnouncementTimerFinished"), ElimAnnouncementWidget);
 			GetWorldTimerManager().SetTimer(ElimMsgTimer, ElimMsgDelegate, ElimAnnouncementTime, false);
 		}
-	}
-}
-
-void ABlasterHUD::AddChatBox()
-{
-	OwningPlayerController = OwningPlayerController == nullptr ? GetOwningPlayerController() : OwningPlayerController;
-	if(OwningPlayerController && ChatBoxClass)
-	{
-		ChatBox = CreateWidget<UChatBox>(OwningPlayerController, ChatBoxClass);
-		if(ChatBox && ChatBox->ChatInput)
-		{
-			ChatBox->AddToViewport();
-			ChatBox->ChatInput->SetHintText(FText(FText::FromString("Write something here.")));
-			ChatBox->SetVisibility(ESlateVisibility::Collapsed);
-			ChatBox->ChatInput->OnTextCommitted.AddDynamic(this, &ABlasterHUD::OnChatCommitted);
-		}
-	}
-}
-
-void ABlasterHUD::ToggleChatBox()
-{
-	if(ChatBox && OwningPlayerController)
-	{
-		if(ChatBox->GetVisibility() == ESlateVisibility::Collapsed)
-		{
-			ChatBox->SetVisibility(ESlateVisibility::Visible);
-			FInputModeGameAndUI InputModeGameAndUI;
-			InputModeGameAndUI.SetWidgetToFocus(ChatBox->TakeWidget());
-			OwningPlayerController->SetInputMode(InputModeGameAndUI);
-			OwningPlayerController->SetShowMouseCursor(true);
-		}
-		else if(ChatBox->GetVisibility() == ESlateVisibility::Visible)
-		{
-			ChatBox->SetVisibility(ESlateVisibility::Collapsed);
-			FInputModeGameOnly InputModeGameOnly;
-			OwningPlayerController->SetInputMode(InputModeGameOnly);
-			OwningPlayerController->SetShowMouseCursor(false);
-		}
-	}
-}
-
-void ABlasterHUD::OnChatCommitted(const FText& Text, ETextCommit::Type CommitMethod)
-{
-	UE_LOG(LogTemp, Warning, TEXT("ABlasterHUD::OnChatCommitted"))
-	if(ChatBox)
-	{
-		ChatBox->OnTextCommitted(Text, CommitMethod);
 	}
 }
 

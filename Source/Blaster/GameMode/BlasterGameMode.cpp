@@ -124,6 +124,7 @@ void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedCharacter,
 		if(TempBlasterPlayerController && AttackerPlayerState && VictimPlayerState)
 		{
 			TempBlasterPlayerController->BroadCastElim(AttackerPlayerState, VictimPlayerState);
+			
 		}
 	}
 	
@@ -132,6 +133,19 @@ void ABlasterGameMode::PlayerEliminated(ABlasterCharacter* EliminatedCharacter,
 	EliminatedCharacter->Elim(false);
 	
 }
+
+void ABlasterGameMode::SendChatMsg(const FText& Text, const FString& PlayerName)
+{
+	for(FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+	{
+		ABlasterPlayerController* TempBlasterPlayerController = Cast<ABlasterPlayerController>(*It);
+		if(TempBlasterPlayerController)
+		{
+			TempBlasterPlayerController->ClientChatCommitted(Text, PlayerName);
+		}
+	}
+}
+
 
 void ABlasterGameMode::RequestRespawn(ACharacter* EliminatedCharacter, AController* EliminatedController)
 {
