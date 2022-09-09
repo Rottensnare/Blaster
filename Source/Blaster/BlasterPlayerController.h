@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
+#include "GameFramework/PlayerState.h"
 #include "BlasterPlayerController.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHighPingChecked, bool, bPingTooHigh);
@@ -31,6 +32,7 @@ public:
 	void SetHUDWeaponType(FString WeaponType);
 	void SetMatchTimeText(float MatchTime);
 	void SetHUDAnnouncementTime(float WarmupTime);
+	void BroadCastElim(APlayerState* Attacker, APlayerState* Victim);
 
 	virtual float GetServerTime();
 	virtual void ReceivedPlayer() override;
@@ -42,6 +44,15 @@ public:
 	float SingleTripTime = 0.f;
 
 	FOnHighPingChecked OnHighPingChecked;
+
+	void AddChatBox();
+	void ToggleChatBox();
+
+	UFUNCTION()
+	void OnChatCommitted(const FText& Text, ETextCommit::Type CommitMethod);
+	
+	UFUNCTION(Client, Reliable)
+	void ClientChatCommitted(const FText& Text, const FString& PlayerName);
 	
 protected:
 
@@ -62,7 +73,10 @@ protected:
 
 	UFUNCTION(Client, Reliable)
 	void ClientReportServerTime(const float TimeOfClientRequest, const float TimeServerReceivedClientRequest);
-
+	
+	UFUNCTION(Server, Reliable)
+	void ServerChatCommitted(const FText& Text, const FString& PlayerName);
+	
 	void PollInit();
 
 	float ClientServerDelta{0.f};
@@ -86,6 +100,9 @@ protected:
 	float CheckPingFrequency{20.f};
 	UPROPERTY(EditAnywhere)
 	float HighPingThreshold{85.f};
+
+	UFUNCTION(Client, Reliable)
+	void ClientElimAnnouncement(APlayerState* Attacker, APlayerState* Victim);
 
 private:
 
@@ -123,6 +140,12 @@ private:
 	class UCharacterOverlay* CharacterOverlay;
 
 	bool bInitializeCharacterOverlay{false};
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class UChatBox> ChatBoxClass;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	UChatBox* ChatBox;
 
 	//Cached values that will be used to set HUD element values when Overlay is initialized.
 	//Overlay will be initialized late so we need to do this.

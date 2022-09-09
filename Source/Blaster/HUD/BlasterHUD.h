@@ -13,10 +13,15 @@ struct FHUDPackage
 	GENERATED_BODY()
 
 public:
+	UPROPERTY()
 	class UTexture2D* CrosshairsCenter;
+	UPROPERTY()
 	UTexture2D* CrosshairsBottom;
+	UPROPERTY()
 	UTexture2D* CrosshairsTop;
+	UPROPERTY()
 	UTexture2D* CrosshairsLeft;
+	UPROPERTY()
 	UTexture2D* CrosshairsRight;
 	float CrosshairSpread;
 };
@@ -31,6 +36,7 @@ public:
 	virtual void DrawHUD() override;
 	void AddCharacterOverlay();
 	void AddWarmupWidget();
+	void AddElimAnnouncement(FString Attacker, FString Victim);
 	
 	UPROPERTY(EditAnywhere, Category = "Player Status")
 	TSubclassOf<class UUserWidget> CharacterOverlayClass;
@@ -48,9 +54,11 @@ public:
 protected:
 
 	virtual void BeginPlay() override;
-	
 
 private:
+
+	UPROPERTY()
+	class APlayerController* OwningPlayerController;
 
 	FHUDPackage HUDPackage;
 
@@ -61,6 +69,20 @@ private:
 	float CrosshairSpread;
 
 	FLinearColor CrosshairColor{FLinearColor::White};
+
+	UPROPERTY(EditAnywhere)
+	TSubclassOf<class UElimAnnouncement> ElimAnnouncementClass;
+
+	UPROPERTY(EditAnywhere)
+	float ElimAnnouncementTime = 3.f;
+
+	UFUNCTION()
+	void ElimAnnouncementTimerFinished(UElimAnnouncement* MsgToRemove);
+
+	UPROPERTY()
+	TArray<UElimAnnouncement*> ElimMessages;
+
+	
 public:
 
 	FORCEINLINE void SetHUDPackage(const FHUDPackage& Package) {HUDPackage = Package;}

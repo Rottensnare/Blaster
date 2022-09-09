@@ -206,8 +206,8 @@ FServerSideRewindResult ULagCompensationComponent::ProjectileConfirmHit(const FF
 	FPredictProjectilePathParams PathParams;
 	PathParams.bTraceWithChannel = true;
 	PathParams.bTraceWithCollision = true;
-	PathParams.DrawDebugTime = 5.f;
-	PathParams.DrawDebugType = EDrawDebugTrace::ForDuration;
+	//PathParams.DrawDebugTime = 5.f;
+	//PathParams.DrawDebugType = EDrawDebugTrace::ForDuration;
 	PathParams.LaunchVelocity = InitialVelocity;
 	PathParams.MaxSimTime = MaxRecordTime;
 	PathParams.ProjectileRadius = 5.f;
@@ -541,7 +541,8 @@ void ULagCompensationComponent::ServerScoreRequest_Implementation(ABlasterCharac
 	//Essentially, if client scored a hit, apply damage.
 	if(HitCharacter && Confirm.bHitConfirmed && DamageCauser && BlasterCharacter)
 	{
-		UGameplayStatics::ApplyDamage(HitCharacter, DamageCauser->GetDamage(), BlasterCharacter->Controller, DamageCauser, UDamageType::StaticClass());
+		const float Damage = Confirm.bHeadShot ? DamageCauser->GetHeadshotMultiplier() * DamageCauser->GetDamage() : DamageCauser->GetDamage();
+		UGameplayStatics::ApplyDamage(HitCharacter, Damage, BlasterCharacter->Controller, DamageCauser, UDamageType::StaticClass());
 	}
 }
 
@@ -551,12 +552,14 @@ void ULagCompensationComponent::ProjectileServerScoreRequest_Implementation(ABla
 	const FServerSideRewindResult Confirm = ProjectileServerSideRewind(HitCharacter, TraceStart, InitialVelocity, HitTime);
 	
 	//Essentially, if client scored a hit, apply damage.
-	if(HitCharacter && Confirm.bHitConfirmed && BlasterCharacter)
+	if(HitCharacter && Confirm.bHitConfirmed && BlasterCharacter && BlasterCharacter->GetEquippedWeapon())
 	{
-		UGameplayStatics::ApplyDamage(HitCharacter, BlasterCharacter->GetEquippedWeapon()->GetDamage(), BlasterCharacter->Controller, BlasterCharacter->GetEquippedWeapon(), UDamageType::StaticClass());
+		//BUG: GAME BREAKING DAMAGE EXPLOIT, NEEDS DAMAGE CAUSER PASSED IN OTHERWISE CLIENT CAN SWITCH WEAPONS TO CHEAT THE SYSTEM AND THE CURRENTLY EQUIPPED WEAPONS DAMAGE WILL BE USED, NOT THE ONE THAT FIRED THE PROJECTILE
+		const float Damage = Confirm.bHeadShot ? BlasterCharacter->GetEquippedWeapon()->GetHeadshotMultiplier() * BlasterCharacter->GetEquippedWeapon()->GetDamage() :BlasterCharacter->GetEquippedWeapon()->GetDamage();
+		UGameplayStatics::ApplyDamage(HitCharacter, Damage, BlasterCharacter->Controller, BlasterCharacter->GetEquippedWeapon(), UDamageType::StaticClass());
 	}
 }
-
+//TODO: Fix inconsistent function names. I.E. ServerShotgun and ProjectileServer. Note to self: Choose one way of naming stuff and do it that way.
 void ULagCompensationComponent::ServerShotgunScoreRequest_Implementation(
 	const TArray<ABlasterCharacter*>& HitCharacters, const FVector_NetQuantize& TraceStart,
 	const TArray<FVector_NetQuantize>& HitLocations, const float HitTime, AWeapon* DamageCauser)
@@ -573,7 +576,7 @@ void ULagCompensationComponent::ServerShotgunScoreRequest_Implementation(
 			if(Confirm.BodyShots.Contains(HitCharacter))
 			{
 				
-				TotalDamage += Confirm.BodyShots[HitCharacter] * BlasterCharacter->GetEquippedWeapon()->GetDamage();
+				TotalDamage += Confirm.BodyShots[HitCharacter] * BlasterCharacter->GetEquippedWeapon()->GetDamage() * BlasterCharacter->GetEquippedWeapon()->GetHeadshotMultiplier();
 			}
 			if(Confirm.HeadShots.Contains(HitCharacter))
 			{

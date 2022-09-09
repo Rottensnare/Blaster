@@ -25,8 +25,13 @@ public:
 	UPROPERTY(EditAnywhere)
 	float InitialSpeed{25000.f};
 
+	//Projectile weapon values will override this value when spawning the projectile
 	UPROPERTY(EditAnywhere)
 	float Damage {10.f};
+
+	//Projectile weapon values will override this value when spawning the projectile
+	UPROPERTY(EditAnywhere)
+	float HeadShotMultiplier{2.f};
 
 protected:
 

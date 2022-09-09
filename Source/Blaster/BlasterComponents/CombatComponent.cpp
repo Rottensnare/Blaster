@@ -111,7 +111,6 @@ void UCombatComponent::OnRep_EquippedWeapon()
 	if(EquippedWeapon && Character)
 	{
 		EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);
-	
 		const USkeletalMeshSocket* HandSocket = Character->GetMesh()->GetSocketByName(FName("hand_rSocket"));
 		if(HandSocket)
 		{
@@ -468,6 +467,7 @@ void UCombatComponent::EquipPrimaryWeapon(AWeapon* WeaponToEquip)
 	{
 		EquippedWeapon->Dropped();
 	}
+	
 	EquippedWeapon = WeaponToEquip;
 	if(Character == nullptr || Character->GetMesh() == nullptr) return;
 	EquippedWeapon->SetWeaponState(EWeaponState::EWS_Equipped);

@@ -26,6 +26,7 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 		
 		//Tracks how many pellets hit which character
 		TMap<ABlasterCharacter*, uint32> HitActors;
+		TMap<ABlasterCharacter*, uint32> HeadshotHitMap;
 		for(FVector_NetQuantize HitTarget : HitTargets)
 		{
 			const FVector End = Start + (HitTarget - Start) * 1.25f;
@@ -35,14 +36,19 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 			{
 				if(ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(HitResult.GetActor()))
 				{
-					if(HitActors.Contains(BlasterCharacter))
+					const bool bHeadShot = HitResult.BoneName == FName("head");
+					if(bHeadShot)
 					{
-						HitActors[BlasterCharacter]++;
-					}else
-					{
-						HitActors.Emplace(BlasterCharacter, 1);
+						if(HitActors.Contains(BlasterCharacter)) HeadshotHitMap[BlasterCharacter]++;
+						else HeadshotHitMap.Emplace(BlasterCharacter, 1);
 					}
-					MulticastSetImpactEffects(EHT_Character, HitResult.Location, SocketTransform.GetLocation());
+					else
+					{
+						if(HitActors.Contains(BlasterCharacter)) HitActors[BlasterCharacter]++;
+						else HitActors.Emplace(BlasterCharacter, 1);
+					}
+					//BUG: Crash Log says the following line will might cause the crash. Map.h pair != null assertion failed, Line 656
+					MulticastSetImpactEffects(EHT_Character, HitResult.Location, SocketTransform.GetLocation()); //TODO: Make a version for shotgun, so that we don't call this multiple times per frame
 				}
 				else
 				{
@@ -58,18 +64,36 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 
 		TArray<ABlasterCharacter*> HitCharacters;
 		
+		TMap<ABlasterCharacter*, float> DamageMap;
 		for(auto HitPair : HitActors)
 		{
-			if(InstigatorController && HitPair.Key)
+			if(HitPair.Key)
+			{
+				DamageMap.Emplace(HitPair.Key, HitPair.Value * Damage);
+				HitCharacters.AddUnique(HitPair.Key);
+			}
+		}
+		for(auto HitPair : HeadshotHitMap)
+		{
+			if(HitPair.Key)
+			{
+				if(DamageMap.Contains(HitPair.Key)) HeadshotHitMap[HitPair.Key] += HitPair.Value * Damage * HeadshotMultiplier;
+				else DamageMap.Emplace(HitPair.Key, HitPair.Value * Damage * HeadshotMultiplier);
+				HitCharacters.AddUnique(HitPair.Key);
+			}
+		}
+		for(auto DamagePair : DamageMap)
+		{
+			if(DamagePair.Key && InstigatorController)
 			{
 				bool bCauseAuthDamage = !bUseServerSideRewind || OwnerPawn->IsLocallyControlled();
 				if(HasAuthority() && bCauseAuthDamage)
 				{
-					UGameplayStatics::ApplyDamage(HitPair.Key, Damage * HitPair.Value, InstigatorController, this, UDamageType::StaticClass());
+					UGameplayStatics::ApplyDamage(DamagePair.Key, DamagePair.Value, InstigatorController, this, UDamageType::StaticClass());
 				}
-				HitCharacters.Add(HitPair.Key);
 			}
 		}
+		
 		if(!HasAuthority() && bUseServerSideRewind)
 		{
 			OwnerCharacter = OwnerCharacter == nullptr ? Cast<ABlasterCharacter>(OwnerPawn) : OwnerCharacter;
