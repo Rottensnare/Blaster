@@ -48,6 +48,9 @@ protected:
 
 	virtual void BeginPlay() override;
 
+	UPROPERTY(EditAnywhere)
+	bool bTeamsMatch{false};
+
 private:
 	
 	UPROPERTY(VisibleAnywhere)
@@ -55,7 +58,6 @@ private:
 
 	UPROPERTY(VisibleAnywhere)
 	bool bRestartingGame{false};
-
 
 public:
 

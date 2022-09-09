@@ -24,6 +24,9 @@ public:
 	UPROPERTY(Replicated)
 	TArray< ABlasterPlayerState* > TopScoringPlayers;
 
+	void RedTeamScores();
+	void BlueTeamScores();
+
 	UPROPERTY()
 	TArray<ABlasterPlayerState*> RedTeamPlayers;
 	UPROPERTY()
@@ -48,6 +51,9 @@ protected:
 
 
 private:
+
+	UPROPERTY()
+	class ABlasterPlayerController* FirstPlayerController;
 
 	float TopScore{0.f};
 };

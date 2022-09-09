@@ -828,7 +828,6 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 
 	if(Health == 0.f)
 	{
-		
 		if(CurrentGameMode)
 		{
 			BlasterPlayerController = BlasterPlayerController == nullptr ? Cast<ABlasterPlayerController>(Controller) : BlasterPlayerController;
@@ -854,7 +853,6 @@ void ABlasterCharacter::PollInit()
 				MulticastGainedTheLead();
 			}
 		}
-		
 	}
 }
 

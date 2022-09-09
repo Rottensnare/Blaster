@@ -172,7 +172,7 @@ void ABlasterGameMode::OnMatchStateSet()
 		ABlasterPlayerController* BlasterController = Cast<ABlasterPlayerController>(*It);
 		if(BlasterController)
 		{
-			BlasterController->OnMatchStateSet(MatchState);
+			BlasterController->OnMatchStateSet(MatchState, bTeamsMatch);
 		}
 	}
 }
