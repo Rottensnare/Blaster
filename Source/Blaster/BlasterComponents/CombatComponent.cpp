@@ -72,8 +72,10 @@ void UCombatComponent::SetAiming(bool bIsAiming)
 	if(Character == nullptr || EquippedWeapon == nullptr) return;
 	bAiming = bIsAiming; //Set here so that we don't need to wait for the server to tell us to aim.
 	ServerSetAiming(bIsAiming);
-	
-	Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
+	if(!Character->bHoldingTheOrb)
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
+	}
 	if(Character->IsLocallyControlled() && EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle)
 	{
 		Character->ShowSniperScopeWidget(bIsAiming);
@@ -94,8 +96,10 @@ void UCombatComponent::ServerSetAiming_Implementation(bool bIsAiming)
 {
 	if(Character == nullptr || EquippedWeapon == nullptr) return;
 	bAiming = bIsAiming;
-
-	Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
+	if(!Character->bHoldingTheOrb)
+	{
+		Character->GetCharacterMovement()->MaxWalkSpeed = bIsAiming ? AimWalkSpeed : BaseWalkSpeed;
+	}
 	if(EquippedWeapon->GetWeaponType() == EWeaponType::EWT_SniperRifle && bIsAiming)
 	{
 		EquippedWeapon->SetUseScatter(false);

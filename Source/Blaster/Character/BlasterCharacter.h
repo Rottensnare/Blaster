@@ -73,6 +73,9 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastAttachOrb(AOrb* Orb);
 
+	UPROPERTY(ReplicatedUsing = OnRep_HoldingTheOrb)
+	bool bHoldingTheOrb = false;
+
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
@@ -327,6 +330,11 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	USceneComponent* OrbAttachLocation;
+
+	
+
+	UFUNCTION()
+	void OnRep_HoldingTheOrb();
 	
 public:
 

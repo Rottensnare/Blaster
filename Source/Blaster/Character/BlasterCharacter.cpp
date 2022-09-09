@@ -189,7 +189,13 @@ void ABlasterCharacter::SetTeamColor(ETeams Team)
 
 void ABlasterCharacter::ServerAttachOrb_Implementation(AOrb* Orb)
 {
+	bHoldingTheOrb = true;
+	if(CombatComponent && GetCharacterMovement())
+	{
+		GetCharacterMovement()->MaxWalkSpeed = CombatComponent->AimWalkSpeed;
+	}
 	MulticastAttachOrb(Orb);
+	
 }
 
 void ABlasterCharacter::MulticastAttachOrb_Implementation(AOrb* Orb)
@@ -654,6 +660,22 @@ void ABlasterCharacter::HUDInitTimerFinished()
 	}
 }
 
+void ABlasterCharacter::OnRep_HoldingTheOrb()
+{
+	if(CombatComponent == nullptr) return;
+	if(bHoldingTheOrb)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Holding The Orb"))
+		GetCharacterMovement()->MaxWalkSpeed = CombatComponent->AimWalkSpeed;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("NOT Holding The Orb"))
+		GetCharacterMovement()->MaxWalkSpeed = CombatComponent->BaseWalkSpeed;
+	}
+	
+}
+
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
 {
 	if(IsLocallyControlled()) 
@@ -988,6 +1010,7 @@ void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 
 void ABlasterCharacter::Elim(bool bPlayerLeftGame)
 {
+	bHoldingTheOrb = false;
 	if(CombatComponent && CombatComponent->EquippedWeapon)
 	{
 		if(CombatComponent->EquippedWeapon->bDestroyWeapon)
@@ -1010,6 +1033,10 @@ void ABlasterCharacter::Elim(bool bPlayerLeftGame)
 				CombatComponent->SecondaryWeapon->Dropped();
 			}
 		}
+	}
+	if(GetCharacterMovement() && CombatComponent)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = CombatComponent->BaseWalkSpeed;
 	}
 	
 	MulticastElim(bPlayerLeftGame);
@@ -1092,6 +1119,7 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(ABlasterCharacter, Health);
 	DOREPLIFETIME(ABlasterCharacter, Shields);
 	DOREPLIFETIME(ABlasterCharacter, bDisableGameplay);
+	DOREPLIFETIME(ABlasterCharacter, bHoldingTheOrb);
 }
 
 
