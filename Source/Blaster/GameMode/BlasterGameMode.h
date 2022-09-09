@@ -27,6 +27,7 @@ public:
 	virtual void PlayerEliminated(class ABlasterCharacter* EliminatedCharacter, class ABlasterPlayerController* VictimPlayerController, ABlasterPlayerController* AttackerController);
 	virtual void RequestRespawn(ACharacter* EliminatedCharacter, AController* EliminatedController);
 	virtual void OnMatchStateSet() override;
+	virtual float CalculateDamage(AController* VictimPlayerController, AController* AttackerController, float BaseDamage);
 
 	void PlayerLeftGame(class ABlasterPlayerState* PlayerLeaving);
 	

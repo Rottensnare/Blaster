@@ -50,6 +50,24 @@ void ATeamsGameMode::Logout(AController* Exiting)
 	}
 }
 
+float ATeamsGameMode::CalculateDamage(AController* VictimPlayerController, AController* AttackerController,
+	float BaseDamage)
+{
+	if(VictimPlayerController == nullptr || AttackerController == nullptr) return 0.f;
+	ABlasterPlayerState* VictimPlayerState = VictimPlayerController->GetPlayerState<ABlasterPlayerState>();
+	ABlasterPlayerState* AttackerPlayerState = AttackerController->GetPlayerState<ABlasterPlayerState>();
+	if(VictimPlayerState == nullptr || AttackerPlayerState == nullptr) return 0.f;
+	
+	if(VictimPlayerState->GetTeam() != AttackerPlayerState->GetTeam())
+	{
+		return BaseDamage;
+	}
+	else
+	{
+		return 0.f;
+	}
+}
+
 void ATeamsGameMode::HandleMatchHasStarted()
 {
 	Super::HandleMatchHasStarted();

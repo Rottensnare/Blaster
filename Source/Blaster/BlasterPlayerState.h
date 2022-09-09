@@ -35,13 +35,16 @@ private:
 	UPROPERTY(ReplicatedUsing = OnRep_Elims)
 	int32 Elims;
 
-	UPROPERTY(Replicated)
+	UPROPERTY(ReplicatedUsing = OnRep_Team)
 	ETeams Team{ETeams::ET_NoTeam};
+
+	UFUNCTION()
+	void OnRep_Team();
 
 public:
 	
 	FORCEINLINE ETeams GetTeam() const {return Team;}
-	FORCEINLINE void SetTeam(const ETeams InTeam) {Team = InTeam;}
+	void SetTeam(const ETeams InTeam);
 	
 	
 };

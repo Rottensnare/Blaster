@@ -69,6 +69,25 @@ void ABlasterPlayerState::OnRep_Elims()
 	}
 }
 
+void ABlasterPlayerState::OnRep_Team()
+{
+	ABlasterCharacter* BlastCharacter = Cast<ABlasterCharacter>(GetPawn());
+	if(BlastCharacter)
+	{
+		BlasterCharacter->SetTeamColor(Team);
+	}
+}
+
+void ABlasterPlayerState::SetTeam(const ETeams InTeam)
+{
+	Team = InTeam;
+	ABlasterCharacter* BlastCharacter = Cast<ABlasterCharacter>(GetPawn());
+	if(BlastCharacter)
+	{
+		BlasterCharacter->SetTeamColor(Team);
+	}
+}
+
 void ABlasterPlayerState::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
 	Super::GetLifetimeReplicatedProps(OutLifetimeProps);
