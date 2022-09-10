@@ -8,6 +8,7 @@
 #include "Blaster/Blaster.h"
 #include "Blaster/BlasterPlayerController.h"
 #include "Blaster/BlasterPlayerState.h"
+#include "Blaster/TeamPlayerStart.h"
 #include "Blaster/BlasterComponents/BuffComponent.h"
 #include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Blaster/BlasterComponents/LagCompensationComponent.h"
@@ -200,6 +201,8 @@ void ABlasterCharacter::ServerAttachOrb_Implementation(AOrb* Orb)
 
 void ABlasterCharacter::MulticastAttachOrb_Implementation(AOrb* Orb)
 {
+	HeldOrb = Orb;
+	Orb->PickedUp();
 	Orb->AttachToComponent(OrbAttachLocation, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 	
 }
@@ -667,10 +670,13 @@ void ABlasterCharacter::OnRep_HoldingTheOrb()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Holding The Orb"))
 		GetCharacterMovement()->MaxWalkSpeed = CombatComponent->AimWalkSpeed;
+		
 	}
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("NOT Holding The Orb"))
+		HeldOrb->Dropped(GetActorLocation());
+		HeldOrb = nullptr;
 		GetCharacterMovement()->MaxWalkSpeed = CombatComponent->BaseWalkSpeed;
 	}
 	
@@ -874,6 +880,38 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 	}
 }
 
+void ABlasterCharacter::SetSpawnPoint()
+{
+	if(HasAuthority() && BlasterPlayerState->GetTeam() != ETeams::ET_NoTeam)
+	{
+	
+		TArray<AActor*> PlayerStarts;
+		UGameplayStatics::GetAllActorsOfClass(this, ATeamPlayerStart::StaticClass(), PlayerStarts);
+		TArray<ATeamPlayerStart*> TeamPlayerStarts;
+		for(auto Start : PlayerStarts)
+		{
+			ATeamPlayerStart* TeamPlayerStart = Cast<ATeamPlayerStart>(Start);
+			if(TeamPlayerStart && TeamPlayerStart->Team == BlasterPlayerState->GetTeam())
+			{
+				TeamPlayerStarts.Add(TeamPlayerStart);
+			}
+		}
+		if(TeamPlayerStarts.Num() > 0)
+		{
+			ATeamPlayerStart* ChosenPlayerStart = TeamPlayerStarts[FMath::RandRange(0, TeamPlayerStarts.Num()-1)];
+			SetActorLocationAndRotation(ChosenPlayerStart->GetActorLocation(), ChosenPlayerStart->GetActorRotation());
+		}
+	}
+}
+
+void ABlasterCharacter::OnPlayerStateInitialized()
+{
+	BlasterPlayerState->AddToScore(0.f);
+	BlasterPlayerState->AddToElims(0);
+	SetTeamColor(BlasterPlayerState->GetTeam());
+	SetSpawnPoint();
+}
+
 void ABlasterCharacter::PollInit()
 {
 	if(BlasterPlayerState == nullptr)
@@ -881,9 +919,8 @@ void ABlasterCharacter::PollInit()
 		BlasterPlayerState = GetPlayerState<ABlasterPlayerState>();
 		if(BlasterPlayerState)
 		{
-			BlasterPlayerState->AddToScore(0.f);
-			BlasterPlayerState->AddToElims(0);
-			SetTeamColor(BlasterPlayerState->GetTeam());
+			OnPlayerStateInitialized();
+			
 			ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this));
 			if(BlasterGameState && BlasterGameState->TopScoringPlayers.Contains(BlasterPlayerState))
 			{
@@ -1011,6 +1048,9 @@ void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 void ABlasterCharacter::Elim(bool bPlayerLeftGame)
 {
 	bHoldingTheOrb = false;
+	if(HeldOrb) HeldOrb->Dropped(GetActorLocation());
+	HeldOrb = nullptr;
+	
 	if(CombatComponent && CombatComponent->EquippedWeapon)
 	{
 		if(CombatComponent->EquippedWeapon->bDestroyWeapon)

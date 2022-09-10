@@ -113,6 +113,9 @@ protected:
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor ,float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
 
+	void SetSpawnPoint();
+	void OnPlayerStateInitialized();
+
 	//Initialize HUD if relevant info is missing
 	void PollInit();
 
@@ -331,7 +334,8 @@ private:
 	UPROPERTY(EditAnywhere)
 	USceneComponent* OrbAttachLocation;
 
-	
+	UPROPERTY()
+	class AOrb* HeldOrb;
 
 	UFUNCTION()
 	void OnRep_HoldingTheOrb();

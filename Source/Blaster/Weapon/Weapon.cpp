@@ -225,7 +225,7 @@ void AWeapon::SetWeaponState(EWeaponState State)
 		OwnerCharacter = OwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : OwnerCharacter;
 		if(OwnerCharacter && bUseServerSideRewind)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Binding"))
+			//UE_LOG(LogTemp, Warning, TEXT("Binding"))
 			OwnerController = OwnerController == nullptr ? Cast<ABlasterPlayerController>(OwnerCharacter->Controller) : OwnerController;
 			if(OwnerController)
 			{

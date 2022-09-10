@@ -575,7 +575,7 @@ void ABlasterPlayerController::SetHUDAnnouncementTime(float InWarmupTime)
 		const int32 MatchSeconds = InWarmupTime - (MatchMinutes * 60);
 		const FString AnnouncementTimeText = FString::Printf(TEXT("%02d : %02d"), MatchMinutes, MatchSeconds);
 		BlasterHUD->WarmupWidget->WarmupTimeText->SetText(FText::FromString(AnnouncementTimeText));
-		UE_LOG(LogTemp, Warning, TEXT("SetHUDAnnouncement: %02d : %02d"),MatchMinutes, MatchSeconds)
+		//UE_LOG(LogTemp, Warning, TEXT("SetHUDAnnouncement: %02d : %02d"),MatchMinutes, MatchSeconds)
 	}
 }
 

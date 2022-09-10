@@ -15,6 +15,8 @@ class BLASTER_API AOrb : public AActor
 public:	
 
 	AOrb();
+	void Dropped(const FVector& InLocation);
+	void PickedUp();
 
 protected:
 
@@ -22,6 +24,8 @@ protected:
 
 	UFUNCTION()
 	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
+
+	
 
 private:
 
@@ -36,6 +40,9 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	class USoundCue* PickupSound;
+
+	UPROPERTY(EditAnywhere)
+	USoundCue* DropSound;
 
 	UPROPERTY()
 	class USoundAttenuation* PickupAttenuation;

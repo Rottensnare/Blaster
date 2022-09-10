@@ -6,6 +6,8 @@
 #include "Blaster/BlasterPlayerState.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Components/SphereComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Sound/SoundCue.h"
 
 
 AOrb::AOrb()
@@ -54,6 +56,30 @@ void AOrb::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 			}
 		}
 	}
+}
+
+
+
+void AOrb::Dropped(const FVector& InLocation)
+{
+	FDetachmentTransformRules DetachmentTransformRules(EDetachmentRule::KeepWorld, true);
+	if(OrbMesh)
+	{
+		OrbMesh->DetachFromComponent(DetachmentTransformRules);
+	}
+	SetOwner(nullptr);
+	AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+	if(DropSound)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, DropSound, GetActorLocation(), GetActorRotation());
+	}
+	//TODO: If bots are added, needs to find a nearest location in NavMesh that is accessible to bots
+	SetActorLocation(InLocation);
+}
+
+void AOrb::PickedUp()
+{
+	AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
 
