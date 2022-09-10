@@ -62,19 +62,22 @@ void AOrb::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 
 void AOrb::Dropped(const FVector& InLocation)
 {
+	UE_LOG(LogTemp, Warning, TEXT("AOrb::Dropped"))
 	FDetachmentTransformRules DetachmentTransformRules(EDetachmentRule::KeepWorld, true);
+	OrbMesh = OrbMesh == nullptr ? Cast<UStaticMeshComponent>(RootComponent) : OrbMesh;
 	if(OrbMesh)
 	{
 		OrbMesh->DetachFromComponent(DetachmentTransformRules);
 	}
 	SetOwner(nullptr);
-	AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 	if(DropSound)
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, DropSound, GetActorLocation(), GetActorRotation());
 	}
+	
 	//TODO: If bots are added, needs to find a nearest location in NavMesh that is accessible to bots
 	SetActorLocation(InLocation);
+	AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
 }
 
 void AOrb::PickedUp()

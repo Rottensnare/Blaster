@@ -3,51 +3,40 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Blaster/GameMode/Teams.h"
 #include "GameFramework/Actor.h"
-#include "Orb.generated.h"
+#include "Blaster/GameMode/Teams.h"
+#include "OrbZone.generated.h"
 
 UCLASS()
-class BLASTER_API AOrb : public AActor
+class BLASTER_API AOrbZone : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
 
-	AOrb();
-	void Dropped(const FVector& InLocation);
-	void PickedUp();
+	AOrbZone();
+
+	UFUNCTION()
+	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
 
 protected:
 
 	virtual void BeginPlay() override;
 
-	UFUNCTION()
-	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
-
-	
 
 private:
 
-	UPROPERTY(EditAnywhere)
-	class UStaticMeshComponent* OrbMesh;
 
-	UPROPERTY(EditDefaultsOnly)
-	class USphereComponent* AreaSphere;
+	UPROPERTY(EditAnywhere)
+	class UBoxComponent* OrbZoneComponent;
 
 	UPROPERTY(EditAnywhere)
 	ETeams Team;
 
-	UPROPERTY(EditAnywhere)
-	class USoundCue* PickupSound;
-
-	UPROPERTY(EditAnywhere)
-	USoundCue* DropSound;
-
 	UPROPERTY()
-	class USoundAttenuation* PickupAttenuation;
+	class ACTFGameMode* CTFGameMode;
 
-public:	
+public:
 
 	FORCEINLINE ETeams GetTeam() const {return Team;}
 
