@@ -671,7 +671,7 @@ void ABlasterPlayerController::HandleCooldown()
 	}
 	
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
-	if(BlasterHUD)
+	if(BlasterHUD && BlasterHUD->BlasterOverlay)
 	{
 		BlasterHUD->BlasterOverlay->RemoveFromParent();
 		if(BlasterHUD->WarmupWidget && BlasterHUD->WarmupWidget->InfoText)

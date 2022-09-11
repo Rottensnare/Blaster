@@ -59,7 +59,8 @@ void ABlasterHUD::DrawHUD()
 void ABlasterHUD::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	bDrawHUD = true;
 }
 
 void ABlasterHUD::AddCharacterOverlay()
@@ -105,13 +106,16 @@ void ABlasterHUD::AddElimAnnouncement(FString Attacker, FString Victim)
 					}
 				}
 			}
-
 			
 			ElimMessages.Add(ElimAnnouncementWidget);
 
 			FTimerHandle ElimMsgTimer;
 			FTimerDelegate ElimMsgDelegate;
-			ElimMsgDelegate.BindUFunction(this, FName("ElimAnnouncementTimerFinished"), ElimAnnouncementWidget);
+			if(!ElimMsgDelegate.IsBoundToObject(this))
+			{
+				ElimMsgDelegate.BindUFunction(this, FName("ElimAnnouncementTimerFinished"), ElimAnnouncementWidget);
+			}
+			
 			GetWorldTimerManager().SetTimer(ElimMsgTimer, ElimMsgDelegate, ElimAnnouncementTime, false);
 		}
 	}

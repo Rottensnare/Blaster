@@ -21,6 +21,17 @@ namespace MatchState
 ABlasterGameMode::ABlasterGameMode()
 {
 	bDelayedStart = true;
+	bAllowTickBeforeBeginPlay = false;
+}
+
+
+void ABlasterGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+
+	LevelStartingTime = 0.f;
+	ServerTotalTime = GetWorld()->GetTimeSeconds();
+	UE_LOG(LogTemp, Warning, TEXT("ABlasterGameMode::BeginPlay"))
 }
 
 void ABlasterGameMode::Tick(float DeltaSeconds)
@@ -29,7 +40,7 @@ void ABlasterGameMode::Tick(float DeltaSeconds)
 
 	if(MatchState == MatchState::WaitingToStart)
 	{
-		CountdownTime = WarmupTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+		CountdownTime = WarmupTime - (GetWorld()->GetTimeSeconds() - ServerTotalTime)  + LevelStartingTime;
 		if(CountdownTime <= 0.f)
 		{
 			bMatchEnding = false;
@@ -39,7 +50,7 @@ void ABlasterGameMode::Tick(float DeltaSeconds)
 	}
 	else if(MatchState == MatchState::InProgress)
 	{
-		CountdownTime = WarmupTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+		CountdownTime = WarmupTime + MatchTime - (GetWorld()->GetTimeSeconds() - ServerTotalTime) + LevelStartingTime;
 		if(CountdownTime <= 0.f)
 		{
 			SetMatchState(MatchState::Cooldown);
@@ -48,7 +59,8 @@ void ABlasterGameMode::Tick(float DeltaSeconds)
 	}
 	else if(MatchState == MatchState::Cooldown)
 	{
-		CountdownTime = CooldownTime + WarmupTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+		CountdownTime = CooldownTime + WarmupTime + MatchTime - (GetWorld()->GetTimeSeconds() - ServerTotalTime) + LevelStartingTime;
+		
 		if(!bMatchEnding)
 		{
 			for(FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
@@ -59,7 +71,7 @@ void ABlasterGameMode::Tick(float DeltaSeconds)
 					ABlasterHUD* TempHUD = Cast<ABlasterHUD>(TempBlasterPlayerController->GetHUD());
 					if(TempHUD)
 					{
-						TempHUD->bDrawHUD = false;
+						TempHUD->SetDrawHUD(false);
 					}
 				}
 			}
@@ -79,16 +91,16 @@ void ABlasterGameMode::Tick(float DeltaSeconds)
 			LevelStartingTime = 0.f;
 			bUseSeamlessTravel = true;
 			bRestartingGame = true;
-			RestartGame();
-			/*
+			//RestartGame();
+			
 			UWorld* World = GetWorld();
 			if(World)
 			{
-				bUseSeamlessTravel = true;
-				World->ServerTravel("/Game/ThirdPerson/Maps/Level_FFA_01?listen");
+				//bUseSeamlessTravel = true;
+				World->ServerTravel("/Game/Maps/Level_FFA_01?listen");
 			}
-			UGameplayStatics::OpenLevel(this, FName("/Game/Maps/Level_OpenWorld_01?listen"));
-			*/
+			//UGameplayStatics::OpenLevel(this, FName("/Game/Maps/Level_OpenWorld_01?listen"));
+			
 #endif
 		}
 	}
@@ -218,9 +230,3 @@ void ABlasterGameMode::PlayerLeftGame(ABlasterPlayerState* PlayerLeaving)
 	}
 }
 
-void ABlasterGameMode::BeginPlay()
-{
-	Super::BeginPlay();
-
-	LevelStartingTime = 0.f;
-}

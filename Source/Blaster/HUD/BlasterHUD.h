@@ -50,7 +50,7 @@ public:
 	UPROPERTY()
 	class UAnnouncement* WarmupWidget;
 
-	bool bDrawHUD{true};
+	
 
 
 protected:
@@ -83,6 +83,7 @@ private:
 
 	UPROPERTY()
 	TArray<UElimAnnouncement*> ElimMessages;
+	bool bDrawHUD{true};
 
 	
 public:
@@ -90,5 +91,10 @@ public:
 	FORCEINLINE void SetHUDPackage(const FHUDPackage& Package) {HUDPackage = Package;}
 	FORCEINLINE void SetCrosshairSpread(const float Spread) {CrosshairSpread = Spread;}
 	FORCEINLINE void SetCrosshairColor(FLinearColor Color) {CrosshairColor = Color;}
-	
+
+	UFUNCTION(Client, Reliable)
+	void SetDrawHUD(bool bInDrawHUD);
 };
+
+inline void ABlasterHUD::SetDrawHUD_Implementation(bool bInDrawHUD)
+{bDrawHUD = bInDrawHUD;}

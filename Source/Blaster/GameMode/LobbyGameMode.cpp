@@ -30,11 +30,11 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 				}
 				else if (MatchType == "TDM")
 				{
-					World->ServerTravel(FString("/Game/Maps/Level_FFA_01?listen"));
+					World->ServerTravel(FString("/Game/Maps/Level_TDM_01?listen"));
 				}
 				else if(MatchType == "CTF")
 				{
-					World->ServerTravel(FString("/Game/Maps/Level_FFA_01?listen"));
+					World->ServerTravel(FString("/Game/Maps/Level_CTF_01?listen"));
 				}
 				
 				

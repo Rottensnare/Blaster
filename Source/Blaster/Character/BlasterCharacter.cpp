@@ -659,7 +659,16 @@ void ABlasterCharacter::HUDInitTimerFinished()
 	if(BlasterPlayerController && CombatComponent && CombatComponent->EquippedWeapon)
 	{
 		FText WeaponText = UEnum::GetDisplayValueAsText(CombatComponent->EquippedWeapon->GetWeaponType());
-		BlasterPlayerController->SetHUDWeaponType(WeaponText.ToString());
+		FString TempWeaponString = WeaponText.ToString();
+		
+//In a packaged game, GetDisplayValueAsText returns the complete name of the Enum, not just the display name, so need to create a substring to get rid of the EWT_
+#if WITH_EDITOR
+		
+#else
+		TempWeaponString = TempWeaponString.RightChop(4);
+#endif
+		
+		BlasterPlayerController->SetHUDWeaponType(TempWeaponString);
 	}
 }
 

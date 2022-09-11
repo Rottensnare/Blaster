@@ -61,6 +61,9 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	bool bRestartingGame{false};
 
+	UPROPERTY(VisibleAnywhere)
+	float ServerTotalTime{0.f};
+
 public:
 
 	FORCEINLINE float GetCountdownTime() const {return CountdownTime;}
