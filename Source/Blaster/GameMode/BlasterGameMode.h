@@ -50,6 +50,8 @@ protected:
 
 	UPROPERTY(EditAnywhere)
 	bool bTeamsMatch{false};
+	
+	bool bMatchEnding{false};
 
 private:
 	

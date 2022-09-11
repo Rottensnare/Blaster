@@ -7,6 +7,7 @@
 #include "Blaster/BlasterPlayerState.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/GameState/BlasterGameState.h"
+#include "Blaster/HUD/BlasterHUD.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "GameFramework/PlayerStart.h"
 #include "Kismet/GameplayStatics.h"
@@ -31,8 +32,10 @@ void ABlasterGameMode::Tick(float DeltaSeconds)
 		CountdownTime = WarmupTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
 		if(CountdownTime <= 0.f)
 		{
+			bMatchEnding = false;
 			StartMatch();
 		}
+		
 	}
 	else if(MatchState == MatchState::InProgress)
 	{
@@ -46,6 +49,22 @@ void ABlasterGameMode::Tick(float DeltaSeconds)
 	else if(MatchState == MatchState::Cooldown)
 	{
 		CountdownTime = CooldownTime + WarmupTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+		if(!bMatchEnding)
+		{
+			for(FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+			{
+				ABlasterPlayerController* TempBlasterPlayerController = Cast<ABlasterPlayerController>(*It);
+				if(TempBlasterPlayerController)
+				{
+					ABlasterHUD* TempHUD = Cast<ABlasterHUD>(TempBlasterPlayerController->GetHUD());
+					if(TempHUD)
+					{
+						TempHUD->bDrawHUD = false;
+					}
+				}
+			}
+			bMatchEnding = true;
+		}
 		if(CountdownTime <= 0.f && !bRestartingGame)
 		{
 			UWidgetLayoutLibrary::RemoveAllWidgets(this);

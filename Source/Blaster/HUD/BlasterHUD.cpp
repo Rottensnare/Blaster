@@ -16,6 +16,7 @@
 
 void ABlasterHUD::DrawHUD()
 {
+	if(bDrawHUD == false) return;
 	Super::DrawHUD();
 
 	FVector2D ViewportSize;
@@ -118,6 +119,7 @@ void ABlasterHUD::AddElimAnnouncement(FString Attacker, FString Victim)
 
 void ABlasterHUD::DrawCrosshair(UTexture2D* Texture, FVector2D ViewportCenter, FVector2D Spread)
 {
+	if(bDrawHUD == false) return;
 	const float TextureWidth = Texture->GetSizeX();
 	const float TextureHeight = Texture->GetSizeY();
 	const FVector2D TextureDrawpoint(

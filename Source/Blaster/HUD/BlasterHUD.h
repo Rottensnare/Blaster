@@ -50,6 +50,8 @@ public:
 	UPROPERTY()
 	class UAnnouncement* WarmupWidget;
 
+	bool bDrawHUD{true};
+
 
 protected:
 
