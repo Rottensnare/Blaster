@@ -3,6 +3,7 @@
 
 #include "OrbZone.h"
 
+#include "NiagaraComponent.h"
 #include "Orb.h"
 #include "Blaster/GameMode/CTFGameMode.h"
 #include "Components/BoxComponent.h"
@@ -16,6 +17,9 @@ AOrbZone::AOrbZone()
 	OrbZoneComponent = CreateDefaultSubobject<UBoxComponent>(TEXT("OrbZoneComponent"));
 	SetRootComponent(OrbZoneComponent);
 
+	OrbZoneParticleComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("PickupEffectComponent"));
+	OrbZoneParticleComponent->SetupAttachment(RootComponent);
+	
 }
 
 void AOrbZone::BeginPlay()

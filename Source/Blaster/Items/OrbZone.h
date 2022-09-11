@@ -36,6 +36,13 @@ private:
 	UPROPERTY()
 	class ACTFGameMode* CTFGameMode;
 
+	UPROPERTY(VisibleAnywhere)
+	class UNiagaraComponent* OrbZoneParticleComponent;
+
+	UPROPERTY(EditAnywhere)
+	class UNiagaraSystem* OrbZoneParticleSystem;
+
+
 public:
 
 	FORCEINLINE ETeams GetTeam() const {return Team;}

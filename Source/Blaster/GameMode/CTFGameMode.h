@@ -22,6 +22,7 @@ public:
 protected:
 	void HandleCTFStart();
 	virtual void BeginPlay() override;
+	
 
 private:
 

@@ -3,6 +3,7 @@
 
 #include "CTFGameMode.h"
 
+#include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/GameState/BlasterGameState.h"
 #include "Blaster/Items/Orb.h"
 #include "Blaster/Items/OrbSpawnPoint.h"
@@ -59,7 +60,15 @@ void ACTFGameMode::PlayerEliminated(ABlasterCharacter* EliminatedCharacter,
 {
 	ABlasterGameMode::PlayerEliminated(EliminatedCharacter, VictimPlayerController, AttackerController);
 
-	
+	if(EliminatedCharacter)
+	{
+		if(EliminatedCharacter->GetHeldOrb() != nullptr)
+		{
+			//EliminatedCharacter->MulticastDropTheOrb();
+			EliminatedCharacter->GetHeldOrb()->Dropped(EliminatedCharacter->GetHeldOrb()->GetActorLocation());
+			EliminatedCharacter->MulticastDropTheOrb();
+		}
+	}
 }
 
 void ACTFGameMode::FlagCaptured(AOrb* InOrb, AOrbZone* InOrbZone)
@@ -73,12 +82,18 @@ void ACTFGameMode::FlagCaptured(AOrb* InOrb, AOrbZone* InOrbZone)
 		if(InOrbZone->GetTeam() == ETeams::ET_BlueTeam)
 		{
 			BGameState->BlueTeamScores();
-			InOrb->Dropped(InOrb->GetActorLocation());
+			RedOrb->Dropped(RedOrb->GetActorLocation());
+			//InOrb->Dropped(InOrb->GetActorLocation());
+			RedOrb->Destroy();
+			RedOrbSpawnPoint->SpawnOrb(ETeams::ET_RedTeam);
 		}
 		else if(InOrbZone->GetTeam() == ETeams::ET_RedTeam)
 		{
 			BGameState->RedTeamScores();
-			InOrb->Dropped(InOrb->GetActorLocation());
+			BlueOrb->Dropped(BlueOrb->GetActorLocation());
+			//InOrb->Dropped(InOrb->GetActorLocation());
+			BlueOrb->Destroy();
+			BlueOrbSpawnPoint->SpawnOrb(ETeams::ET_BlueTeam);
 		}
 	}
 }

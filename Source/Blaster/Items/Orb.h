@@ -15,10 +15,13 @@ class BLASTER_API AOrb : public AActor
 public:	
 
 	AOrb();
+	
+	UFUNCTION(NetMulticast, Reliable)
 	void Dropped(const FVector& InLocation);
+	
 	void PickedUp();
 	void SetMaterial();
-
+	virtual void Destroyed() override;
 protected:
 
 	virtual void BeginPlay() override;

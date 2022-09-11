@@ -201,10 +201,22 @@ void ABlasterCharacter::ServerAttachOrb_Implementation(AOrb* Orb)
 
 void ABlasterCharacter::MulticastAttachOrb_Implementation(AOrb* Orb)
 {
+	UE_LOG(LogTemp, Warning, TEXT("ABlasterCharacter::MulticastAttachOrb_Implementation"))
 	HeldOrb = Orb;
 	Orb->PickedUp();
 	Orb->AttachToComponent(OrbAttachLocation, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 	
+}
+
+void ABlasterCharacter::MulticastDropTheOrb_Implementation()
+{
+	if(HeldOrb)
+	{
+		HeldOrb = nullptr;
+	}
+	UE_LOG(LogTemp, Warning, TEXT("ABlasterCharacter::MulticastDropTheOrb_Implementation"))
+	bHoldingTheOrb = false;
+	if(GetCharacterMovement() && CombatComponent) GetCharacterMovement()->MaxWalkSpeed = CombatComponent->BaseWalkSpeed;
 }
 
 // Called when the game starts or when spawned
@@ -684,8 +696,8 @@ void ABlasterCharacter::OnRep_HoldingTheOrb()
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("NOT Holding The Orb"))
-		HeldOrb->Dropped(GetActorLocation());
-		HeldOrb = nullptr;
+		//HeldOrb->Dropped(GetActorLocation());
+		//HeldOrb = nullptr;
 		GetCharacterMovement()->MaxWalkSpeed = CombatComponent->BaseWalkSpeed;
 	}
 	
@@ -1056,9 +1068,9 @@ void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 
 void ABlasterCharacter::Elim(bool bPlayerLeftGame)
 {
-	bHoldingTheOrb = false;
-	if(HeldOrb) HeldOrb->Dropped(GetActorLocation());
-	HeldOrb = nullptr;
+	//bHoldingTheOrb = false;
+	//if(HeldOrb) HeldOrb->Dropped(GetActorLocation());
+	//HeldOrb = nullptr;
 	
 	if(CombatComponent && CombatComponent->EquippedWeapon)
 	{

@@ -73,6 +73,9 @@ public:
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastAttachOrb(AOrb* Orb);
 
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastDropTheOrb();
+
 	UPROPERTY(ReplicatedUsing = OnRep_HoldingTheOrb)
 	bool bHoldingTheOrb = false;
 
@@ -361,6 +364,7 @@ public:
 	FORCEINLINE float GetMaxShields() const {return MaxShields;}
 	FORCEINLINE bool GetDisableGameplay() const {return bDisableGameplay;}
 	FORCEINLINE ULagCompensationComponent* GetLagCompensationComponent() const {return LagCompensationComponent;}
+	FORCEINLINE AOrb* GetHeldOrb() const {return HeldOrb;}
 	bool IsLocallyReloading() const;
 	AWeapon* GetEquippedWeapon();
 	FVector GetHitTarget() const;

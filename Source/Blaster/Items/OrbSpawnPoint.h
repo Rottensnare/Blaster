@@ -37,6 +37,12 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	ETeams Team;
+
+	UPROPERTY(VisibleAnywhere)
+	class UNiagaraComponent* OrbSpawnParticleComponent;
+
+	UPROPERTY(EditAnywhere)
+	class UNiagaraSystem* OrbSpawnParticleSystem;
 	
 public:	
 
