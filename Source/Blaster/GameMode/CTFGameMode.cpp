@@ -5,7 +5,54 @@
 
 #include "Blaster/GameState/BlasterGameState.h"
 #include "Blaster/Items/Orb.h"
+#include "Blaster/Items/OrbSpawnPoint.h"
 #include "Blaster/Items/OrbZone.h"
+#include "Kismet/GameplayStatics.h"
+
+
+
+
+void ACTFGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+
+	HandleCTFStart();
+
+	
+}
+
+void ACTFGameMode::HandleCTFStart()
+{
+	TArray<AActor*> OrbSpawnPoints;
+	UGameplayStatics::GetAllActorsOfClass(this, AOrbSpawnPoint::StaticClass(), OrbSpawnPoints);
+	for(auto TempActor : OrbSpawnPoints)
+	{
+		AOrbSpawnPoint* OrbSpawnPoint = Cast<AOrbSpawnPoint>(TempActor);
+		if(OrbSpawnPoint)
+		{
+			if(OrbSpawnPoint->GetTeam() == ETeams::ET_RedTeam)
+			{
+				RedOrbSpawnPoint = OrbSpawnPoint;
+				if(RedOrbSpawnPoint)
+				{
+					RedOrbSpawnPoint->SpawnOrb(ETeams::ET_RedTeam);
+				}
+			}
+			else if(OrbSpawnPoint->GetTeam() == ETeams::ET_BlueTeam)
+			{
+				BlueOrbSpawnPoint = OrbSpawnPoint;
+				if(BlueOrbSpawnPoint)
+				{
+					BlueOrbSpawnPoint->SpawnOrb(ETeams::ET_BlueTeam);
+				}
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("ACTFGameMode::BeginPlay: Someone forgot to assign a team to the orb spawn point"))
+			}
+		}
+	}
+}
 
 void ACTFGameMode::PlayerEliminated(ABlasterCharacter* EliminatedCharacter,
                                     ABlasterPlayerController* VictimPlayerController, ABlasterPlayerController* AttackerController)
@@ -35,3 +82,5 @@ void ACTFGameMode::FlagCaptured(AOrb* InOrb, AOrbZone* InOrbZone)
 		}
 	}
 }
+
+

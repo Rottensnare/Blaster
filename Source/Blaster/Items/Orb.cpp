@@ -85,4 +85,20 @@ void AOrb::PickedUp()
 	AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
+void AOrb::SetMaterial()
+{
+	if(OrbMesh)
+	{
+		if(RedMaterial && Team == ETeams::ET_RedTeam)
+		{
+			OrbMesh->SetMaterial(0, RedMaterial);
+		}
+		else if(BlueMaterial && Team == ETeams::ET_BlueTeam)
+		{
+			OrbMesh->SetMaterial(0, BlueMaterial);
+		}
+	}
+	
+}
+
 

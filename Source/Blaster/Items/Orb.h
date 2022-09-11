@@ -17,6 +17,7 @@ public:
 	AOrb();
 	void Dropped(const FVector& InLocation);
 	void PickedUp();
+	void SetMaterial();
 
 protected:
 
@@ -47,8 +48,16 @@ private:
 	UPROPERTY()
 	class USoundAttenuation* PickupAttenuation;
 
+	UPROPERTY(EditAnywhere)
+	UMaterialInstance* RedMaterial;
+
+	UPROPERTY(EditAnywhere)
+	UMaterialInstance* BlueMaterial;
+
 public:	
 
 	FORCEINLINE ETeams GetTeam() const {return Team;}
+	FORCEINLINE void SetTeam(const ETeams InTeam) {Team = InTeam;}
+	
 
 };

@@ -18,5 +18,28 @@ public:
 
 	virtual void PlayerEliminated(ABlasterCharacter* EliminatedCharacter, ABlasterPlayerController* VictimPlayerController, ABlasterPlayerController* AttackerController) override;
 	void FlagCaptured(class AOrb* InOrb, class AOrbZone* InOrbZone);
+
+protected:
+	void HandleCTFStart();
+	virtual void BeginPlay() override;
+
+private:
+
+	UPROPERTY(BlueprintReadOnly, Category = CTF, meta = (AllowPrivateAccess = "true"))
+	AOrb* BlueOrb;
+
+	UPROPERTY(BlueprintReadOnly, Category = CTF, meta = (AllowPrivateAccess = "true"))
+	AOrb* RedOrb;
+
+	UPROPERTY(VisibleAnywhere)
+	class AOrbSpawnPoint* RedOrbSpawnPoint;
+
+	UPROPERTY(VisibleAnywhere)
+	AOrbSpawnPoint* BlueOrbSpawnPoint;
+
+public:
+
+	FORCEINLINE void SetRedOrb(AOrb* InRedOrb) {RedOrb = InRedOrb;}
+	FORCEINLINE void SetBlueOrb(AOrb* InBlueOrb) {BlueOrb = InBlueOrb;}
 	
 };
