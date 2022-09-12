@@ -22,6 +22,8 @@ public:
 protected:
 	void HandleCTFStart();
 	virtual void BeginPlay() override;
+	UFUNCTION()
+	void FlagPickedUp(AOrb* PickedUpOrb);
 	
 
 private:

@@ -205,7 +205,9 @@ void ABlasterCharacter::MulticastAttachOrb_Implementation(AOrb* Orb)
 	if(Orb == nullptr) return;
 	HeldOrb = Orb;
 	Orb->SetOwningCharacter(this);
+	
 	Orb->PickedUp();
+	
 	Orb->AttachToComponent(OrbAttachLocation, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 	
 }

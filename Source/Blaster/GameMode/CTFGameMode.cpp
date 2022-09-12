@@ -23,6 +23,8 @@ void ACTFGameMode::BeginPlay()
 	
 }
 
+
+
 void ACTFGameMode::HandleCTFStart()
 {
 	TArray<AActor*> OrbSpawnPoints;
@@ -38,6 +40,7 @@ void ACTFGameMode::HandleCTFStart()
 				if(RedOrbSpawnPoint)
 				{
 					RedOrbSpawnPoint->SpawnOrb(ETeams::ET_RedTeam);
+					if(RedOrb) RedOrb->OnOrbPickedUp.AddUObject(this, &ACTFGameMode::FlagPickedUp);
 				}
 			}
 			else if(OrbSpawnPoint->GetTeam() == ETeams::ET_BlueTeam)
@@ -46,11 +49,41 @@ void ACTFGameMode::HandleCTFStart()
 				if(BlueOrbSpawnPoint)
 				{
 					BlueOrbSpawnPoint->SpawnOrb(ETeams::ET_BlueTeam);
+					if(BlueOrb) BlueOrb->OnOrbPickedUp.AddUObject(this, &ACTFGameMode::FlagPickedUp);
 				}
 			}
 			else
 			{
 				UE_LOG(LogTemp, Warning, TEXT("ACTFGameMode::BeginPlay: Someone forgot to assign a team to the orb spawn point"))
+			}
+		}
+	}
+}
+
+void ACTFGameMode::FlagPickedUp(AOrb* PickedUpOrb)
+{
+	if(PickedUpOrb && PickedUpOrb->GetOwningBlasterCharacter())
+	{
+		if(PickedUpOrb->GetTeam() == ETeams::ET_BlueTeam)
+		{
+			for(FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+			{
+				ABlasterPlayerController* TempBlasterPlayerController = Cast<ABlasterPlayerController>(*It);
+				if(TempBlasterPlayerController)
+				{
+					TempBlasterPlayerController->ClientOrbAnnouncement(BlueOrb->GetOwningBlasterCharacter()->GetPlayerState(), 0);
+				}
+			}
+		}
+		if(PickedUpOrb->GetTeam() == ETeams::ET_RedTeam)
+		{
+			for(FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+			{
+				ABlasterPlayerController* TempBlasterPlayerController = Cast<ABlasterPlayerController>(*It);
+				if(TempBlasterPlayerController)
+				{
+					TempBlasterPlayerController->ClientOrbAnnouncement(RedOrb->GetOwningBlasterCharacter()->GetPlayerState(), 0);
+				}
 			}
 		}
 	}
@@ -98,6 +131,7 @@ void ACTFGameMode::FlagCaptured(AOrb* InOrb, AOrbZone* InOrbZone)
 				//InOrb->Dropped(InOrb->GetActorLocation());
 				RedOrb->Destroy();
 				RedOrbSpawnPoint->SpawnOrb(ETeams::ET_RedTeam);
+				if(RedOrb) RedOrb->OnOrbPickedUp.AddUObject(this, &ACTFGameMode::FlagPickedUp);
 			}
 		}
 		else if(InOrbZone->GetTeam() == ETeams::ET_RedTeam)
@@ -118,6 +152,7 @@ void ACTFGameMode::FlagCaptured(AOrb* InOrb, AOrbZone* InOrbZone)
 				//InOrb->Dropped(InOrb->GetActorLocation());
 				BlueOrb->Destroy();
 				BlueOrbSpawnPoint->SpawnOrb(ETeams::ET_BlueTeam);
+				if(BlueOrb) BlueOrb->OnOrbPickedUp.AddUObject(this, &ACTFGameMode::FlagPickedUp);
 			}
 		}
 	}

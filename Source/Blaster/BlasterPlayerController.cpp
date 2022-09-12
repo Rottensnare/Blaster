@@ -289,8 +289,8 @@ void ABlasterPlayerController::ClientOrbAnnouncement_Implementation(APlayerState
 	const ABlasterPlayerState* const Self = GetPlayerState<ABlasterPlayerState>();
 	const ABlasterPlayerState* const OrbHolder = Cast<ABlasterPlayerState>(InOrbHolder);
 	if(Self == nullptr || OrbHolder == nullptr) return;
-	//Selection 0 = Taking the orb
-	if(OrbHolder == Self && Selection == 0)
+	
+	if(OrbHolder == Self && Selection == 0) //Selection 0 = Taking the orb
 	{
 		PlayOrbAnnouncementSound(0);
 	}

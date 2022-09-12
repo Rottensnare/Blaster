@@ -84,6 +84,7 @@ void AOrb::Dropped_Implementation(const FVector& InLocation)
 
 void AOrb::PickedUp()
 {
+	if(HasAuthority()) OnOrbPickedUp.Broadcast(this);
 	AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 }
 
