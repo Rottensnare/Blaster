@@ -57,10 +57,15 @@ private:
 	UPROPERTY(EditAnywhere)
 	UMaterialInstance* BlueMaterial;
 
+	UPROPERTY()
+	class ABlasterCharacter* OwningCharacter;
+
 public:	
 
 	FORCEINLINE ETeams GetTeam() const {return Team;}
 	FORCEINLINE void SetTeam(const ETeams InTeam) {Team = InTeam;}
+	FORCEINLINE ABlasterCharacter* GetOwningBlasterCharacter() const {return OwningCharacter;}
+	FORCEINLINE void SetOwningCharacter(ABlasterCharacter* const InBlasterCharacter) {OwningCharacter = InBlasterCharacter;}
 	
 
 };

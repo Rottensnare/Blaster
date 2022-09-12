@@ -21,6 +21,7 @@
 #include "HUD/ReturnToMainMenu.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
+#include "Sound/SoundCue.h"
 
 
 void ABlasterPlayerController::BeginPlay()
@@ -280,6 +281,64 @@ void ABlasterPlayerController::StopHighPingWarning()
 		{
 			BlasterHUD->BlasterOverlay->StopAnimation(BlasterHUD->BlasterOverlay->HighPingAnimation);
 		}
+	}
+}
+
+void ABlasterPlayerController::ClientOrbAnnouncement_Implementation(APlayerState* InOrbHolder, uint8 Selection)
+{
+	const ABlasterPlayerState* const Self = GetPlayerState<ABlasterPlayerState>();
+	const ABlasterPlayerState* const OrbHolder = Cast<ABlasterPlayerState>(InOrbHolder);
+	if(Self == nullptr || OrbHolder == nullptr) return;
+	//Selection 0 = Taking the orb
+	if(OrbHolder == Self && Selection == 0)
+	{
+		PlayOrbAnnouncementSound(0);
+	}
+	else if(OrbHolder->GetTeam() != Self->GetTeam() && Selection == 0)
+	{
+		PlayOrbAnnouncementSound(1);
+		
+	}
+	else if (OrbHolder == Self && Selection == 1) //Selection 1 = Scored
+	{
+		PlayOrbAnnouncementSound(2);
+	}
+	else if (OrbHolder->GetTeam() != Self->GetTeam() && Selection == 1)
+	{
+		PlayOrbAnnouncementSound(3);
+	}
+}
+
+void ABlasterPlayerController::PlayOrbAnnouncementSound(const int32 SoundNumber) const
+{
+	switch (SoundNumber)
+	{
+	case 0:
+		if(YouHaveTheOrb)
+		{
+			UGameplayStatics::PlaySound2D(this, YouHaveTheOrb);
+		}
+		break;
+	case 1:
+		if(EnemyHasTheOrb)
+		{
+			UGameplayStatics::PlaySound2D(this, EnemyHasTheOrb);
+		}
+		break;
+	case 2:
+		if(YouHaveScored)
+		{
+			UGameplayStatics::PlaySound2D(this, YouHaveScored);
+		}
+		break;
+	case 3:
+		if(EnemyHasScored)
+		{
+			UGameplayStatics::PlaySound2D(this, EnemyHasScored);
+		}
+		break;
+	default:
+		break;
 	}
 }
 

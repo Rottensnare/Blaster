@@ -3,6 +3,7 @@
 
 #include "CTFGameMode.h"
 
+#include "Blaster/BlasterPlayerController.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/GameState/BlasterGameState.h"
 #include "Blaster/Items/Orb.h"
@@ -82,18 +83,42 @@ void ACTFGameMode::FlagCaptured(AOrb* InOrb, AOrbZone* InOrbZone)
 		if(InOrbZone->GetTeam() == ETeams::ET_BlueTeam)
 		{
 			BGameState->BlueTeamScores();
-			RedOrb->Dropped(RedOrb->GetActorLocation());
-			//InOrb->Dropped(InOrb->GetActorLocation());
-			RedOrb->Destroy();
-			RedOrbSpawnPoint->SpawnOrb(ETeams::ET_RedTeam);
+			if(RedOrb && RedOrb->GetOwningBlasterCharacter())
+			{
+				for(FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+				{
+					ABlasterPlayerController* TempBlasterPlayerController = Cast<ABlasterPlayerController>(*It);
+					if(TempBlasterPlayerController)
+					{
+						TempBlasterPlayerController->ClientOrbAnnouncement(RedOrb->GetOwningBlasterCharacter()->GetPlayerState(), 1);
+					}
+				}
+				RedOrb->GetOwningBlasterCharacter()->MulticastDropTheOrb();
+				RedOrb->Dropped(RedOrb->GetActorLocation());
+				//InOrb->Dropped(InOrb->GetActorLocation());
+				RedOrb->Destroy();
+				RedOrbSpawnPoint->SpawnOrb(ETeams::ET_RedTeam);
+			}
 		}
 		else if(InOrbZone->GetTeam() == ETeams::ET_RedTeam)
 		{
 			BGameState->RedTeamScores();
-			BlueOrb->Dropped(BlueOrb->GetActorLocation());
-			//InOrb->Dropped(InOrb->GetActorLocation());
-			BlueOrb->Destroy();
-			BlueOrbSpawnPoint->SpawnOrb(ETeams::ET_BlueTeam);
+			if(BlueOrb && BlueOrb->GetOwningBlasterCharacter())
+			{
+				for(FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+				{
+					ABlasterPlayerController* TempBlasterPlayerController = Cast<ABlasterPlayerController>(*It);
+					if(TempBlasterPlayerController)
+					{
+						TempBlasterPlayerController->ClientOrbAnnouncement(BlueOrb->GetOwningBlasterCharacter()->GetPlayerState(), 1);
+					}
+				}
+				BlueOrb->GetOwningBlasterCharacter()->MulticastDropTheOrb();
+				BlueOrb->Dropped(BlueOrb->GetActorLocation());
+				//InOrb->Dropped(InOrb->GetActorLocation());
+				BlueOrb->Destroy();
+				BlueOrbSpawnPoint->SpawnOrb(ETeams::ET_BlueTeam);
+			}
 		}
 	}
 }

@@ -202,7 +202,9 @@ void ABlasterCharacter::ServerAttachOrb_Implementation(AOrb* Orb)
 void ABlasterCharacter::MulticastAttachOrb_Implementation(AOrb* Orb)
 {
 	UE_LOG(LogTemp, Warning, TEXT("ABlasterCharacter::MulticastAttachOrb_Implementation"))
+	if(Orb == nullptr) return;
 	HeldOrb = Orb;
+	Orb->SetOwningCharacter(this);
 	Orb->PickedUp();
 	Orb->AttachToComponent(OrbAttachLocation, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 	

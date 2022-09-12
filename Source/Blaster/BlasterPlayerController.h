@@ -57,6 +57,9 @@ public:
 	void SetHUDRedTeamScore(int32 RedScore);
 	void SetHUDBlueTeamScore(int32 BlueScore);
 	
+	UFUNCTION(Client, Reliable)
+	void ClientOrbAnnouncement(APlayerState* InOrbHolder, uint8 Selection);
+	
 protected:
 
 	virtual void SetupInputComponent() override;
@@ -109,6 +112,10 @@ protected:
 	UFUNCTION(Client, Reliable)
 	void ClientElimAnnouncement(APlayerState* Attacker, APlayerState* Victim);
 
+
+	//Could have made an enum, but I think adding an enum for every little thing might cause problems if the project gets bigger
+	void PlayOrbAnnouncementSound(const int32 SoundNumber) const;
+
 	UPROPERTY(ReplicatedUsing = OnRep_ShowTeamScores)
 	bool bShowTeamScores = false;
 
@@ -160,6 +167,18 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
 	UChatBox* ChatBox;
+
+	UPROPERTY(EditAnywhere)
+	class USoundCue* YouHaveTheOrb;
+
+	UPROPERTY(EditAnywhere)
+	USoundCue* EnemyHasTheOrb;
+
+	UPROPERTY(EditAnywhere)
+	USoundCue* EnemyHasScored;
+
+	UPROPERTY(EditAnywhere)
+	USoundCue* YouHaveScored;
 
 	//Cached values that will be used to set HUD element values when Overlay is initialized.
 	//Overlay will be initialized late so we need to do this.

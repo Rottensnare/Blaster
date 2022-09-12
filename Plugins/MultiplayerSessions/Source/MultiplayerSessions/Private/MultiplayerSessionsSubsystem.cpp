@@ -16,6 +16,7 @@ UMultiplayerSessionsSubsystem::UMultiplayerSessionsSubsystem():
 	if(Subsystem)
 	{
 		SessionInterface = Subsystem->GetSessionInterface();
+		
 	}
 }
 
