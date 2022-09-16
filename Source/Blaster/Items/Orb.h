@@ -19,20 +19,24 @@ public:
 	DECLARE_MULTICAST_DELEGATE_OneParam(FOnOrbPickedUp, AOrb*)
 	
 	AOrb();
-	
+
+	//Detaches orb from owner character. Plays DropSound, set collision back to QueryOnly
 	UFUNCTION(NetMulticast, Reliable)
 	void Dropped(const FVector& InLocation);
-	
-	void PickedUp();
-	void SetMaterial();
-	virtual void Destroyed() override;
 
-	FOnOrbPickedUp OnOrbPickedUp;
+	//Broadcasts using OnOrbPickedUp delegate and sets collision to NoCollision
+	void PickedUp();
+	void SetMaterial(); //Set orb material based on team
+	virtual void Destroyed() override; //Nada
+
+	FOnOrbPickedUp OnOrbPickedUp; //Used by CTF game mode
 	
 protected:
 
+	//Binds OnSphereOverlap to AreaSphere->OnComponentBeginOverlap
 	virtual void BeginPlay() override;
 
+	//Calls BlasterCharacter->ServerAttachOrb
 	UFUNCTION()
 	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
 

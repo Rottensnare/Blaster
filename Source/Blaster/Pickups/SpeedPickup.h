@@ -20,6 +20,7 @@ public:
 
 protected:
 
+	//Calls BuffComponent->BuffSpeed with buff parameters
 	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult) override;
 
 

@@ -27,15 +27,20 @@ class BLASTER_API AHitScanWeapon : public AWeapon
 
 public:
 
+	//Handles firing the hitscan weapon. More info in the .cpp file
 	virtual void Fire(const FVector& HitTarget) override;
 
 
 protected:
 
+	//Sets impact effects (Sound and particles) based on the object hit. Currently only 2 different types
+	//Calls ShowEffects with Location and StartLocation
 	UFUNCTION(NetMulticast, Unreliable)
 	void MulticastSetImpactEffects(EHitType HitType, const FVector_NetQuantize& Location,  const FVector_NetQuantize& StartLocation = FVector());
+	//Performs a line trace based on passed in parameters. Gets the HitResult as an Out Parameter.
 	void WeaponTraceHit(const FVector& InTraceStart, const FVector& InHitTarget, FHitResult& OutHitResult);
 
+	//Plays particle and sound effects 
 	virtual void ShowEffects(const FVector& Location, const FVector& StartLocation = FVector());
 	
 	UPROPERTY(VisibleAnywhere)
@@ -60,6 +65,6 @@ protected:
 private:
 
 	UPROPERTY(EditAnywhere)
-	UParticleSystem* BeamParticles;
+	UParticleSystem* BeamParticles; //Currently a smoke trail for bullets
 	
 };

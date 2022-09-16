@@ -17,6 +17,7 @@ class BLASTER_API UBlasterAnimInstance : public UAnimInstance
 
 public:
 	virtual void NativeInitializeAnimation() override;
+	//I feel like this function is eating too much processing power. Doing too much unnecessary work each frame.
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
 protected:
@@ -58,7 +59,8 @@ private:
 
 	UPROPERTY(BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))
 	FTransform LeftHandTransfrom;
-	
+
+	UPROPERTY()
 	class AWeapon* EquippedWeapon;
 
 	UPROPERTY(BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = "true"))

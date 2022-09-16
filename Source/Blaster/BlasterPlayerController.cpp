@@ -501,6 +501,7 @@ void ABlasterPlayerController::OnPossess(APawn* InPawn)
 	if(BlasterCharacter)
 	{
 		SetHUDHealth(BlasterCharacter->GetHealth(), BlasterCharacter->GetMaxHealth());
+		SetHUDShields(BlasterCharacter->GetShields(), BlasterCharacter->GetMaxShields());
 	}
 }
 
@@ -813,14 +814,14 @@ void ABlasterPlayerController::AddChatBox()
 
 void ABlasterPlayerController::OnChatCommitted(const FText& Text, ETextCommit::Type CommitMethod)
 {
-	if(CommitMethod != ETextCommit::OnEnter) return;
+	if(CommitMethod != ETextCommit::OnEnter) return; //Only commit message if Enter was pressed
 	
 	FString PlayerName{""};
 	
 	APlayerState* TempPlayerState = GetPlayerState<APlayerState>();
 	if(TempPlayerState)
 	{
-		PlayerName = TempPlayerState->GetPlayerName();
+		PlayerName = TempPlayerState->GetPlayerName(); //Player name for chat 
 	}
 	
 	ServerChatCommitted(Text, PlayerName); //TODO: Add a delay so that some absolute cucumber can't spam the chat.

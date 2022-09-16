@@ -34,11 +34,11 @@ void AOrbZone::BeginPlay()
 void AOrbZone::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
 	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UE_LOG(LogTemp, Warning, TEXT("AOrbZone::OnSphereOverlap"))
+	//UE_LOG(LogTemp, Warning, TEXT("AOrbZone::OnSphereOverlap"))
 	TArray<AActor*> AttachedActors;
 	OtherActor->GetAttachedActors(AttachedActors);
 	AOrb* Orb = nullptr;
-	for(auto AttachedOrb : AttachedActors)
+	for(auto AttachedOrb : AttachedActors) //Check if actor has the orb attached to it. Might be unnecessary
 	{
 		Orb = Cast<AOrb>(AttachedOrb);
 		if(Orb)
@@ -46,19 +46,19 @@ void AOrbZone::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor*
 			break;
 		}
 	}
-	UE_LOG(LogTemp, Warning, TEXT("AOrbZone::OnSphereOverlap"))
+	//UE_LOG(LogTemp, Warning, TEXT("AOrbZone::OnSphereOverlap"))
 	
 	if(Orb)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("AOrbZone::OnSphereOverlap: IF Orb"))
+		//UE_LOG(LogTemp, Warning, TEXT("AOrbZone::OnSphereOverlap: IF Orb"))
 		if(Orb->GetTeam() != Team)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("AOrbZone::OnSphereOverlap: IF Orb->GetTeam != Team"))
+			//UE_LOG(LogTemp, Warning, TEXT("AOrbZone::OnSphereOverlap: IF Orb->GetTeam != Team"))
 			CTFGameMode = CTFGameMode == nullptr ? GetWorld()->GetAuthGameMode<ACTFGameMode>() : CTFGameMode;
 			if(CTFGameMode)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("AOrbZone::OnSphereOverlap: IF CTFGameMode"))
-				CTFGameMode->FlagCaptured(Orb, this);
+				//UE_LOG(LogTemp, Warning, TEXT("AOrbZone::OnSphereOverlap: IF CTFGameMode"))
+				CTFGameMode->FlagCaptured(Orb, this); 
 			}
 		}
 	}

@@ -38,7 +38,7 @@ void AProjectileGrenade::BeginPlay()
 
 void AProjectileGrenade::OnBounce(const FHitResult& ImpactResult, const FVector& ImpactVelocity)
 {
-	if(BounceSoundCue)
+	if(BounceSoundCue) //TODO: Add a timer or something so that the sound won't be so obnoxious at times
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, BounceSoundCue, GetActorLocation());
 	}

@@ -18,15 +18,16 @@ public:
 
 
 	AProjectileGrenade();
-	virtual void Destroyed() override;
+	virtual void Destroyed() override; //Calls ExplodeDamage
 
 
 protected:
 
-
+	//Calls StartDestroyTimer, SpawnTrailSystem, and binds OnBounce to OnProjectileBounce
 	virtual void BeginPlay() override;
 
 	//TODO: Make it so that the grenade explodes if it hits a pawn, also might need to check if pawn is friendly
+	//Just plays bounce sound
 	UFUNCTION()
 	void OnBounce(const FHitResult& ImpactResult, const FVector& ImpactVelocity);
 

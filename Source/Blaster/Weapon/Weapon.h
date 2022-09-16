@@ -7,27 +7,30 @@
 #include "WeaponType.h"
 #include "Weapon.generated.h"
 
+//Used for broadcasting to the Weapon Spawn Point class to start the weapon spawn timer.
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPickedUp);
 
+//Useful for indicating what state the weapon is in.
 UENUM(BlueprintType)
 enum class EWeaponState : uint8
 {
-	EWS_Initial UMETA(DisplayName = "Initial State"),
+	EWS_Initial UMETA(DisplayName = "Initial State"), // Initial State is reserved for weapons that are spawned and haven't been picked up.
 	EWS_Equipped UMETA(DisplayName = "Equipped State"),
 	EWS_Dropped UMETA(DisplayName = "Dropped State"),
-	EWS_UnEquipped UMETA(DisplayName = "UnEquipped State"),
+	EWS_UnEquipped UMETA(DisplayName = "UnEquipped State"), //Unequipped is for weapons that are carried by the player but not equipped.
 	
-	EWS_MAX UMETA(DisplayName = "MAX"),
+	EWS_MAX UMETA(DisplayName = "DefaultMax"),
 };
 
-UENUM()
+//Used for determining which fire function to call, as well as some other variables.
+UENUM(BlueprintType)
 enum class EFireType : uint8
 {
 	EFT_Hitscan UMETA(DisplayName = "Hitscan Weapon"),
 	EFT_Projectile UMETA(DisplayName = "Projectile Weapon"),
 	EFT_Shotgun UMETA(DisplayName = "Shotgun Weapon"),
 
-	EFT_MAX UMETA(DisplayName = "DefaultMAX")
+	EFT_MAX UMETA(DisplayName = "DefaultMax")
 };
 
 UCLASS()
@@ -36,28 +39,28 @@ class BLASTER_API AWeapon : public AActor
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
+
 	AWeapon();
 
 	//If someone forgets to add crosshairs, this will prevent a crash of type "Array out of bounds".
 	virtual void OnConstruction(const FTransform& Transform) override;
 	
-	// Called every frame
+	//Currently not used
 	virtual void Tick(float DeltaTime) override;
-	void ShowPickupWidget(bool bShowWidget);
+	void ShowPickupWidget(bool bShowWidget); //Sets pickup widget visibility to bShowWidget
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 	//Plays fire animation, ejects a casing if any, then calls SpendRound. Specific functionality implemented in the derived classes.
 	virtual void Fire(const FVector& HitTarget);
-	void Dropped();
-	virtual void OnRep_Owner() override;
-	void SetHUDAmmo();
-	void SetHUDMagAmmo();
-	void SetHUDWeaponType();
-	void AddAmmo(int32 AmmoToAdd);
+	void Dropped(); //Detaches the weapon and sets state to dropped.
+	virtual void OnRep_Owner() override; //Calls hud update functions when owner is not nullptr
+	void SetHUDAmmo(); //Calls the characters UpdateHUDAmmo function
+	void SetHUDMagAmmo(); //Calls the characters SetHUDMagText function
+	void SetHUDWeaponType(); //Calls the characters SetHUDWeaponType function
+	void AddAmmo(int32 AmmoToAdd); //Updates Ammo variable, calls SetHUDAmmo and calls the Client version of this function
 
-	void EnableCustomDepth(bool bEnable);
+	void EnableCustomDepth(bool bEnable); //Sets whether or not Custom depth is enabled
 	
-	bool bDestroyWeapon = false;
+	bool bDestroyWeapon = false; // True for default weapons
 
 	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
 	bool bUseScatter{false};
@@ -65,39 +68,42 @@ public:
 	//Delay between shots. Lower is better.
 	UPROPERTY(EditAnywhere, Category = Combat)
 	float FireDelay{.15f};
+	//Returns a random vector based on the muzzle locations. Currently scatter amount is fixed, needs to be made dynamic.
+	FVector TraceEndWithScatter(const FVector& HitTarget); 
 	
-	FVector TraceEndWithScatter(const FVector& HitTarget);
-
-	FOnPickedUp OnPickedUpDelegate;
+	FOnPickedUp OnPickedUpDelegate; //Used for broadcasting to the WeaponSpawnPoint class to start the weapon spawn timer.
 
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
+	//Sets characters overlapping weapon to this
 	UFUNCTION()
 	void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult);
 	UFUNCTION()
 	void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
 
+	//If ping is too high, switch Server-Side Rewind Off
 	UFUNCTION()
 	void OnPingTooHigh(bool bPingTooHigh);
 
+	
 	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
-	float DistanceToSphere{800.f};
+	float DistanceToSphere{800.f}; //For scatter calculations, currently a fixed value
 	UPROPERTY(EditAnywhere, Category = "Weapon Scatter")
-	float SphereRadius{75.f};
+	float SphereRadius{75.f}; //Another variable for scatter calculations, currently a fixed value
 
 	UPROPERTY(EditAnywhere)
-	float Damage{10.f};
+	float Damage{10.f}; //Base damage, overridden by weapon blueprints
 
 	UPROPERTY(EditAnywhere)
-	float HeadshotMultiplier{1.5f};
+	float HeadshotMultiplier{1.5f}; // Headshot damage = Damage * HeadShotMultiplier
 
 	UPROPERTY(EditAnywhere, Replicated)
-	bool bUseServerSideRewind{false};
+	bool bUseServerSideRewind{false}; //Whether or not the gun should use SSR. True for most guns.
 
 	UPROPERTY(EditAnywhere)
-	bool bCanUseServerSideRewind{true};
+	bool bCanUseServerSideRewind{true}; //Currently not used
 
 	UPROPERTY()
 	class ABlasterCharacter* OwnerCharacter;
@@ -117,9 +123,9 @@ private:
 	EWeaponState WeaponState;
 
 	UPROPERTY(EditAnywhere)
-	EFireType FireType;
+	EFireType FireType; //Automatic or Semi-automatic. No burst fire currently, or other rarer types.
 	
-	//For clients to set the WeaponState
+	//For clients to set the WeaponState. More detailed documentation in the .cpp file
 	UFUNCTION()
 	void OnRep_WeaponState();
 
@@ -138,6 +144,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = Crosshairs)
 	TArray<class UTexture2D*> Crosshairs;
 
+	//FOV when aiming
 	UPROPERTY(EditAnywhere)
 	float ZoomedFOV{30.f};
 
@@ -172,9 +179,11 @@ private:
 	//Incremented in SpendRound, Decremented in ClientUpdateAmmo
 	int32 Sequence{0};
 
+	//Updates ammo values, lag compensation taken into consideration
 	UFUNCTION(Client, Reliable)
 	void ClientUpdateAmmo(int32 ServerAmmo);
 
+	//Updates ammo for clients
 	UFUNCTION(Client, Reliable)
 	void ClientAddAmmo(int32 AmmoToAdd);
 	
@@ -183,7 +192,8 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	int32 MagCapacity;
-	
+
+	//Check EWeaponType enum for types
 	UPROPERTY(EditAnywhere)
 	EWeaponType WeaponType;
 
@@ -193,9 +203,11 @@ private:
 	UPROPERTY(EditAnywhere)
 	USoundCue* EquipSound;
 
+	//Value from 247 to 252. Red, Green, Orange, Purple, Blue, Tan
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	int32 CustomDepthValue{CUSTOM_DEPTH_TAN};
 
+	//Currently not used
 	UPROPERTY(EditAnywhere)
 	float BaseTurnRate{25.f};
 	
@@ -203,7 +215,7 @@ private:
 	
 public:
 
-	void SetWeaponState(EWeaponState State);
+	void SetWeaponState(EWeaponState State); //For server, more detailed explanation in the .cpp file
 	FORCEINLINE USphereComponent* GetAreaSphere() const {return AreaSphere;}
 	FORCEINLINE USkeletalMeshComponent* GetWeaponMesh() const {return WeaponMesh;}
 	FORCEINLINE TArray<UTexture2D*> GetCrosshairTextures() const {return Crosshairs;}

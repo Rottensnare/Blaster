@@ -12,15 +12,17 @@ class BLASTER_API ACasing : public AActor
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
+
 	ACasing();
 
+	//Plays sound at location, but only once per casing
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& HitResult);
 
 protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
+
+	//Binds OnHit to OnComponentHit, adds semi-random impulse vector and sets lifespan to 5 seconds
+	virtual void BeginPlay() override; 
 	
 private:
 
@@ -28,7 +30,7 @@ private:
 	UStaticMeshComponent* CasingMesh;
 
 	UPROPERTY(EditAnywhere)
-	float ShellImpulse;
+	float ShellImpulse; //Impulse strength
 
 	UPROPERTY(EditAnywhere)
 	class USoundCue* ShellHitCue;

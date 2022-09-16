@@ -31,7 +31,18 @@ void ABlasterGameMode::BeginPlay()
 
 	LevelStartingTime = 0.f;
 	ServerTotalTime = GetWorld()->GetTimeSeconds();
-	UE_LOG(LogTemp, Warning, TEXT("ABlasterGameMode::BeginPlay"))
+	
+	//UE_LOG(LogTemp, Warning, TEXT("ABlasterGameMode::BeginPlay:"))
+	//UE_LOG(LogTemp, Warning, TEXT("GetTimeSeconds: %f"), ServerTotalTime)
+	//UE_LOG(LogTemp, Warning, TEXT("GetRealTimeSeconds: %f"), UGameplayStatics::GetRealTimeSeconds(this))
+	//UE_LOG(LogTemp, Warning, TEXT("GetGameTimeInSeconds: %f"), UKismetSystemLibrary::GetGameTimeInSeconds(this))
+	//if(GEngine)
+	//{
+	//	GEngine->AddOnScreenDebugMessage(0, 15.f, FColor::Cyan, FString::Printf(TEXT("GetTimeSeconds: %f"), ServerTotalTime));
+	//	GEngine->AddOnScreenDebugMessage(1, 15.f, FColor::Cyan, FString::Printf(TEXT("GetRealTimeSeconds: %f"), UGameplayStatics::GetRealTimeSeconds(this)));
+	//	GEngine->AddOnScreenDebugMessage(2, 15.f, FColor::Cyan, FString::Printf(TEXT("GetGameTimeInSeconds: %f"), UKismetSystemLibrary::GetGameTimeInSeconds(this)));
+	//}
+	
 }
 
 void ABlasterGameMode::Tick(float DeltaSeconds)

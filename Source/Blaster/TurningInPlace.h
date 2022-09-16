@@ -1,7 +1,8 @@
 ﻿#pragma once
 
+//Used for determining which way to turn or if not to turn at all
 UENUM(BlueprintType)
-enum class ETurningInPlace : uint8
+enum class ETurningInPlace : uint8 
 {
 	ETIP_Left UMETA(DisplayName = "Turning Left"),
 	ETIP_Right UMETA(DisplayName = "Turning Right"),

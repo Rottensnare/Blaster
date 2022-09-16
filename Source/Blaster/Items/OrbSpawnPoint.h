@@ -16,13 +16,14 @@ public:
 
 	AOrbSpawnPoint();
 
+	//Spawns orb and sets its initial values. Calls CTFGameMod->SetRedOrb or SetBlueOrb
 	void SpawnOrb(const ETeams InTeam);
 
 	
 
 protected:
 
-	virtual void BeginPlay() override;
+	virtual void BeginPlay() override; //Nada
 	
 private:
 
@@ -36,7 +37,7 @@ private:
 	USceneComponent* SpawnLocation;
 
 	UPROPERTY(EditAnywhere)
-	ETeams Team;
+	ETeams Team; //Which team does this spawner belong to
 
 	UPROPERTY(VisibleAnywhere)
 	class UNiagaraComponent* OrbSpawnParticleComponent;

@@ -52,7 +52,7 @@ void AOrb::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 		{
 			if(BlasterPlayerState->GetTeam() != Team)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("AOrb::OnSphereOverlap: BlasterPlayerState->GetTeam() != Team"))
+				//UE_LOG(LogTemp, Warning, TEXT("AOrb::OnSphereOverlap: BlasterPlayerState->GetTeam() != Team"))
 				BlasterCharacter->ServerAttachOrb(this);
 			}
 		}
@@ -64,7 +64,7 @@ void AOrb::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 void AOrb::Dropped_Implementation(const FVector& InLocation)
 {
 	if(RootComponent == nullptr) return;
-	UE_LOG(LogTemp, Warning, TEXT("AOrb::Dropped"))
+	//UE_LOG(LogTemp, Warning, TEXT("AOrb::Dropped"))
 	FDetachmentTransformRules DetachmentTransformRules(EDetachmentRule::KeepWorld, true);
 	OrbMesh = OrbMesh == nullptr ? Cast<UStaticMeshComponent>(RootComponent) : OrbMesh;
 	if(OrbMesh)

@@ -165,6 +165,54 @@ TurningInPlace(ETurningInPlace::ETIP_NotTurning)
 	}
 }
 
+void ABlasterCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	Health = MaxHealth;
+	GetWorldTimerManager().SetTimer(HUDInitTimer, this, &ABlasterCharacter::HUDInitTimerFinished, HUDInitDelay);
+	SpawnDefaultWeapon();
+	
+	if(HasAuthority())
+	{
+		OnTakeAnyDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
+	}
+}
+
+void ABlasterCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	RotateInPlace(DeltaTime);
+
+	//Checks if character is too close to the camera, and if so, hides the character. TODO: Use interpolation and dither effect for a more refined hide effect
+	HideCharacter();
+
+	PollInit();
+}
+
+void ABlasterCharacter::RotateInPlace(float DeltaTime)
+{
+	if(bDisableGameplay)
+	{
+		bUseControllerRotationYaw = false;
+		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
+		return;
+	}
+	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
+	{
+		AimOffset(DeltaTime);
+	}
+	else
+	{
+		TimeSinceLastMovementReplication += DeltaTime;
+		if (TimeSinceLastMovementReplication > 0.25f)
+		{
+			OnRep_ReplicatedMovement();
+		}
+		CalculateAO_Pitch();
+	}
+}
 
 void ABlasterCharacter::SetTeamColor(ETeams Team)
 {
@@ -221,58 +269,6 @@ void ABlasterCharacter::MulticastDropTheOrb_Implementation()
 	UE_LOG(LogTemp, Warning, TEXT("ABlasterCharacter::MulticastDropTheOrb_Implementation"))
 	bHoldingTheOrb = false;
 	if(GetCharacterMovement() && CombatComponent) GetCharacterMovement()->MaxWalkSpeed = CombatComponent->BaseWalkSpeed;
-}
-
-// Called when the game starts or when spawned
-void ABlasterCharacter::BeginPlay()
-{
-	Super::BeginPlay();
-
-	Health = MaxHealth;
-	GetWorldTimerManager().SetTimer(HUDInitTimer, this, &ABlasterCharacter::HUDInitTimerFinished, HUDInitDelay);
-	SpawnDefaultWeapon();
-	
-	if(HasAuthority())
-	{
-		OnTakeAnyDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
-	}
-
-	
-}
-
-void ABlasterCharacter::RotateInPlace(float DeltaTime)
-{
-	if(bDisableGameplay)
-	{
-		bUseControllerRotationYaw = false;
-		TurningInPlace = ETurningInPlace::ETIP_NotTurning;
-		return;
-	}
-	if (GetLocalRole() > ENetRole::ROLE_SimulatedProxy && IsLocallyControlled())
-	{
-		AimOffset(DeltaTime);
-	}
-	else
-	{
-		TimeSinceLastMovementReplication += DeltaTime;
-		if (TimeSinceLastMovementReplication > 0.25f)
-		{
-			OnRep_ReplicatedMovement();
-		}
-		CalculateAO_Pitch();
-	}
-}
-
-void ABlasterCharacter::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-
-	RotateInPlace(DeltaTime);
-
-	//Checks if character is too close to the camera, and if so, hides the character. TODO: Use interpolation and dither effect for a more refined hide effect
-	HideCharacter();
-
-	PollInit();
 }
 
 void ABlasterCharacter::MoveForward(float Value)
@@ -931,6 +927,7 @@ void ABlasterCharacter::SetSpawnPoint()
 
 void ABlasterCharacter::OnPlayerStateInitialized()
 {
+	if(BlasterPlayerState == nullptr) return;
 	BlasterPlayerState->AddToScore(0.f);
 	BlasterPlayerState->AddToElims(0);
 	SetTeamColor(BlasterPlayerState->GetTeam());
@@ -1015,7 +1012,9 @@ void ABlasterCharacter::UpdateHUDAmmo()
 
 void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 {
-	bLeftGame =  bPlayerLeftGame;
+	//When player leaves some elimination functionality is used, but not all
+	//This boolean makes sure only the necessary parts of the code are run
+	bLeftGame =  bPlayerLeftGame; 
 	
 	if(BlasterPlayerController)
 	{
@@ -1027,7 +1026,7 @@ void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 	bEliminated = true;
 	PlayElimMontage();
 
-	if(DissolveMaterialInstance)
+	if(DissolveMaterialInstance) //Creating and setting values for the dissolve effect material
 	{
 		DynamicDissolveMaterialInstance = UMaterialInstanceDynamic::Create(DissolveMaterialInstance, this);
 
@@ -1035,24 +1034,27 @@ void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Dissolve"), 0.55f);
 		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("GlowAmount"), 150.f);
 	}
-	
-	StartDissolve();
+	//Starts the dissolve effect using a timeline
+	StartDissolve(); 
 
+	//Stopping movement for dead character
 	GetCharacterMovement()->DisableMovement();
 	GetCharacterMovement()->StopMovementImmediately();
 
 	bDisableGameplay = true;
 	
-	if(CombatComponent)
+	if(CombatComponent)//Making sure character cant aim or keep firing when dead
 	{
 		CombatComponent->FireButtonPressed(false);
 		CombatComponent->SetAiming(false);
 	}
-	
+
+	//Disabling collision so that the corpse wont hinder movement of other players
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	FVector BotSpawnPoint{GetActorLocation() + FVector(0.f, 0.f, 200.f)};
+	//Location for the death animation bot effect
+	FVector BotSpawnPoint{GetActorLocation() + FVector(0.f, 0.f, 200.f)}; 
 	if(ElimBotEffect)
 	{
 		ElimBotComponent = UGameplayStatics::SpawnEmitterAtLocation(this, ElimBotEffect, BotSpawnPoint, FRotator::ZeroRotator);
@@ -1061,7 +1063,7 @@ void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 	{
 		UGameplayStatics::SpawnSoundAtLocation(this, BotSoundCue, BotSpawnPoint);
 	}
-	if(CrownComponent)
+	if(CrownComponent) //Destroy the crown effect when dead
 	{
 		CrownComponent->DestroyComponent();
 	}

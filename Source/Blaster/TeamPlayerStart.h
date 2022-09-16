@@ -17,6 +17,7 @@ class BLASTER_API ATeamPlayerStart : public APlayerStart
 
 public:
 
+	//Which team owns this player start
 	UPROPERTY(EditAnywhere)
 	ETeams Team;
 

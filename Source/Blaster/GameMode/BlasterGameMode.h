@@ -23,14 +23,23 @@ class BLASTER_API ABlasterGameMode : public AGameMode
 public:
 
 	ABlasterGameMode();
+	//Keeps track of match time and sets match state based on passed time. Restarts game mode when cooldown time has ended.
 	virtual void Tick(float DeltaSeconds) override;
+	//Handles Scoring. Calls PlayerState->AddToScore, AddToElims, BlasterGameState->UpdateTopScore.
+	//Calls Leader->MulticastGainedTheLead() or Loser->MultiCastLostTheLead()
+	//Iterates through all player controllers and calls BroadCastElim. Fianlly calls Elim on the eliminated character
 	virtual void PlayerEliminated(class ABlasterCharacter* EliminatedCharacter, class ABlasterPlayerController* VictimPlayerController, ABlasterPlayerController* AttackerController);
+	//Resets and destroys eliminated character. Spawns player at a random spawn point
 	virtual void RequestRespawn(ACharacter* EliminatedCharacter, AController* EliminatedController);
+	//Iterates through all player controllers and calls BlasterController->OnMatchStateSet
 	virtual void OnMatchStateSet() override;
+	//Just returns BaseDamage
 	virtual float CalculateDamage(AController* VictimPlayerController, AController* AttackerController, float BaseDamage);
 
+	//Remove left player from top scoring player array. Call Elim for the leaving character so that the weapons are dropped.
 	void PlayerLeftGame(class ABlasterPlayerState* PlayerLeaving);
-	
+
+	//Iterates through all the player controllers and calls ClientChatCommitted with the passed in message
 	void SendChatMsg(const FText& Text, const FString& PlayerName);
 
 	UPROPERTY(EditDefaultsOnly)
@@ -46,6 +55,7 @@ public:
 
 protected:
 
+	//Gets server time
 	virtual void BeginPlay() override;
 
 	UPROPERTY(EditAnywhere)
@@ -62,7 +72,7 @@ private:
 	bool bRestartingGame{false};
 
 	UPROPERTY(VisibleAnywhere)
-	float ServerTotalTime{0.f};
+	float ServerTotalTime{0.f}; //EXPERIMENTAL FOR BUG HUNTING
 
 public:
 

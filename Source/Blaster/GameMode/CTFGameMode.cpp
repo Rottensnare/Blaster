@@ -60,7 +60,7 @@ void ACTFGameMode::HandleCTFStart()
 	}
 }
 
-void ACTFGameMode::FlagPickedUp(AOrb* PickedUpOrb)
+void ACTFGameMode::FlagPickedUp(AOrb* PickedUpOrb) //Can be done with 1 for loop
 {
 	if(PickedUpOrb && PickedUpOrb->GetOwningBlasterCharacter())
 	{
@@ -109,7 +109,7 @@ void ACTFGameMode::FlagCaptured(AOrb* InOrb, AOrbZone* InOrbZone)
 {
 	bool bValidCapture = InOrb->GetTeam() != InOrbZone->GetTeam();
 	if(!bValidCapture) return;
-	UE_LOG(LogTemp, Warning, TEXT("ACTFGameMode::FlagCaptured: IF bValidCapture"))
+	//UE_LOG(LogTemp, Warning, TEXT("ACTFGameMode::FlagCaptured: IF bValidCapture"))
 	ABlasterGameState* BGameState = Cast<ABlasterGameState>(GameState);
 	if(BGameState)
 	{

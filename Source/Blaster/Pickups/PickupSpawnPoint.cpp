@@ -9,7 +9,7 @@
 APickupSpawnPoint::APickupSpawnPoint()
 {
 
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 	bReplicates = true;
 
 }
