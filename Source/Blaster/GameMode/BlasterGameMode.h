@@ -27,7 +27,7 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 	//Handles Scoring. Calls PlayerState->AddToScore, AddToElims, BlasterGameState->UpdateTopScore.
 	//Calls Leader->MulticastGainedTheLead() or Loser->MultiCastLostTheLead()
-	//Iterates through all player controllers and calls BroadCastElim. Fianlly calls Elim on the eliminated character
+	//Iterates through all player controllers and calls BroadCastElim. Finally calls Elim on the eliminated character
 	virtual void PlayerEliminated(class ABlasterCharacter* EliminatedCharacter, class ABlasterPlayerController* VictimPlayerController, ABlasterPlayerController* AttackerController);
 	//Resets and destroys eliminated character. Spawns player at a random spawn point
 	virtual void RequestRespawn(ACharacter* EliminatedCharacter, AController* EliminatedController);
