@@ -121,6 +121,7 @@ protected:
 
 
 	//Could have made an enum, but I think adding an enum for every little thing might cause problems if the project gets bigger
+	//Used an FName and a datatable to select the sound in another project. (AlchemyProject)
 	void PlayOrbAnnouncementSound(const int32 SoundNumber) const;
 
 	UPROPERTY(ReplicatedUsing = OnRep_ShowTeamScores)

@@ -36,4 +36,8 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	float SpeedBuffTime = 4.f;
+
+public:
+
+	FORCEINLINE void SetSpeedBuffTime(const float InDuration) { SpeedBuffTime = InDuration;}
 };

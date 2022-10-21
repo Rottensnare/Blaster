@@ -4,6 +4,7 @@
 #include "PickupSpawnPoint.h"
 
 #include "Pickup.h"
+#include "SpeedPickup.h"
 
 // Sets default values
 APickupSpawnPoint::APickupSpawnPoint()
@@ -41,6 +42,10 @@ void APickupSpawnPoint::SpawnPickup()
 		if(HasAuthority() && SpawnedPickup)
 		{
 			SpawnedPickup->OnDestroyed.AddDynamic(this, &APickupSpawnPoint::StartSpawnTimer);
+		}
+		if(ASpeedPickup* TempBuff = Cast<ASpeedPickup>(SpawnedPickup))
+		{
+			TempBuff->SetSpeedBuffTime(BuffTime);
 		}
 	}
 }

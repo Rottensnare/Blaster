@@ -38,6 +38,9 @@ private:
 	FTimerHandle SpawnTimer;
 	UPROPERTY(EditAnywhere)
 	float TimeBetweenSpawns{15.f};
+
+	UPROPERTY(EditAnywhere)
+	float BuffTime{5.f};
 	
 	
 

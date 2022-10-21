@@ -18,6 +18,7 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 	Super::Fire(HitTarget);
 	
 	APawn* InstigatorPawn = Cast<APawn>(GetOwner());
+	if(InstigatorPawn == nullptr) return;
 	AController* InstigatorController = InstigatorPawn->GetController();
 	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName(FName("MuzzleFlash"));
 	if (MuzzleFlashSocket)
