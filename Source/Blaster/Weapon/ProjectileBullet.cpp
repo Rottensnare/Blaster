@@ -35,6 +35,8 @@ void AProjectileBullet::PostEditChangeProperty(FPropertyChangedEvent& PropertyCh
 	
 }
 #endif
+
+//Look at Fire functions of other weapon types for reference. Not going to comment this with almost the exact same comments
 void AProjectileBullet::OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp,
                               FVector NormalImpulse, const FHitResult& HitResult)
 {

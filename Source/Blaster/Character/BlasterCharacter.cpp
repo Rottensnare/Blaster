@@ -8,11 +8,13 @@
 #include "Blaster/Blaster.h"
 #include "Blaster/BlasterPlayerController.h"
 #include "Blaster/BlasterPlayerState.h"
+#include "Blaster/TeamPlayerStart.h"
 #include "Blaster/BlasterComponents/BuffComponent.h"
 #include "Blaster/BlasterComponents/CombatComponent.h"
 #include "Blaster/BlasterComponents/LagCompensationComponent.h"
 #include "Blaster/GameMode/BlasterGameMode.h"
 #include "Blaster/GameState/BlasterGameState.h"
+#include "Blaster/Items/Orb.h"
 #include "Blaster/Weapon/Weapon.h"
 #include "Camera/CameraComponent.h"
 #include "Components/BoxComponent.h"
@@ -47,6 +49,9 @@ TurningInPlace(ETurningInPlace::ETIP_NotTurning)
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComponent"));
 	CameraComponent->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 	CameraComponent->bUsePawnControlRotation = false;
+
+	OrbAttachLocation = CreateDefaultSubobject<USceneComponent>(TEXT("OrbAttachLocation"));
+	OrbAttachLocation->SetupAttachment(RootComponent);
 	
 	bUseControllerRotationYaw = false;
 	GetCharacterMovement()->bOrientRotationToMovement = true;
@@ -160,30 +165,6 @@ TurningInPlace(ETurningInPlace::ETIP_NotTurning)
 	}
 }
 
-
-void ABlasterCharacter::SetTeamColor(ETeams Team)
-{
-	if(GetMesh() == nullptr || OriginalMaterial == nullptr || BlueMaterial == nullptr ||RedMaterial == nullptr) return;
-	switch(Team)
-	{
-	case ETeams::ET_NoTeam:
-		GetMesh()->SetMaterial(0, OriginalMaterial);
-		DissolveMaterialInstance = BlueDissolveMatInst;
-		break;
-	case ETeams::ET_BlueTeam:
-		GetMesh()->SetMaterial(0, BlueMaterial);
-		DissolveMaterialInstance = BlueDissolveMatInst;
-		break;
-	case ETeams::ET_RedTeam:
-		GetMesh()->SetMaterial(0, RedMaterial);
-		DissolveMaterialInstance = RedDissolveMatInst;
-		break;
-	default:
-		break;
-	}
-}
-
-// Called when the game starts or when spawned
 void ABlasterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
@@ -196,8 +177,18 @@ void ABlasterCharacter::BeginPlay()
 	{
 		OnTakeAnyDamage.AddDynamic(this, &ABlasterCharacter::ReceiveDamage);
 	}
+}
 
-	
+void ABlasterCharacter::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+
+	RotateInPlace(DeltaTime);
+
+	//Checks if character is too close to the camera, and if so, hides the character. TODO: Use interpolation and dither effect for a more refined hide effect
+	HideCharacter();
+
+	PollInit();
 }
 
 void ABlasterCharacter::RotateInPlace(float DeltaTime)
@@ -223,16 +214,61 @@ void ABlasterCharacter::RotateInPlace(float DeltaTime)
 	}
 }
 
-void ABlasterCharacter::Tick(float DeltaTime)
+void ABlasterCharacter::SetTeamColor(ETeams Team)
 {
-	Super::Tick(DeltaTime);
+	if(GetMesh() == nullptr || OriginalMaterial == nullptr || BlueMaterial == nullptr ||RedMaterial == nullptr) return;
+	switch(Team)
+	{
+	case ETeams::ET_NoTeam:
+		GetMesh()->SetMaterial(0, OriginalMaterial);
+		DissolveMaterialInstance = BlueDissolveMatInst;
+		break;
+	case ETeams::ET_BlueTeam:
+		GetMesh()->SetMaterial(0, BlueMaterial);
+		DissolveMaterialInstance = BlueDissolveMatInst;
+		break;
+	case ETeams::ET_RedTeam:
+		GetMesh()->SetMaterial(0, RedMaterial);
+		DissolveMaterialInstance = RedDissolveMatInst;
+		break;
+	default:
+		break;
+	}
+}
 
-	RotateInPlace(DeltaTime);
+void ABlasterCharacter::ServerAttachOrb_Implementation(AOrb* Orb)
+{
+	bHoldingTheOrb = true;
+	if(CombatComponent && GetCharacterMovement())
+	{
+		GetCharacterMovement()->MaxWalkSpeed = CombatComponent->AimWalkSpeed;
+	}
+	MulticastAttachOrb(Orb);
+	
+}
 
-	//Checks if character is too close to the camera, and if so, hides the character. TODO: Use interpolation and dither effect for a more refined hide effect
-	HideCharacter();
+void ABlasterCharacter::MulticastAttachOrb_Implementation(AOrb* Orb)
+{
+	UE_LOG(LogTemp, Warning, TEXT("ABlasterCharacter::MulticastAttachOrb_Implementation"))
+	if(Orb == nullptr) return;
+	HeldOrb = Orb;
+	Orb->SetOwningCharacter(this);
+	
+	Orb->PickedUp();
+	
+	Orb->AttachToComponent(OrbAttachLocation, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+	
+}
 
-	PollInit();
+void ABlasterCharacter::MulticastDropTheOrb_Implementation()
+{
+	if(HeldOrb)
+	{
+		HeldOrb = nullptr;
+	}
+	UE_LOG(LogTemp, Warning, TEXT("ABlasterCharacter::MulticastDropTheOrb_Implementation"))
+	bHoldingTheOrb = false;
+	if(GetCharacterMovement() && CombatComponent) GetCharacterMovement()->MaxWalkSpeed = CombatComponent->BaseWalkSpeed;
 }
 
 void ABlasterCharacter::MoveForward(float Value)
@@ -635,8 +671,36 @@ void ABlasterCharacter::HUDInitTimerFinished()
 	if(BlasterPlayerController && CombatComponent && CombatComponent->EquippedWeapon)
 	{
 		FText WeaponText = UEnum::GetDisplayValueAsText(CombatComponent->EquippedWeapon->GetWeaponType());
-		BlasterPlayerController->SetHUDWeaponType(WeaponText.ToString());
+		FString TempWeaponString = WeaponText.ToString();
+		
+//In a packaged game, GetDisplayValueAsText returns the complete name of the Enum, not just the display name, so need to create a substring to get rid of the EWT_
+#if WITH_EDITOR
+		
+#else
+		TempWeaponString = TempWeaponString.RightChop(4);
+#endif
+		
+		BlasterPlayerController->SetHUDWeaponType(TempWeaponString);
 	}
+}
+
+void ABlasterCharacter::OnRep_HoldingTheOrb()
+{
+	if(CombatComponent == nullptr) return;
+	if(bHoldingTheOrb)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Holding The Orb"))
+		GetCharacterMovement()->MaxWalkSpeed = CombatComponent->AimWalkSpeed;
+		
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("NOT Holding The Orb"))
+		//HeldOrb->Dropped(GetActorLocation());
+		//HeldOrb = nullptr;
+		GetCharacterMovement()->MaxWalkSpeed = CombatComponent->BaseWalkSpeed;
+	}
+	
 }
 
 void ABlasterCharacter::SetOverlappingWeapon(AWeapon* Weapon)
@@ -837,6 +901,39 @@ void ABlasterCharacter::ReceiveDamage(AActor* DamagedActor, float Damage, const 
 	}
 }
 
+void ABlasterCharacter::SetSpawnPoint()
+{
+	if(HasAuthority() && BlasterPlayerState->GetTeam() != ETeams::ET_NoTeam)
+	{
+	
+		TArray<AActor*> PlayerStarts;
+		UGameplayStatics::GetAllActorsOfClass(this, ATeamPlayerStart::StaticClass(), PlayerStarts);
+		TArray<ATeamPlayerStart*> TeamPlayerStarts;
+		for(auto Start : PlayerStarts)
+		{
+			ATeamPlayerStart* TeamPlayerStart = Cast<ATeamPlayerStart>(Start);
+			if(TeamPlayerStart && TeamPlayerStart->Team == BlasterPlayerState->GetTeam())
+			{
+				TeamPlayerStarts.Add(TeamPlayerStart);
+			}
+		}
+		if(TeamPlayerStarts.Num() > 0)
+		{
+			ATeamPlayerStart* ChosenPlayerStart = TeamPlayerStarts[FMath::RandRange(0, TeamPlayerStarts.Num()-1)];
+			SetActorLocationAndRotation(ChosenPlayerStart->GetActorLocation(), ChosenPlayerStart->GetActorRotation());
+		}
+	}
+}
+
+void ABlasterCharacter::OnPlayerStateInitialized()
+{
+	if(BlasterPlayerState == nullptr) return;
+	BlasterPlayerState->AddToScore(0.f);
+	BlasterPlayerState->AddToElims(0);
+	SetTeamColor(BlasterPlayerState->GetTeam());
+	SetSpawnPoint();
+}
+
 void ABlasterCharacter::PollInit()
 {
 	if(BlasterPlayerState == nullptr)
@@ -844,9 +941,8 @@ void ABlasterCharacter::PollInit()
 		BlasterPlayerState = GetPlayerState<ABlasterPlayerState>();
 		if(BlasterPlayerState)
 		{
-			BlasterPlayerState->AddToScore(0.f);
-			BlasterPlayerState->AddToElims(0);
-			SetTeamColor(BlasterPlayerState->GetTeam());
+			OnPlayerStateInitialized();
+			
 			ABlasterGameState* BlasterGameState = Cast<ABlasterGameState>(UGameplayStatics::GetGameState(this));
 			if(BlasterGameState && BlasterGameState->TopScoringPlayers.Contains(BlasterPlayerState))
 			{
@@ -916,7 +1012,9 @@ void ABlasterCharacter::UpdateHUDAmmo()
 
 void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 {
-	bLeftGame =  bPlayerLeftGame;
+	//When player leaves some elimination functionality is used, but not all
+	//This boolean makes sure only the necessary parts of the code are run
+	bLeftGame =  bPlayerLeftGame; 
 	
 	if(BlasterPlayerController)
 	{
@@ -928,7 +1026,7 @@ void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 	bEliminated = true;
 	PlayElimMontage();
 
-	if(DissolveMaterialInstance)
+	if(DissolveMaterialInstance) //Creating and setting values for the dissolve effect material
 	{
 		DynamicDissolveMaterialInstance = UMaterialInstanceDynamic::Create(DissolveMaterialInstance, this);
 
@@ -936,24 +1034,27 @@ void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("Dissolve"), 0.55f);
 		DynamicDissolveMaterialInstance->SetScalarParameterValue(TEXT("GlowAmount"), 150.f);
 	}
-	
-	StartDissolve();
+	//Starts the dissolve effect using a timeline
+	StartDissolve(); 
 
+	//Stopping movement for dead character
 	GetCharacterMovement()->DisableMovement();
 	GetCharacterMovement()->StopMovementImmediately();
 
 	bDisableGameplay = true;
 	
-	if(CombatComponent)
+	if(CombatComponent)//Making sure character cant aim or keep firing when dead
 	{
 		CombatComponent->FireButtonPressed(false);
 		CombatComponent->SetAiming(false);
 	}
-	
+
+	//Disabling collision so that the corpse wont hinder movement of other players
 	GetCapsuleComponent()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	GetMesh()->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 
-	FVector BotSpawnPoint{GetActorLocation() + FVector(0.f, 0.f, 200.f)};
+	//Location for the death animation bot effect
+	FVector BotSpawnPoint{GetActorLocation() + FVector(0.f, 0.f, 200.f)}; 
 	if(ElimBotEffect)
 	{
 		ElimBotComponent = UGameplayStatics::SpawnEmitterAtLocation(this, ElimBotEffect, BotSpawnPoint, FRotator::ZeroRotator);
@@ -962,7 +1063,7 @@ void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 	{
 		UGameplayStatics::SpawnSoundAtLocation(this, BotSoundCue, BotSpawnPoint);
 	}
-	if(CrownComponent)
+	if(CrownComponent) //Destroy the crown effect when dead
 	{
 		CrownComponent->DestroyComponent();
 	}
@@ -973,6 +1074,10 @@ void ABlasterCharacter::MulticastElim_Implementation(bool bPlayerLeftGame)
 
 void ABlasterCharacter::Elim(bool bPlayerLeftGame)
 {
+	//bHoldingTheOrb = false;
+	//if(HeldOrb) HeldOrb->Dropped(GetActorLocation());
+	//HeldOrb = nullptr;
+	
 	if(CombatComponent && CombatComponent->EquippedWeapon)
 	{
 		if(CombatComponent->EquippedWeapon->bDestroyWeapon)
@@ -995,6 +1100,10 @@ void ABlasterCharacter::Elim(bool bPlayerLeftGame)
 				CombatComponent->SecondaryWeapon->Dropped();
 			}
 		}
+	}
+	if(GetCharacterMovement() && CombatComponent)
+	{
+		GetCharacterMovement()->MaxWalkSpeed = CombatComponent->BaseWalkSpeed;
 	}
 	
 	MulticastElim(bPlayerLeftGame);
@@ -1077,6 +1186,7 @@ void ABlasterCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& Ou
 	DOREPLIFETIME(ABlasterCharacter, Health);
 	DOREPLIFETIME(ABlasterCharacter, Shields);
 	DOREPLIFETIME(ABlasterCharacter, bDisableGameplay);
+	DOREPLIFETIME(ABlasterCharacter, bHoldingTheOrb);
 }
 
 

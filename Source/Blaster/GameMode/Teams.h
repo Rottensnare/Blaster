@@ -1,5 +1,6 @@
 ﻿#pragma once
 
+//No team for FFA matches
 UENUM(BlueprintType)
 enum class ETeams : uint8
 {
@@ -7,5 +8,5 @@ enum class ETeams : uint8
 	ET_BlueTeam UMETA(DisplayName = "BlueTeam"),
 	ET_NoTeam UMETA(DisplayName = "NoTeam"),
 
-	ET_MAX UMETA(DisplayName = "DefaultMAX"),
+	ET_MAX UMETA(DisplayName = "DefaultMax"),
 };

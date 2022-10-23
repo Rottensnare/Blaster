@@ -29,7 +29,7 @@ APickup::APickup()
 	PickupMesh->SetupAttachment(OverlapSphere);
 	PickupMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	PickupMesh->SetRenderCustomDepth(true);
-	PickupMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN);
+	PickupMesh->SetCustomDepthStencilValue(CUSTOM_DEPTH_TAN); //For Ammo Pickups
 
 	PickupEffectComponent = CreateDefaultSubobject<UNiagaraComponent>(TEXT("PickupEffectComponent"));
 	PickupEffectComponent->SetupAttachment(RootComponent);

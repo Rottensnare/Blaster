@@ -20,6 +20,7 @@ public:
 
 protected:
 
+	//Calls BuffComponent->BuffSpeed with buff parameters
 	virtual void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult & SweepResult) override;
 
 
@@ -35,4 +36,8 @@ private:
 
 	UPROPERTY(EditAnywhere)
 	float SpeedBuffTime = 4.f;
+
+public:
+
+	FORCEINLINE void SetSpeedBuffTime(const float InDuration) { SpeedBuffTime = InDuration;}
 };

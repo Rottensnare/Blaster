@@ -27,12 +27,13 @@ void UReturnToMainMenu::MenuSetup()
 			PlayerController->SetShowMouseCursor(true);
 		}
 	}
-	
+	//Bind ReturnButtonClicked if not already bound to this instance
 	if(MainMenuButton && !MainMenuButton->OnClicked.IsAlreadyBound(this, &UReturnToMainMenu::ReturnButtonClicked))
 	{
 		MainMenuButton->OnClicked.AddDynamic(this, &UReturnToMainMenu::ReturnButtonClicked);
 	}
 
+	//Binding OnDestroySession when the Multiplayer session is destroyed
 	UGameInstance* GameInstance = GetGameInstance();
 	if(GameInstance)
 	{
@@ -46,7 +47,7 @@ void UReturnToMainMenu::MenuSetup()
 
 void UReturnToMainMenu::MenuTearDown()
 {
-	RemoveFromParent();
+	RemoveFromParent(); //Remove from viewport
 	UWorld* World = GetWorld();
 	if(World)
 	{
@@ -58,6 +59,7 @@ void UReturnToMainMenu::MenuTearDown()
 			PlayerController->SetShowMouseCursor(false);
 		}
 	}
+	//Remove binding when menu widget is being destroyed
 	if(MainMenuButton && MainMenuButton->OnClicked.IsAlreadyBound(this, &UReturnToMainMenu::ReturnButtonClicked))
 	{
 		MainMenuButton->OnClicked.RemoveDynamic(this, &UReturnToMainMenu::ReturnButtonClicked);
@@ -89,7 +91,7 @@ void UReturnToMainMenu::OnDestroySession(bool bWasSuccessful)
 		AGameModeBase* GameMode = World->GetAuthGameMode<AGameModeBase>();
 		if(GameMode)
 		{
-			GameMode->ReturnToMainMenuHost();
+			GameMode->ReturnToMainMenuHost(); //In practice calls the GameSession version of ReturnToMainMenuHost
 		}
 		else
 		{

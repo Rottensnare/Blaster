@@ -17,7 +17,7 @@ class BLASTER_API UChatTextBlock : public UUserWidget
 public:
 
 	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* ChatTextSlot;
+	class UTextBlock* ChatTextSlot; //Holds the text within the ChatBox's scroll box
 	
 	
 };

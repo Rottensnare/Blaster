@@ -22,87 +22,111 @@ public:
 	// Sets default values for this character's properties
 	ABlasterCharacter();
 	
-	virtual void Tick(float DeltaTime) override;
+	virtual void Tick(float DeltaTime) override; //Calls RotateInPlace upon other less important things
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+	//Sets some initial values for components
 	virtual void PostInitializeComponents() override;
 
-	void PlayFireMontage(bool bAiming);
-	void PlayReloadMontage();
-	
+	void PlayFireMontage(bool bAiming); //Just plays the fire montage based on aiming state
+	void PlayReloadMontage(); //Plays Reload animation. Only 1 reload animation currently
+	//Calls SimProxiesTurn and sets TimeSinceLastMovementReplication to 0.f
 	virtual void OnRep_ReplicatedMovement() override;
-	void UpdateHUDHealth();
-	void UpdateHUDShields();
-	void UpdateHUDAmmo();
-	
+	void UpdateHUDHealth(); //Calls PlayerController version with health values
+	void UpdateHUDShields(); //Calls PlayerController version with shield values
+	void UpdateHUDAmmo(); //Calls PlayerController version with ammo values
+
+	//Handles functionality concerning getting eliminated, more in the .cpp file
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastElim(bool bPlayerLeftGame);
+	//Called by the game mode. Drops weapons and calls the multicast version
 	void Elim(bool bPlayerLeftGame);
-	void PlayElimMontage();
-	virtual void Destroyed() override;
+	void PlayElimMontage(); //Plays death animation
+	virtual void Destroyed() override; //Destroys elim bot effect for all players and destroys the default weapon
 
 	UFUNCTION(BlueprintImplementableEvent)
-	void ShowSniperScopeWidget(bool bShowScope);
+	void ShowSniperScopeWidget(bool bShowScope); //Shows or hides sniper scope widget
 			
 	//Setting character invisible if camera gets too close
 	void HideCharacter();
 
-	void SpawnDefaultWeapon();
+	void SpawnDefaultWeapon(); //Spawns weapon when player spawns
 
 	UPROPERTY(Replicated)
 	bool bDisableGameplay{false};
 
-	TMap<FName, class UBoxComponent*> HitCollisionBoxes;
+	TMap<FName, class UBoxComponent*> HitCollisionBoxes; //Hit boxes for Server-Side Rewind
 
 	UFUNCTION(Server, Reliable)
-	void ServerLeaveGame();
+	void ServerLeaveGame(); //Calls GameMode->PlayerLeftGame passing in the player state
 
-	FOnLeftGame OnLeftGame;
+	FOnLeftGame OnLeftGame; //Used by the ReturnToMainMenu user widget class
 
 	UFUNCTION(NetMulticast, Reliable)
-	void MulticastGainedTheLead();
+	void MulticastGainedTheLead(); //Spawns a crown effect above the character
 	UFUNCTION(NetMulticast, Reliable)
-	void MultiCastLostTheLead();
+	void MultiCastLostTheLead(); //Despawns the crown effect
+	
+	//BUG: callstack suggest that the first line crashes the game, but not likely
+	//Sets characters material based on the team. 
+	void SetTeamColor(ETeams Team); 
 
-	void SetTeamColor(ETeams Team);
+	UFUNCTION(Server, Reliable)
+	void ServerAttachOrb(class AOrb* Orb);//Sets walk speed and calls the multicast version
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastAttachOrb(AOrb* Orb); //Calls Orb->PickedUp and attaches orb above players head
+
+	UFUNCTION(NetMulticast, Reliable)
+	void MulticastDropTheOrb(); //sets HeldOrb reference to nullptr and resets movement speed back to normal
+
+	UPROPERTY(ReplicatedUsing = OnRep_HoldingTheOrb)
+	bool bHoldingTheOrb = false;
 
 protected:
-	// Called when the game starts or when spawned
+	// Starts HUDInitTimer, Spawns default Weapon and binds ReceiveDamage to OnTakeAnyDamage
 	virtual void BeginPlay() override;
-	void RotateInPlace(float DeltaTime);
-
-	void MoveForward(float Value);
-	void MoveRight(float Value);
-	void Turn(float Value);
-	void LookUp(float Value);
-	void TurnAtRate(float Value);
-	void LookUpAtRate(float Value);
-	void EquipButtonPressed();
-	void SwapButtonPressed();
-	void CrouchButtonPressed();
-	void AimButtonPressed();
-	void AimButtonReleased();
-	void ReloadButtonPressed();
-	float CalculateSpeed();
-	void CalculateAO_Pitch();
-
-	void AimOffset(float DeltaTime);
-	void SimProxiesTurn();
-	void TurnInPlace(float DeltaTime);
+	//Handles turning in place differently depending if the character is locally controlled
+	void RotateInPlace(float DeltaTime); 
 	
-	virtual void Jump() override;
+	void MoveForward(float Value); //Handles movement forwards and backwards
+	void MoveRight(float Value); //Handles movement right and left 
+	void Turn(float Value); //Horizontal turning with mouse
+	void LookUp(float Value); //Vertical camera turn with mouse
+	void TurnAtRate(float Value); //Horizontal turning with controller
+	void LookUpAtRate(float Value); //Vertical camera turn with controller
+	void EquipButtonPressed(); //Calls EquipWeapon passing in the OverlappingWeapon and sets crosshairs for client
+	void SwapButtonPressed(); //Calls the server version
+	void CrouchButtonPressed(); //Handles crouching
+	void AimButtonPressed(); //Calls CombatComponent->SetAiming with true
+	void AimButtonReleased(); //Calls CombatComponent->SetAiming with false
+	void ReloadButtonPressed(); //Calls CombatComponent->Reload
+	float CalculateSpeed(); //Gets current character velocity
+	void CalculateAO_Pitch(); //Calculates aim offset pitch value
+
+	void AimOffset(float DeltaTime); //Handles the aim offset, calls TurnInPlace and CalculateAO_Pitch
+	void SimProxiesTurn(); //Used by simulated proxies for turning determining the state of TurningInPlace enum
+	void TurnInPlace(float DeltaTime); //Updates variables used by the turn in place animations
 	
+	virtual void Jump() override; //Crouch
+	//Returns physical surface type the character is standing on
+	//Needed for determining which footstep sound should be played
 	UFUNCTION(BlueprintCallable)
-	EPhysicalSurface GetSurfaceType();
+	EPhysicalSurface GetSurfaceType(); 
 
-	void FireButtonPressed();
-	void FireButtonReleased();
+	void FireButtonPressed(); //Calls CombatComponent->FireButtonPressed with true
+	void FireButtonReleased(); //Calls CombatComponent->FireButtonPressed with false
 
-	void PlayHitReactMontage();
+	void PlayHitReactMontage(); //Plays hit react animation. Currently only 1 animation
 
+	//Updates health and shield values, calls necessary "cosmetic" functions and checks if the player's health is 0.f
+	//Calls CurrentGameMode->PlayerEliminated if player's health was 0.f
 	UFUNCTION()
 	void ReceiveDamage(AActor* DamagedActor ,float Damage, const UDamageType* DamageType, class AController* InstigatorController, AActor* DamageCauser);
+
+	void SetSpawnPoint(); //Gets all spawn points and teleports you to your teams own spawn points
+	void OnPlayerStateInitialized(); //Handles initialization of some necessary values
 
 	//Initialize HUD if relevant info is missing
 	void PollInit();
@@ -158,7 +182,7 @@ private:
 	class UCameraComponent* CameraComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	class UWidgetComponent* OverheadWidget;
+	class UWidgetComponent* OverheadWidget; //Was used to show player net role
 
 	//Turn rate for controller
 	UPROPERTY(EditAnywhere, Category = Camera)
@@ -176,29 +200,29 @@ private:
 	class AWeapon* OverlappingWeapon;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	class UCombatComponent* CombatComponent;
+	class UCombatComponent* CombatComponent; //Component that handles combat related stuff
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	class UBuffComponent* BuffComponent;
+	class UBuffComponent* BuffComponent; //Component that handles buff related stuff
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
-	class ULagCompensationComponent* LagCompensationComponent;
+	class ULagCompensationComponent* LagCompensationComponent; //Component that handles lag related stuff
 
 	UFUNCTION()
-	void OnRep_OverlappingWeapon(AWeapon* LastWeapon);
+	void OnRep_OverlappingWeapon(AWeapon* LastWeapon); //Handles showing pickup widget visibility
 
 	UFUNCTION(Server, Reliable)
-	void ServerEquipButtonPressed();
+	void ServerEquipButtonPressed(); //Calls CombatComponent->EquipWeapon
 
 	UFUNCTION(Server, Reliable)
-	void ServerSwapButtonPressed();
+	void ServerSwapButtonPressed(); //Calls CombatComponent->SwapWeapons
 	
 	float AO_Yaw; //For calculating aim offsets
-	float AO_Pitch;
-	float InterpAO_Yaw;
-	FRotator StartingAimRotation;
+	float AO_Pitch; //For aim offset pitch
+	float InterpAO_Yaw; //Used for smoothing the aim offset with interpolation
+	FRotator StartingAimRotation; //Used in aim offset calculations when normalizing delta rotators
 
-	ETurningInPlace TurningInPlace;
+	ETurningInPlace TurningInPlace; //Turn in Place state, I.E. Left, right, NoTurning
 
 	UPROPERTY(EditAnywhere, Category = Combat)
 	class UAnimMontage* FireWeaponMontage;
@@ -213,19 +237,19 @@ private:
 	UAnimMontage* ReloadMontage;
 
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<AWeapon> DefaultWeaponClass;
+	TSubclassOf<AWeapon> DefaultWeaponClass; //Weapon class spawned when player spawns
 
 	UPROPERTY()
-	AWeapon* DefaultWeapon;
+	AWeapon* DefaultWeapon; //For keeping track of the default weapon, so that it can be destroyed later
 	
 	//The distance to the camera at which the character should be set invisible.
 	UPROPERTY(EditDefaultsOnly)
 	float CharacterHideThreshold;
 
-	bool bRotateRootBone;
+	bool bRotateRootBone; //If rootbone should be turned
 	float TurnThreshold{0.5f};
-	FRotator ProxyRotationLastFrame;
-	FRotator ProxyRotation;
+	FRotator ProxyRotationLastFrame; //Used by simulated proxies when normalizing delta rotators (B)
+	FRotator ProxyRotation; //Same as above (A)
 	float ProxyYaw;
 	float TimeSinceLastMovementReplication;
 
@@ -237,7 +261,7 @@ private:
 	float Health;
 
 	UFUNCTION()
-	void OnRep_Health(float LastHealth);
+	void OnRep_Health(float LastHealth); //Calls PlayHitReactMontage and UpdateHUDHealth for clients
 	
 	UPROPERTY(EditAnywhere, Category = "Player Status")
 	float MaxShields{50.f};
@@ -246,30 +270,31 @@ private:
 	float Shields{0.f};
 
 	UFUNCTION()
-	void OnRep_Shields(float LastShields);
+	void OnRep_Shields(float LastShields); //Calls PlayHitReactMontage and UpdateHUDShields for clients
 
 	UPROPERTY()
 	class ABlasterPlayerController* BlasterPlayerController;
 
 	bool bEliminated{false};
 	
-	FTimerHandle ElimTimer;
+	FTimerHandle ElimTimer; //Basically a respawn timer
 	UPROPERTY(EditDefaultsOnly);
-	float ElimDelay{3.f};
-	void ElimTimerFinished();
+	float ElimDelay{3.f}; //Respawn delay
+	void ElimTimerFinished(); //Respawns player or broadcasts with OnLeftGame delegate if player left
 
 	bool bLeftGame{false};
 
-	FOnTimelineFloat DissolveTrack;
+	FOnTimelineFloat DissolveTrack; //Timeline for playing the dissolve effect
 	UPROPERTY(VisibleAnywhere)
 	UTimelineComponent* DissolveTimeline;
 
 	UFUNCTION()
-	void UpdateDissolveMaterial(float DissolveValue);
-	void StartDissolve();
+	void UpdateDissolveMaterial(float DissolveValue); //Sets Dissolve value for the dissolve material
+	//Starts dissolve timeline when player gets eliminated and binds UpdateDissolveMaterial to the track
+	void StartDissolve(); 
 
 	UPROPERTY(EditAnywhere)
-	UCurveFloat* DissolveCurve;
+	UCurveFloat* DissolveCurve; //Curve for the dissolve value
 
 	//Changed at runtime, based on the DissolveMaterialInstance
 	UPROPERTY(VisibleAnywhere, Category = Elim)
@@ -279,6 +304,7 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = Elim)
 	UMaterialInstance* DissolveMaterialInstance;
 
+	//Different materials based on team
 	UPROPERTY(EditAnywhere, Category = Elim)
 	UMaterialInstance* RedDissolveMatInst;
 
@@ -294,6 +320,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = Elim)
 	UMaterialInstance* OriginalMaterial;
 
+	//Elim bot effect when player gets eliminated
 	UPROPERTY(EditAnywhere)
 	UParticleSystem* ElimBotEffect;
 
@@ -306,22 +333,31 @@ private:
 	UPROPERTY()
 	class ABlasterPlayerState* BlasterPlayerState;
 
-	FTimerHandle HUDInitTimer;
+	FTimerHandle HUDInitTimer; //Making sure HUD gets initialized when necessary values are set
 	void HUDInitTimerFinished();
 	float HUDInitDelay{0.2f};
 
 	UPROPERTY(EditAnywhere)
-	class UNiagaraSystem* CrownSystem;
+	class UNiagaraSystem* CrownSystem; //Crown effect for players in the lead
 
 	UPROPERTY()
 	class UNiagaraComponent* CrownComponent;
 
 	UPROPERTY()
 	class ABlasterGameMode* CurrentGameMode;
+
+	UPROPERTY(EditAnywhere)
+	USceneComponent* OrbAttachLocation; //For CTF. Location to attach the orb
+
+	UPROPERTY()
+	class AOrb* HeldOrb;
+
+	UFUNCTION()
+	void OnRep_HoldingTheOrb(); //Sets movement speed if holding orb or not, for clients
 	
 public:
 
-	void SetOverlappingWeapon(AWeapon* Weapon);
+	void SetOverlappingWeapon(AWeapon* Weapon); //Sets pickup widget visibility and sets OverlappingWeapon to Weapon
 
 	bool IsWeaponEquipped();
 	bool IsAiming();
@@ -340,6 +376,7 @@ public:
 	FORCEINLINE float GetMaxShields() const {return MaxShields;}
 	FORCEINLINE bool GetDisableGameplay() const {return bDisableGameplay;}
 	FORCEINLINE ULagCompensationComponent* GetLagCompensationComponent() const {return LagCompensationComponent;}
+	FORCEINLINE AOrb* GetHeldOrb() const {return HeldOrb;}
 	bool IsLocallyReloading() const;
 	AWeapon* GetEquippedWeapon();
 	FVector GetHitTarget() const;

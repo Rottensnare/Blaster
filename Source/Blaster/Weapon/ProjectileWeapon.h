@@ -15,7 +15,7 @@ class BLASTER_API AProjectileWeapon : public AWeapon
 	GENERATED_BODY()
 
 public:
-
+	//Handles spawning the projectile actor and initializing its values
 	virtual void Fire(const FVector& HitTarget) override;
 
 private:
@@ -25,5 +25,5 @@ private:
 	TSubclassOf<class AProjectile> ProjectileClass;
 
 	UPROPERTY(EditAnywhere)
-	TSubclassOf<AProjectile> SSRProjectileClass;
+	TSubclassOf<AProjectile> SSRProjectileClass; //Projectile for server-side rewind, only used by server
 };

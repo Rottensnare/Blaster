@@ -74,7 +74,7 @@ void AWeapon::BeginPlay()
 void AWeapon::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
+/*
 	if(WeaponState == EWeaponState::EWS_Initial)
 	{
 		if(WeaponMesh)
@@ -82,7 +82,7 @@ void AWeapon::Tick(float DeltaTime)
 			WeaponMesh->AddLocalRotation(FRotator(0.f, BaseTurnRate * DeltaTime, 0.f));
 		}
 	}
-
+*/
 }
 
 void AWeapon::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
@@ -207,29 +207,29 @@ void AWeapon::SetWeaponState(EWeaponState State)
 	WeaponState = State;
 	switch(WeaponState)
 	{
-	case EWeaponState::EWS_Equipped:
+	case EWeaponState::EWS_Equipped: //Handles weapon values when the gun gets equipped.
 		ShowPickupWidget(false);
 		SetReplicateMovement(false);
 		WeaponMesh->SetSimulatePhysics(false);
 		WeaponMesh->SetEnableGravity(false);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		if(WeaponType == EWeaponType::EWT_SubmachineGun)
+		if(WeaponType == EWeaponType::EWT_SubmachineGun) //SMG has a strap that has physics enabled
 		{
 			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 			WeaponMesh->SetEnableGravity(true);
 			WeaponMesh->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
 		}
-		EnableCustomDepth(false);
+		EnableCustomDepth(false); //Disable outlines
 
 		OwnerCharacter = OwnerCharacter == nullptr ? Cast<ABlasterCharacter>(GetOwner()) : OwnerCharacter;
 		if(OwnerCharacter && bUseServerSideRewind)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Binding"))
+			//UE_LOG(LogTemp, Warning, TEXT("Binding"))
 			OwnerController = OwnerController == nullptr ? Cast<ABlasterPlayerController>(OwnerCharacter->Controller) : OwnerController;
 			if(OwnerController)
 			{
-				if(!OwnerController->OnHighPingChecked.IsBound())
+				if(!OwnerController->OnHighPingChecked.IsBound()) //For Server-Side Rewind
 				{
 					OwnerController->OnHighPingChecked.AddDynamic(this, &ThisClass::OnPingTooHigh);
 				}
@@ -237,7 +237,7 @@ void AWeapon::SetWeaponState(EWeaponState State)
 		}
 		
 		break;
-	case EWeaponState::EWS_Initial:
+	case EWeaponState::EWS_Initial: //Initial state reserved for spawned guns that haven't been picked up yet
 		if(HasAuthority())
 		{
 			AreaSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
@@ -279,14 +279,14 @@ void AWeapon::SetWeaponState(EWeaponState State)
 			}
 		}
 		break;
-	case EWeaponState::EWS_UnEquipped:
+	case EWeaponState::EWS_UnEquipped: //For weapons that are carried but not equipped
 		ShowPickupWidget(false);
 		SetReplicateMovement(false);
 		WeaponMesh->SetSimulatePhysics(false);
 		WeaponMesh->SetEnableGravity(false);
 		WeaponMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		AreaSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-		if(WeaponType == EWeaponType::EWT_SubmachineGun)
+		if(WeaponType == EWeaponType::EWT_SubmachineGun) //SMG is special due to the strap
 		{
 			WeaponMesh->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 			WeaponMesh->SetEnableGravity(true);
@@ -298,7 +298,7 @@ void AWeapon::SetWeaponState(EWeaponState State)
 			OwnerController = OwnerController == nullptr ? Cast<ABlasterPlayerController>(OwnerCharacter->Controller) : OwnerController;
 			if(OwnerController)
 			{
-				if(OwnerController->OnHighPingChecked.IsBound())
+				if(OwnerController->OnHighPingChecked.IsBound()) //For Server-Side Rewind
 				{
 					OwnerController->OnHighPingChecked.RemoveDynamic(this, &ThisClass::OnPingTooHigh);
 				}

@@ -45,6 +45,7 @@ void AWeaponSpawnPoint::SpawnWeapon()
 		if(HasAuthority() && SpawnedWeapon)
 		{
 			SpawnedWeapon->SetWeaponState(EWeaponState::EWS_Initial);
+			//When weapon is picked up start the call StartSpawnTimer. Called from the weapon class.
 			SpawnedWeapon->OnPickedUpDelegate.AddDynamic(this, &AWeaponSpawnPoint::StartSpawnTimer);
 		}
 	}

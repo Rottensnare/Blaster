@@ -6,7 +6,7 @@
 #include "UObject/Interface.h"
 #include "InteractWithCrosshairsInterface.generated.h"
 
-// This class does not need to be modified.
+//Used for checking if crosshairs should be red or white. Yeah... Whole interface for just that...
 UINTERFACE(MinimalAPI)
 class UInteractWithCrosshairsInterface : public UInterface
 {
@@ -20,6 +20,6 @@ class BLASTER_API IInteractWithCrosshairsInterface
 {
 	GENERATED_BODY()
 
-	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
+	
 public:
 };

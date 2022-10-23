@@ -18,6 +18,7 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 	Super::Fire(HitTarget);
 	
 	APawn* InstigatorPawn = Cast<APawn>(GetOwner());
+	if(InstigatorPawn == nullptr) return;
 	AController* InstigatorController = InstigatorPawn->GetController();
 	const USkeletalMeshSocket* MuzzleFlashSocket = GetWeaponMesh()->GetSocketByName(FName("MuzzleFlash"));
 	if (MuzzleFlashSocket)
@@ -26,7 +27,7 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 		const FVector Start = SocketTransform.GetLocation();
 		FVector End = Start + (HitTarget - Start) * 1.25f;
 		FHitResult HitResult;
-		WeaponTraceHit(Start, HitTarget, HitResult);
+		WeaponTraceHit(Start, HitTarget, HitResult); //Gets a HitResult from a linetrace
 		
 		if(HitResult.bBlockingHit)
 		{
@@ -35,19 +36,20 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 			{
 				if(InstigatorController)
 				{
+					//In other words, server and locally controlled
 					bool bCauseAuthDamage = !bUseServerSideRewind || InstigatorPawn->IsLocallyControlled();
 					if(HasAuthority() && bCauseAuthDamage)
 					{
-						if(HitResult.BoneName == FName("head"))
+						if(HitResult.BoneName == FName("head")) //Apply headshot damage
 						{
 							UGameplayStatics::ApplyDamage(BlasterCharacter, Damage * HeadshotMultiplier, InstigatorController, this, UDamageType::StaticClass());
 						}
-						else
+						else //Apply bodyshot damage
 						{
 							UGameplayStatics::ApplyDamage(BlasterCharacter, Damage, InstigatorController, this, UDamageType::StaticClass());
 						}
 					}
-					if(!HasAuthority() && bUseServerSideRewind)
+					if(!HasAuthority() && bUseServerSideRewind) //For clients that use server-side rewind
 					{
 						OwnerCharacter = OwnerCharacter == nullptr ? Cast<ABlasterCharacter>(InstigatorPawn) : OwnerCharacter;
 						if(OwnerCharacter && OwnerCharacter->IsLocallyControlled())
@@ -61,6 +63,7 @@ void AHitScanWeapon::Fire(const FVector& HitTarget)
 							}
 						}
 					}
+		//Setting the effects for the bullet hit
 					
 					MulticastSetImpactEffects(EHT_Character, HitResult.Location, SocketTransform.GetLocation());
 				}
@@ -114,7 +117,7 @@ void AHitScanWeapon::WeaponTraceHit(const FVector& InTraceStart, const FVector& 
 		{
 			BeamEnd = OutHitResult.ImpactPoint;
 		}
-		DrawDebugSphere(World, BeamEnd, 16.f, 12, FColor::Orange, false, 5.f);
+		//DrawDebugSphere(World, BeamEnd, 16.f, 12, FColor::Orange, false, 5.f);
 	}
 }
 
@@ -133,6 +136,7 @@ void AHitScanWeapon::ShowEffects(const FVector& Location, const FVector& StartLo
 		UParticleSystemComponent* ParticleSystemComponent = UGameplayStatics::SpawnEmitterAtLocation(this, BeamParticles, StartLocation);
 		if(ParticleSystemComponent)
 		{
+			//Set a named vector instance parameter on this ParticleSystemComponent... (From docs)
 			ParticleSystemComponent->SetVectorParameter(FName("Target"), Location);
 		}
 	}

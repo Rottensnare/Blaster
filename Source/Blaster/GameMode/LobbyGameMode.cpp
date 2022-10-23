@@ -3,6 +3,7 @@
 
 #include "LobbyGameMode.h"
 
+#include "MultiplayerSessionsSubsystem.h"
 #include "GameFramework/GameStateBase.h"
 
 void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
@@ -10,13 +11,35 @@ void ALobbyGameMode::PostLogin(APlayerController* NewPlayer)
 	Super::PostLogin(NewPlayer);
 
 	 int32 NumOfPlayers = GameState.Get()->PlayerArray.Num();
-	if(NumOfPlayers == 2)
+	UGameInstance* GameInstance = GetGameInstance();
+	if(GameInstance)
 	{
-		UWorld* World = GetWorld();
-		if(World)
+		UMultiplayerSessionsSubsystem* Subsystem = GameInstance->GetSubsystem<UMultiplayerSessionsSubsystem>();
+		checkf(Subsystem, TEXT("Subsystem was NULL"));
+		if(NumOfPlayers >= Subsystem->DesiredNumPublicConnections)
 		{
-			bUseSeamlessTravel = true;
-			World->ServerTravel(FString("/Game/Maps/Level_FFA_01?listen"));
+			UWorld* World = GetWorld();
+			if(World)
+			{
+				bUseSeamlessTravel = true;
+
+				FString MatchType = Subsystem->DesiredMatchType;
+				if(MatchType == "FreeForAll")
+				{
+					World->ServerTravel(FString("/Game/Maps/Level_FFA_01?listen"));
+				}
+				else if (MatchType == "TDM")
+				{
+					World->ServerTravel(FString("/Game/Maps/Level_TDM_01?listen"));
+				}
+				else if(MatchType == "CTF")
+				{
+					World->ServerTravel(FString("/Game/Maps/Level_CTF_01?listen"));
+				}
+				
+				
+			}
 		}
 	}
+	
 }

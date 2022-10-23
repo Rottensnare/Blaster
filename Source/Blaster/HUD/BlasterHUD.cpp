@@ -16,6 +16,7 @@
 
 void ABlasterHUD::DrawHUD()
 {
+	if(bDrawHUD == false) return;
 	Super::DrawHUD();
 
 	FVector2D ViewportSize;
@@ -58,7 +59,8 @@ void ABlasterHUD::DrawHUD()
 void ABlasterHUD::BeginPlay()
 {
 	Super::BeginPlay();
-	
+
+	bDrawHUD = true;
 }
 
 void ABlasterHUD::AddCharacterOverlay()
@@ -104,13 +106,16 @@ void ABlasterHUD::AddElimAnnouncement(FString Attacker, FString Victim)
 					}
 				}
 			}
-
 			
 			ElimMessages.Add(ElimAnnouncementWidget);
 
 			FTimerHandle ElimMsgTimer;
 			FTimerDelegate ElimMsgDelegate;
-			ElimMsgDelegate.BindUFunction(this, FName("ElimAnnouncementTimerFinished"), ElimAnnouncementWidget);
+			if(!ElimMsgDelegate.IsBoundToObject(this))
+			{
+				ElimMsgDelegate.BindUFunction(this, FName("ElimAnnouncementTimerFinished"), ElimAnnouncementWidget);
+			}
+			
 			GetWorldTimerManager().SetTimer(ElimMsgTimer, ElimMsgDelegate, ElimAnnouncementTime, false);
 		}
 	}
@@ -118,6 +123,7 @@ void ABlasterHUD::AddElimAnnouncement(FString Attacker, FString Victim)
 
 void ABlasterHUD::DrawCrosshair(UTexture2D* Texture, FVector2D ViewportCenter, FVector2D Spread)
 {
+	if(bDrawHUD == false) return;
 	const float TextureWidth = Texture->GetSizeX();
 	const float TextureHeight = Texture->GetSizeY();
 	const FVector2D TextureDrawpoint(

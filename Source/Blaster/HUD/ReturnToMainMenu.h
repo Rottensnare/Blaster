@@ -17,7 +17,9 @@ class BLASTER_API UReturnToMainMenu : public UUserWidget
 
 public:
 
+	//Handles the this widgets setup
 	void MenuSetup();
+	//Handles the tear down of this widget
 	void MenuTearDown();
 
 protected:
@@ -39,7 +41,7 @@ private:
 	class UTextBlock* MainMenuButtonText;
 
 	UFUNCTION()
-	void ReturnButtonClicked();
+	void ReturnButtonClicked(); //Calls ServerLeaveGame and binds OnPlayerLeftGame to OnLeftGame
 
 	UPROPERTY()
 	class UMultiplayerSessionsSubsystem* MultiplayerSessionsSubsystem;

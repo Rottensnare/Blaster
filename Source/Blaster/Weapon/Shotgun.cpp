@@ -26,23 +26,26 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 		
 		//Tracks how many pellets hit which character
 		TMap<ABlasterCharacter*, uint32> HitActors;
+		//Tracks how many headshots per character
 		TMap<ABlasterCharacter*, uint32> HeadshotHitMap;
+		
+		//Iterating through all the passed in hit targets
 		for(FVector_NetQuantize HitTarget : HitTargets)
 		{
 			const FVector End = Start + (HitTarget - Start) * 1.25f;
 			FHitResult HitResult;
-			WeaponTraceHit(Start, HitTarget, HitResult);
+			WeaponTraceHit(Start, HitTarget, HitResult); //Line trace for each hit target
 			if(HitResult.bBlockingHit)
 			{
 				if(ABlasterCharacter* BlasterCharacter = Cast<ABlasterCharacter>(HitResult.GetActor()))
 				{
 					const bool bHeadShot = HitResult.BoneName == FName("head");
-					if(bHeadShot)
+					if(bHeadShot) //If headshot, increase HeadshotHitMap value by one based on character hit
 					{
 						if(HitActors.Contains(BlasterCharacter)) HeadshotHitMap[BlasterCharacter]++;
 						else HeadshotHitMap.Emplace(BlasterCharacter, 1);
 					}
-					else
+					else //If Bodyshot, increase HitActors value by one based on character hit
 					{
 						if(HitActors.Contains(BlasterCharacter)) HitActors[BlasterCharacter]++;
 						else HitActors.Emplace(BlasterCharacter, 1);
@@ -62,10 +65,10 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 			
 		}
 
-		TArray<ABlasterCharacter*> HitCharacters;
+		TArray<ABlasterCharacter*> HitCharacters; //Used for iterating all the hit characters and applying damage at once instead of once per pellet
 		
-		TMap<ABlasterCharacter*, float> DamageMap;
-		for(auto HitPair : HitActors)
+		TMap<ABlasterCharacter*, float> DamageMap; //How much damage each character took
+		for(auto HitPair : HitActors) //Calculating damage done with bodyshots
 		{
 			if(HitPair.Key)
 			{
@@ -73,16 +76,16 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 				HitCharacters.AddUnique(HitPair.Key);
 			}
 		}
-		for(auto HitPair : HeadshotHitMap)
+		for(auto HitPair : HeadshotHitMap) //Calculating damage done with headshots
 		{
 			if(HitPair.Key)
 			{
 				if(DamageMap.Contains(HitPair.Key)) HeadshotHitMap[HitPair.Key] += HitPair.Value * Damage * HeadshotMultiplier;
 				else DamageMap.Emplace(HitPair.Key, HitPair.Value * Damage * HeadshotMultiplier);
-				HitCharacters.AddUnique(HitPair.Key);
+				HitCharacters.AddUnique(HitPair.Key); //Needs to be unique, otherwise damage received might be multiple times that of the actual damage intended
 			}
 		}
-		for(auto DamagePair : DamageMap)
+		for(auto DamagePair : DamageMap) //Apply damage if server
 		{
 			if(DamagePair.Key && InstigatorController)
 			{
@@ -93,7 +96,7 @@ void AShotgun::FireShotgun(const TArray<FVector_NetQuantize>& HitTargets)
 				}
 			}
 		}
-		
+		//For clients and if the weapon uses Server-Side Rewind
 		if(!HasAuthority() && bUseServerSideRewind)
 		{
 			OwnerCharacter = OwnerCharacter == nullptr ? Cast<ABlasterCharacter>(OwnerPawn) : OwnerCharacter;
@@ -119,16 +122,16 @@ void AShotgun::ShotgunTraceEndWithScatter(const FVector& HitTarget, TArray<FVect
 	const FTransform SocketTransform = MuzzleFlashSocket->GetSocketTransform(GetWeaponMesh());
 	const FVector TraceStart = SocketTransform.GetLocation();
 	
-	const FVector ToTargetNormalized = (HitTarget - TraceStart).GetSafeNormal();
+	const FVector ToTargetNormalized = (HitTarget - TraceStart).GetSafeNormal(); //GetSafeNormal returns ZeroVector if vector is too small to normalize
 	const FVector SphereCenter = TraceStart + ToTargetNormalized * DistanceToSphere;
 	
-	for (uint32 i = 0; i < NumberOfPellets; i++)
+	for (uint32 i = 0; i < NumberOfPellets; i++) 
 	{
 		const FVector RandVec = UKismetMathLibrary::RandomUnitVector() * FMath::FRandRange(0.f, SphereRadius);
 		const FVector EndLoc = SphereCenter + RandVec;
 		FVector ToEndLoc = EndLoc - TraceStart;
-		ToEndLoc = TraceStart + ToEndLoc * TRACE_LENGTH / ToEndLoc.Size();
-		OutHitTargets.Add(ToEndLoc);
+		ToEndLoc = TraceStart + ToEndLoc * TRACE_LENGTH / ToEndLoc.Size(); //TRACE_LENGTH defined in WeaponType.h. Currently 5000.f
+		OutHitTargets.Add(ToEndLoc); 
 		
 	}
 }

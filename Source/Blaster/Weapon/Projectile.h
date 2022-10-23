@@ -20,7 +20,7 @@ public:
 
 	bool bUseServerSideRewind{false};
 	FVector_NetQuantize TraceStart;
-	FVector_NetQuantize100 InitialVelocity;
+	FVector_NetQuantize100 InitialVelocity; //Initial projectile velocity. Used in AProjectileWeapon::Fire
 	
 	UPROPERTY(EditAnywhere)
 	float InitialSpeed{25000.f};
@@ -37,30 +37,37 @@ protected:
 
 	virtual void BeginPlay() override;
 
+	//Simply calls MulticastSetImpactEffects
 	UFUNCTION()
 	virtual void OnHit(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& HitResult);
+	//calls ServerSetImpactEffects
 	UFUNCTION()
 	virtual void OnHitClient(UPrimitiveComponent* HitComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, FVector NormalImpulse, const FHitResult& HitResult);
-	
+	//Calls MulticastSetImpactEffects
 	void ServerSetImpactEffects(AActor* OtherActor);
-	
+	//Sets impact effects and calls ShowEffects
 	void MulticastSetImpactEffects(AActor* OtherActor);
 
+	//Does nada currently
 	virtual void ShowEffects();
 
+	//Spawns a niagara trail system
 	void SpawnTrailSystem();
 
+	//Calls Destroy
 	void DestroyTimerFinished();
 
+	//Starts DestroyTimer
 	void StartDestroyTimer();
 
+	//Causes radial damage with falloff
 	void ExplodeDamage();
 	
 	UPROPERTY(EditDefaultsOnly)
 	class UStaticMeshComponent* ProjectileMesh;
 	
 	UPROPERTY(EditAnywhere)
-	class UBoxComponent* CollisionBox;
+	class UBoxComponent* CollisionBox; //Projectile collision
 
 	UPROPERTY(VisibleAnywhere)
 	class UParticleSystem* ImpactParticles;
@@ -96,10 +103,11 @@ protected:
 
 		
 	UPROPERTY(EditAnywhere)
-	float InnerDamageRadius{100.f};
+	float InnerDamageRadius{100.f}; //Max damage inside this radius
 
+	//Interpolates damage between this and InnerDamageRadius. Outside this radius no damage applied
 	UPROPERTY(EditAnywhere)
-	float OuterDamageRadius{350.f};
+	float OuterDamageRadius{350.f}; 
 
 private:
 

@@ -38,6 +38,11 @@ public:
 	FMultiplayerOnDestroySessionComplete MultiplayerOnDestroySessionComplete;
 	FMultiplayerOnStartSessionComplete MultiplayerOnStartSessionComplete;
 
+	UPROPERTY(BlueprintReadWrite)
+	int32 DesiredNumPublicConnections{0};
+	UPROPERTY(BlueprintReadWrite)
+	FString DesiredMatchType{""};
+
 protected:
 	
 	void OnCreateSessionComplete(FName SessionName, bool bWasSuccessful);
@@ -72,5 +77,7 @@ private:
 	bool bCreateSessionOnDestroy{false};
 	int32 LastNumPublicConnections;
 	FString LastMatchType;
+
+
 	
 };

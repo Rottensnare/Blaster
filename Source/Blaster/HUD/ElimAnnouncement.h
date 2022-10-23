@@ -16,6 +16,7 @@ class BLASTER_API UElimAnnouncement : public UUserWidget
 
 public:
 
+	//Sets Announcement text to AttackerName killed VictimName
 	void SetElimAnnouncementText(FString AttackerName, FString VictimName);
 
 	UPROPERTY(meta = (BindWidget))

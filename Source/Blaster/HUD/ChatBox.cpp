@@ -29,5 +29,5 @@ void UChatBox::OnTextCommitted(const FText& Text, const FString& PlayerName)
 			}
 		}
 	}
-	ChatInput->SetText(FText::FromString(""));
+	ChatInput->SetText(FText::FromString("")); //Sets input text box text to "" when message was committed
 }

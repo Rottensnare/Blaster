@@ -15,7 +15,8 @@ class BLASTER_API ALobbyGameMode : public AGameMode
 	GENERATED_BODY()
 
 public:
-
+	//If enough players have joined, start the match with the correct match type.
+	//Gets the desired match type from the MultiplayerSessionsSubsystem which in turn was set from the start menu
 	virtual void PostLogin(APlayerController* NewPlayer) override;
 	
 protected:

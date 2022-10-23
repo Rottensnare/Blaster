@@ -21,8 +21,7 @@
 #include "HUD/ReturnToMainMenu.h"
 #include "Kismet/GameplayStatics.h"
 #include "Net/UnrealNetwork.h"
-
-
+#include "Sound/SoundCue.h"
 
 
 void ABlasterPlayerController::BeginPlay()
@@ -32,8 +31,6 @@ void ABlasterPlayerController::BeginPlay()
 	BlasterHUD = Cast<ABlasterHUD>(GetHUD());
 	ServerCheckMatchState();
 }
-
-
 
 void ABlasterPlayerController::Tick(float DeltaSeconds)
 {
@@ -287,6 +284,64 @@ void ABlasterPlayerController::StopHighPingWarning()
 	}
 }
 
+void ABlasterPlayerController::ClientOrbAnnouncement_Implementation(APlayerState* InOrbHolder, uint8 Selection)
+{
+	const ABlasterPlayerState* const Self = GetPlayerState<ABlasterPlayerState>();
+	const ABlasterPlayerState* const OrbHolder = Cast<ABlasterPlayerState>(InOrbHolder);
+	if(Self == nullptr || OrbHolder == nullptr) return;
+	
+	if(OrbHolder == Self && Selection == 0) //Selection 0 = Taking the orb
+	{
+		PlayOrbAnnouncementSound(0);
+	}
+	else if(OrbHolder->GetTeam() != Self->GetTeam() && Selection == 0)
+	{
+		PlayOrbAnnouncementSound(1);
+		
+	}
+	else if (OrbHolder == Self && Selection == 1) //Selection 1 = Scored
+	{
+		PlayOrbAnnouncementSound(2);
+	}
+	else if (OrbHolder->GetTeam() != Self->GetTeam() && Selection == 1)
+	{
+		PlayOrbAnnouncementSound(3);
+	}
+}
+
+void ABlasterPlayerController::PlayOrbAnnouncementSound(const int32 SoundNumber) const
+{
+	switch (SoundNumber)
+	{
+	case 0:
+		if(YouHaveTheOrb)
+		{
+			UGameplayStatics::PlaySound2D(this, YouHaveTheOrb);
+		}
+		break;
+	case 1:
+		if(EnemyHasTheOrb)
+		{
+			UGameplayStatics::PlaySound2D(this, EnemyHasTheOrb);
+		}
+		break;
+	case 2:
+		if(YouHaveScored)
+		{
+			UGameplayStatics::PlaySound2D(this, YouHaveScored);
+		}
+		break;
+	case 3:
+		if(EnemyHasScored)
+		{
+			UGameplayStatics::PlaySound2D(this, EnemyHasScored);
+		}
+		break;
+	default:
+		break;
+	}
+}
+
 void ABlasterPlayerController::OnRep_ShowTeamScores()
 {
 	if(bShowTeamScores)
@@ -298,8 +353,6 @@ void ABlasterPlayerController::OnRep_ShowTeamScores()
 		HideTeamScores();
 	}
 }
-
-
 
 void ABlasterPlayerController::BroadCastElim(APlayerState* Attacker, APlayerState* Victim)
 {
@@ -338,11 +391,9 @@ void ABlasterPlayerController::ClientElimAnnouncement_Implementation(APlayerStat
 			{
 				BlasterHUD->AddElimAnnouncement(Attacker->GetPlayerName(), "Themselves");
 			}
-			
 		}
 	}
 }
-
 
 void ABlasterPlayerController::OnRep_MatchState()
 {
@@ -450,6 +501,7 @@ void ABlasterPlayerController::OnPossess(APawn* InPawn)
 	if(BlasterCharacter)
 	{
 		SetHUDHealth(BlasterCharacter->GetHealth(), BlasterCharacter->GetMaxHealth());
+		SetHUDShields(BlasterCharacter->GetShields(), BlasterCharacter->GetMaxShields());
 	}
 }
 
@@ -583,7 +635,7 @@ void ABlasterPlayerController::SetHUDAnnouncementTime(float InWarmupTime)
 		const int32 MatchSeconds = InWarmupTime - (MatchMinutes * 60);
 		const FString AnnouncementTimeText = FString::Printf(TEXT("%02d : %02d"), MatchMinutes, MatchSeconds);
 		BlasterHUD->WarmupWidget->WarmupTimeText->SetText(FText::FromString(AnnouncementTimeText));
-		UE_LOG(LogTemp, Warning, TEXT("SetHUDAnnouncement: %02d : %02d"),MatchMinutes, MatchSeconds)
+		//UE_LOG(LogTemp, Warning, TEXT("SetHUDAnnouncement: %02d : %02d"),MatchMinutes, MatchSeconds)
 	}
 }
 
@@ -679,7 +731,7 @@ void ABlasterPlayerController::HandleCooldown()
 	}
 	
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
-	if(BlasterHUD)
+	if(BlasterHUD && BlasterHUD->BlasterOverlay)
 	{
 		BlasterHUD->BlasterOverlay->RemoveFromParent();
 		if(BlasterHUD->WarmupWidget && BlasterHUD->WarmupWidget->InfoText)
@@ -693,7 +745,7 @@ void ABlasterPlayerController::HandleCooldown()
 				if(BlasterGameState)
 				{
 					FString InfoTextString = bShowTeamScores ? GetTeamsInfoText(BlasterGameState) : GetInfoText(BlasterGameState->TopScoringPlayers);
-					BlasterHUD->WarmupWidget->TopPlayerText->SetText(FText::FromString(InfoTextString));
+					BlasterHUD->WarmupWidget->TopPlayerText->SetText(FText::FromString(InfoTextString)); //BUG: Doesn't work, but fix at some point, doesn't matter atm.
 				}
 			}
 		}
@@ -762,14 +814,14 @@ void ABlasterPlayerController::AddChatBox()
 
 void ABlasterPlayerController::OnChatCommitted(const FText& Text, ETextCommit::Type CommitMethod)
 {
-	if(CommitMethod != ETextCommit::OnEnter) return;
+	if(CommitMethod != ETextCommit::OnEnter) return; //Only commit message if Enter was pressed
 	
 	FString PlayerName{""};
 	
 	APlayerState* TempPlayerState = GetPlayerState<APlayerState>();
 	if(TempPlayerState)
 	{
-		PlayerName = TempPlayerState->GetPlayerName();
+		PlayerName = TempPlayerState->GetPlayerName(); //Player name for chat 
 	}
 	
 	ServerChatCommitted(Text, PlayerName); //TODO: Add a delay so that some absolute cucumber can't spam the chat.

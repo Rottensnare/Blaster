@@ -7,6 +7,7 @@
 #include "Blaster/BlasterPlayerState.h"
 #include "Blaster/Character/BlasterCharacter.h"
 #include "Blaster/GameState/BlasterGameState.h"
+#include "Blaster/HUD/BlasterHUD.h"
 #include "Blueprint/WidgetLayoutLibrary.h"
 #include "GameFramework/PlayerStart.h"
 #include "Kismet/GameplayStatics.h"
@@ -20,6 +21,28 @@ namespace MatchState
 ABlasterGameMode::ABlasterGameMode()
 {
 	bDelayedStart = true;
+	bAllowTickBeforeBeginPlay = false;
+}
+
+
+void ABlasterGameMode::BeginPlay()
+{
+	Super::BeginPlay();
+
+	LevelStartingTime = 0.f;
+	ServerTotalTime = GetWorld()->GetTimeSeconds();
+	
+	//UE_LOG(LogTemp, Warning, TEXT("ABlasterGameMode::BeginPlay:"))
+	//UE_LOG(LogTemp, Warning, TEXT("GetTimeSeconds: %f"), ServerTotalTime)
+	//UE_LOG(LogTemp, Warning, TEXT("GetRealTimeSeconds: %f"), UGameplayStatics::GetRealTimeSeconds(this))
+	//UE_LOG(LogTemp, Warning, TEXT("GetGameTimeInSeconds: %f"), UKismetSystemLibrary::GetGameTimeInSeconds(this))
+	//if(GEngine)
+	//{
+	//	GEngine->AddOnScreenDebugMessage(0, 15.f, FColor::Cyan, FString::Printf(TEXT("GetTimeSeconds: %f"), ServerTotalTime));
+	//	GEngine->AddOnScreenDebugMessage(1, 15.f, FColor::Cyan, FString::Printf(TEXT("GetRealTimeSeconds: %f"), UGameplayStatics::GetRealTimeSeconds(this)));
+	//	GEngine->AddOnScreenDebugMessage(2, 15.f, FColor::Cyan, FString::Printf(TEXT("GetGameTimeInSeconds: %f"), UKismetSystemLibrary::GetGameTimeInSeconds(this)));
+	//}
+	
 }
 
 void ABlasterGameMode::Tick(float DeltaSeconds)
@@ -28,15 +51,17 @@ void ABlasterGameMode::Tick(float DeltaSeconds)
 
 	if(MatchState == MatchState::WaitingToStart)
 	{
-		CountdownTime = WarmupTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+		CountdownTime = WarmupTime - (GetWorld()->GetTimeSeconds() - ServerTotalTime)  + LevelStartingTime;
 		if(CountdownTime <= 0.f)
 		{
+			bMatchEnding = false;
 			StartMatch();
 		}
+		
 	}
 	else if(MatchState == MatchState::InProgress)
 	{
-		CountdownTime = WarmupTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+		CountdownTime = WarmupTime + MatchTime - (GetWorld()->GetTimeSeconds() - ServerTotalTime) + LevelStartingTime;
 		if(CountdownTime <= 0.f)
 		{
 			SetMatchState(MatchState::Cooldown);
@@ -45,7 +70,24 @@ void ABlasterGameMode::Tick(float DeltaSeconds)
 	}
 	else if(MatchState == MatchState::Cooldown)
 	{
-		CountdownTime = CooldownTime + WarmupTime + MatchTime - GetWorld()->GetTimeSeconds() + LevelStartingTime;
+		CountdownTime = CooldownTime + WarmupTime + MatchTime - (GetWorld()->GetTimeSeconds() - ServerTotalTime) + LevelStartingTime;
+		
+		if(!bMatchEnding)
+		{
+			for(FConstPlayerControllerIterator It = GetWorld()->GetPlayerControllerIterator(); It; ++It)
+			{
+				ABlasterPlayerController* TempBlasterPlayerController = Cast<ABlasterPlayerController>(*It);
+				if(TempBlasterPlayerController)
+				{
+					ABlasterHUD* TempHUD = Cast<ABlasterHUD>(TempBlasterPlayerController->GetHUD());
+					if(TempHUD)
+					{
+						TempHUD->SetDrawHUD(false);
+					}
+				}
+			}
+			bMatchEnding = true;
+		}
 		if(CountdownTime <= 0.f && !bRestartingGame)
 		{
 			UWidgetLayoutLibrary::RemoveAllWidgets(this);
@@ -60,16 +102,16 @@ void ABlasterGameMode::Tick(float DeltaSeconds)
 			LevelStartingTime = 0.f;
 			bUseSeamlessTravel = true;
 			bRestartingGame = true;
-			RestartGame();
-			/*
+			//RestartGame();
+			
 			UWorld* World = GetWorld();
 			if(World)
 			{
-				bUseSeamlessTravel = true;
-				World->ServerTravel("/Game/ThirdPerson/Maps/Level_FFA_01?listen");
+				//bUseSeamlessTravel = true;
+				World->ServerTravel("/Game/Maps/Level_FFA_01?listen");
 			}
-			UGameplayStatics::OpenLevel(this, FName("/Game/Maps/Level_OpenWorld_01?listen"));
-			*/
+			//UGameplayStatics::OpenLevel(this, FName("/Game/Maps/Level_OpenWorld_01?listen"));
+			
 #endif
 		}
 	}
@@ -199,9 +241,3 @@ void ABlasterGameMode::PlayerLeftGame(ABlasterPlayerState* PlayerLeaving)
 	}
 }
 
-void ABlasterGameMode::BeginPlay()
-{
-	Super::BeginPlay();
-
-	LevelStartingTime = 0.f;
-}

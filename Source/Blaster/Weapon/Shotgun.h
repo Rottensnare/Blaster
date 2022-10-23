@@ -16,13 +16,10 @@ class BLASTER_API AShotgun : public AHitScanWeapon
 
 
 public:
-	
+	//Handles firing the shotgun. More info in the .cpp file
 	virtual void FireShotgun(const TArray<FVector_NetQuantize>& HitTargets);
+	//Calculates scatter for each pellet. Called from CombatComponent
 	void ShotgunTraceEndWithScatter(const FVector& HitTarget, TArray<FVector_NetQuantize>& OutHitTargets);
-protected:
-
-
-
 
 private:
 
