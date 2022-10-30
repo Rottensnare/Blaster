@@ -239,5 +239,7 @@ void ABlasterGameMode::PlayerLeftGame(ABlasterPlayerState* PlayerLeaving)
 	{
 		CharacterLeaving->Elim(true);
 	}
+
+	
 }
 
