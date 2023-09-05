@@ -114,7 +114,7 @@ void ABlasterPlayerController::HideTeamScores()
 {
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
 	
-	bool bIsHUDValid = BlasterHUD
+	const bool bIsHUDValid = BlasterHUD
 	&& BlasterHUD->BlasterOverlay
 	&& BlasterHUD->BlasterOverlay->RedTeamScoreText
 	&& BlasterHUD->BlasterOverlay->BlueTeamScoreText
@@ -131,7 +131,7 @@ void ABlasterPlayerController::InitTeamScores()
 {
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
 	
-	bool bIsHUDValid = BlasterHUD
+	const bool bIsHUDValid = BlasterHUD
 	&& BlasterHUD->BlasterOverlay
 	&& BlasterHUD->BlasterOverlay->RedTeamScoreText
 	&& BlasterHUD->BlasterOverlay->BlueTeamScoreText
@@ -148,7 +148,7 @@ void ABlasterPlayerController::SetHUDRedTeamScore(int32 RedScore)
 {
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
 	
-	bool bIsHUDValid = BlasterHUD
+	const bool bIsHUDValid = BlasterHUD
 	&& BlasterHUD->BlasterOverlay
 	&& BlasterHUD->BlasterOverlay->RedTeamScoreText;
 	if(bIsHUDValid)
@@ -161,7 +161,7 @@ void ABlasterPlayerController::SetHUDBlueTeamScore(int32 BlueScore)
 {
 	BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;
 	
-	bool bIsHUDValid = BlasterHUD
+	const bool bIsHUDValid = BlasterHUD
 	&& BlasterHUD->BlasterOverlay
 	&& BlasterHUD->BlasterOverlay->BlueTeamScoreText;
 	if(bIsHUDValid)
@@ -184,7 +184,7 @@ void ABlasterPlayerController::ServerCheckMatchState_Implementation()
 
 		if(BlasterHUD && MatchState == MatchState::WaitingToStart)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("ServerCheckMatchState"))
+			UE_LOG(LogTemp, Warning, TEXT("%hs"), __FUNCTION__)
 			BlasterHUD->AddWarmupWidget();
 		}
 	}
@@ -284,7 +284,7 @@ void ABlasterPlayerController::StopHighPingWarning()
 	}
 }
 
-void ABlasterPlayerController::ClientOrbAnnouncement_Implementation(APlayerState* InOrbHolder, uint8 Selection)
+void ABlasterPlayerController::ClientOrbAnnouncement_Implementation(APlayerState* InOrbHolder, const uint8 Selection)
 {
 	const ABlasterPlayerState* const Self = GetPlayerState<ABlasterPlayerState>();
 	const ABlasterPlayerState* const OrbHolder = Cast<ABlasterPlayerState>(InOrbHolder);
@@ -361,7 +361,7 @@ void ABlasterPlayerController::BroadCastElim(APlayerState* Attacker, APlayerStat
 
 void ABlasterPlayerController::ClientElimAnnouncement_Implementation(APlayerState* Attacker, APlayerState* Victim)
 {
-	APlayerState* Self = GetPlayerState<APlayerState>();
+	const APlayerState* Self = GetPlayerState<APlayerState>();
 	if(Attacker && Victim && Self)
 	{
 		BlasterHUD = BlasterHUD == nullptr ? Cast<ABlasterHUD>(GetHUD()) : BlasterHUD;

@@ -29,7 +29,7 @@ void ACTFGameMode::HandleCTFStart()
 {
 	TArray<AActor*> OrbSpawnPoints;
 	UGameplayStatics::GetAllActorsOfClass(this, AOrbSpawnPoint::StaticClass(), OrbSpawnPoints);
-	for(auto TempActor : OrbSpawnPoints)
+	for(AActor* const TempActor : OrbSpawnPoints)
 	{
 		AOrbSpawnPoint* OrbSpawnPoint = Cast<AOrbSpawnPoint>(TempActor);
 		if(OrbSpawnPoint)
@@ -40,7 +40,9 @@ void ACTFGameMode::HandleCTFStart()
 				if(RedOrbSpawnPoint)
 				{
 					RedOrbSpawnPoint->SpawnOrb(ETeams::ET_RedTeam);
-					if(RedOrb) RedOrb->OnOrbPickedUp.AddUObject(this, &ACTFGameMode::FlagPickedUp);
+					
+					check(RedOrb)
+					RedOrb->OnOrbPickedUp.AddUObject(this, &ACTFGameMode::FlagPickedUp);
 				}
 			}
 			else if(OrbSpawnPoint->GetTeam() == ETeams::ET_BlueTeam)
@@ -49,18 +51,20 @@ void ACTFGameMode::HandleCTFStart()
 				if(BlueOrbSpawnPoint)
 				{
 					BlueOrbSpawnPoint->SpawnOrb(ETeams::ET_BlueTeam);
-					if(BlueOrb) BlueOrb->OnOrbPickedUp.AddUObject(this, &ACTFGameMode::FlagPickedUp);
+
+					check(BlueOrb)
+					BlueOrb->OnOrbPickedUp.AddUObject(this, &ACTFGameMode::FlagPickedUp);
 				}
 			}
 			else
 			{
-				UE_LOG(LogTemp, Warning, TEXT("ACTFGameMode::BeginPlay: Someone forgot to assign a team to the orb spawn point"))
+				UE_LOG(LogTemp, Warning, TEXT("%hs: Someone forgot to assign a team to the orb spawn point"), __FUNCTION__)
 			}
 		}
 	}
 }
 
-void ACTFGameMode::FlagPickedUp(AOrb* PickedUpOrb) //Can be done with 1 for loop
+void ACTFGameMode::FlagPickedUp(AOrb* PickedUpOrb) const //Note: Can be done with 1 for loop
 {
 	if(PickedUpOrb && PickedUpOrb->GetOwningBlasterCharacter())
 	{
@@ -94,22 +98,18 @@ void ACTFGameMode::PlayerEliminated(ABlasterCharacter* EliminatedCharacter,
 {
 	ABlasterGameMode::PlayerEliminated(EliminatedCharacter, VictimPlayerController, AttackerController);
 
-	if(EliminatedCharacter)
+	if(EliminatedCharacter && EliminatedCharacter->GetHeldOrb() != nullptr)
 	{
-		if(EliminatedCharacter->GetHeldOrb() != nullptr)
-		{
-			//EliminatedCharacter->MulticastDropTheOrb();
-			EliminatedCharacter->GetHeldOrb()->Dropped(EliminatedCharacter->GetHeldOrb()->GetActorLocation());
-			EliminatedCharacter->MulticastDropTheOrb();
-		}
+		EliminatedCharacter->GetHeldOrb()->Dropped(EliminatedCharacter->GetHeldOrb()->GetActorLocation());
+		EliminatedCharacter->MulticastDropTheOrb();
 	}
 }
 
 void ACTFGameMode::FlagCaptured(AOrb* InOrb, AOrbZone* InOrbZone)
 {
-	bool bValidCapture = InOrb->GetTeam() != InOrbZone->GetTeam();
+	const bool bValidCapture = InOrb->GetTeam() != InOrbZone->GetTeam();
 	if(!bValidCapture) return;
-	//UE_LOG(LogTemp, Warning, TEXT("ACTFGameMode::FlagCaptured: IF bValidCapture"))
+	
 	ABlasterGameState* BGameState = Cast<ABlasterGameState>(GameState);
 	if(BGameState)
 	{
@@ -128,10 +128,11 @@ void ACTFGameMode::FlagCaptured(AOrb* InOrb, AOrbZone* InOrbZone)
 				}
 				RedOrb->GetOwningBlasterCharacter()->MulticastDropTheOrb();
 				RedOrb->Dropped(RedOrb->GetActorLocation());
-				//InOrb->Dropped(InOrb->GetActorLocation());
 				RedOrb->Destroy();
 				RedOrbSpawnPoint->SpawnOrb(ETeams::ET_RedTeam);
-				if(RedOrb) RedOrb->OnOrbPickedUp.AddUObject(this, &ACTFGameMode::FlagPickedUp);
+				
+				check(RedOrb)
+				RedOrb->OnOrbPickedUp.AddUObject(this, &ACTFGameMode::FlagPickedUp);
 			}
 		}
 		else if(InOrbZone->GetTeam() == ETeams::ET_RedTeam)
@@ -149,10 +150,11 @@ void ACTFGameMode::FlagCaptured(AOrb* InOrb, AOrbZone* InOrbZone)
 				}
 				BlueOrb->GetOwningBlasterCharacter()->MulticastDropTheOrb();
 				BlueOrb->Dropped(BlueOrb->GetActorLocation());
-				//InOrb->Dropped(InOrb->GetActorLocation());
 				BlueOrb->Destroy();
 				BlueOrbSpawnPoint->SpawnOrb(ETeams::ET_BlueTeam);
-				if(BlueOrb) BlueOrb->OnOrbPickedUp.AddUObject(this, &ACTFGameMode::FlagPickedUp);
+				
+				check(BlueOrb)
+				BlueOrb->OnOrbPickedUp.AddUObject(this, &ACTFGameMode::FlagPickedUp);
 			}
 		}
 	}

@@ -59,7 +59,7 @@ public:
 
 	//Called from the CTF GameMode class
 	UFUNCTION(Client, Reliable)
-	void ClientOrbAnnouncement(APlayerState* InOrbHolder, uint8 Selection);
+	void ClientOrbAnnouncement(APlayerState* InOrbHolder, const uint8 Selection);
 	
 protected:
 

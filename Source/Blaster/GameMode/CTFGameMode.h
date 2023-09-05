@@ -6,6 +6,9 @@
 #include "TeamsGameMode.h"
 #include "CTFGameMode.generated.h"
 
+
+class AOrb;
+class AOrbZone;
 /**
  * 
  */
@@ -20,7 +23,7 @@ public:
 
 	//Adds score to the correct team. Calls ClienOrbAnnouncements for all player controllers.
 	//Drops the orb and destroys it. Calls SpawnOrb and binds FlagPickedUp to the spawned orb.
-	void FlagCaptured(class AOrb* InOrb, class AOrbZone* InOrbZone);
+	void FlagCaptured(AOrb* InOrb, AOrbZone* InOrbZone);
 
 protected:
 	
@@ -32,7 +35,7 @@ protected:
 	
 	//Iterates through all the player controllers and calls ClientOrbAnnouncement with different parameters
 	UFUNCTION()
-	void FlagPickedUp(AOrb* PickedUpOrb);
+	void FlagPickedUp(AOrb* PickedUpOrb) const;
 	
 
 private:
